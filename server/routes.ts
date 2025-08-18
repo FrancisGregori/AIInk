@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { summarizeArticle, analyzeSentiment, analyzeImage } from "./gemini";
-import { insertStencilResultSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
+import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -22,36 +22,85 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Stencil Tool Routes
-  app.get("/api/stencil/models", async (req, res) => {
+  
+  // Get available stencil styles
+  app.get("/api/stencil/styles", async (req, res) => {
     try {
-      const models = await storage.getStencilModels();
-      res.json(models);
+      const styles = await storage.getStencilStyles();
+      res.json(styles);
     } catch (error) {
-      console.error("Error fetching stencil models:", error);
+      console.error("Error fetching stencil styles:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
 
-  app.post("/api/stencil/process", upload.single('image'), async (req, res) => {
+  // Create a new stencil job
+  app.post("/api/stencil/jobs", upload.single('image'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided" });
       }
 
-      const { model = "model-1" } = req.body;
+      const { style = "steven", quality = 90, transparentBg = false } = req.body;
       
-      // Process the image with the selected model
-      const result = await storage.processStencil({
-        imageBuffer: req.file.buffer,
-        modelId: model,
-        originalName: req.file.originalname,
-        mimeType: req.file.mimetype,
+      // For now, use a placeholder URL for the uploaded image
+      // In production, this would upload to Supabase Storage
+      const originalImageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      
+      // Create the stencil job
+      const job = await storage.createStencilJob({
+        userId: "demo-user", // In production, get from auth session
+        originalImageUrl,
+        style,
+        processingOptions: {
+          quality: parseInt(quality),
+          transparentBg: transparentBg === 'true',
+        },
       });
 
-      res.json(result);
+      res.json(job);
     } catch (error) {
-      console.error("Error processing stencil:", error);
+      console.error("Error creating stencil job:", error);
       res.status(500).json({ error: "Error processing image" });
+    }
+  });
+
+  // Get stencil job status
+  app.get("/api/stencil/jobs/:id", async (req, res) => {
+    try {
+      const job = await storage.getStencilJob(req.params.id);
+      if (!job) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+      res.json(job);
+    } catch (error) {
+      console.error("Error fetching stencil job:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Get user's stencil jobs
+  app.get("/api/stencil/jobs", async (req, res) => {
+    try {
+      const userId = "demo-user"; // In production, get from auth session
+      const jobs = await storage.getStencilJobs(userId);
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching stencil jobs:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Get gallery stencils
+  app.get("/api/stencil/gallery", async (req, res) => {
+    try {
+      const userId = "demo-user"; // In production, get from auth session or null for public
+      const limit = parseInt(req.query.limit as string) || 20;
+      const stencils = await storage.getGalleryStencils(userId, limit);
+      res.json(stencils);
+    } catch (error) {
+      console.error("Error fetching gallery:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
