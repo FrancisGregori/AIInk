@@ -7,6 +7,7 @@ Darwin AI Tools is a professional AI-powered design platform that provides two m
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Project landing page: https://tattoostencilpro.app (for project promotion)
 
 ## System Architecture
 
