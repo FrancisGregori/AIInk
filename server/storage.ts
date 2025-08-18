@@ -220,7 +220,10 @@ export class MemStorage implements IStorage {
 
   async createUserProfile(insertProfile: InsertUserProfile): Promise<UserProfile> {
     const profile: UserProfile = {
-      ...insertProfile,
+      id: insertProfile.id,
+      email: insertProfile.email,
+      displayName: insertProfile.displayName || null,
+      avatarUrl: insertProfile.avatarUrl || null,
       subscriptionTier: insertProfile.subscriptionTier || "free",
       monthlyCredits: insertProfile.monthlyCredits || 10,
       creditsUsed: insertProfile.creditsUsed || 0,
@@ -245,7 +248,7 @@ export class MemStorage implements IStorage {
   async getStencilStyles(): Promise<StencilStyle[]> {
     return Array.from(this.stencilStyles.values())
       .filter(style => style.isActive)
-      .sort((a, b) => a.displayOrder - b.displayOrder);
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
   }
 
   async getStencilStyle(id: string): Promise<StencilStyle | undefined> {
@@ -256,12 +259,17 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const job: StencilJob = {
       id,
-      ...insertJob,
+      userId: insertJob.userId,
+      originalImageUrl: insertJob.originalImageUrl,
+      processedImageUrl: insertJob.processedImageUrl || null,
+      style: insertJob.style,
       status: "pending",
-      createdAt: new Date(),
+      comfyDeployRunId: insertJob.comfyDeployRunId || null,
+      processingOptions: insertJob.processingOptions || null,
+      errorMessage: null,
       startedAt: null,
       completedAt: null,
-      errorMessage: null,
+      createdAt: new Date(),
     };
     this.stencilJobs.set(id, job);
     
@@ -332,9 +340,13 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const project: FluxProject = {
       id,
-      ...insertProject,
-      isPublic: insertProject.isPublic || false,
+      name: insertProject.name,
+      description: insertProject.description || null,
+      userId: insertProject.userId,
+      prompt: insertProject.prompt || null,
       imageUrl: insertProject.imageUrl || "https://via.placeholder.com/512x512/000080/FFFFFF?text=New+Design",
+      settings: insertProject.settings || null,
+      isPublic: insertProject.isPublic || false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -377,7 +389,11 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const chat: GeminiChat = {
       id,
-      ...insertChat,
+      userId: insertChat.userId,
+      role: insertChat.role,
+      message: insertChat.message,
+      projectId: insertChat.projectId || null,
+      response: insertChat.response || null,
       createdAt: new Date(),
     };
 
@@ -397,7 +413,9 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const usage: UsageTracking = {
       id,
-      ...insertUsage,
+      userId: insertUsage.userId,
+      actionType: insertUsage.actionType,
+      metadata: insertUsage.metadata || null,
       creditsUsed: insertUsage.creditsUsed || 1,
       createdAt: new Date(),
     };
@@ -406,7 +424,7 @@ export class MemStorage implements IStorage {
     
     // Update user credits
     const profile = await this.getUserProfile(insertUsage.userId);
-    if (profile) {
+    if (profile && profile.creditsUsed !== null) {
       await this.updateUserProfile(insertUsage.userId, {
         creditsUsed: profile.creditsUsed + (insertUsage.creditsUsed || 1),
       });
@@ -418,7 +436,11 @@ export class MemStorage implements IStorage {
   async getUserUsage(userId: string): Promise<UsageTracking[]> {
     return Array.from(this.usageTracking.values())
       .filter(usage => usage.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
   }
 }
 
