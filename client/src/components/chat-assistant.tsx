@@ -390,6 +390,33 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     });
   };
 
+  // Function to determine if a message contains a prompt that should have action buttons
+  const isPromptMessage = (content: string) => {
+    const promptIndicators = [
+      'Add', 'Remove', 'Change', 'maintaining',
+      'background', 'style', 'color', 'effect',
+      'Transform', 'Create', 'Generate', 'Make',
+      'Enhance', 'Modify', 'Replace', 'Include'
+    ];
+    
+    // Check if message contains prompt-like language
+    const hasPromptWords = promptIndicators.some(indicator => 
+      content.toLowerCase().includes(indicator.toLowerCase())
+    );
+    
+    // Check if message is not just a greeting or explanation
+    const isNotGreeting = !content.toLowerCase().includes('hola') && 
+                         !content.toLowerCase().includes('hi') &&
+                         !content.toLowerCase().includes('experto') &&
+                         !content.toLowerCase().includes('ayudo') &&
+                         !content.toLowerCase().includes('expert');
+    
+    // Check if message is substantial (more than just a few words)
+    const isSubstantial = content.trim().length > 20;
+    
+    return hasPromptWords && isNotGreeting && isSubstantial;
+  };
+
 
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -472,7 +499,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   <p className={`text-sm whitespace-pre-wrap ${msg.isAnalyzing ? 'animate-pulse' : ''}`}>
                     {msg.content}
                   </p>
-                  {msg.role === 'assistant' && msg.content && !msg.isAnalyzing && (
+                  {msg.role === 'assistant' && msg.content && !msg.isAnalyzing && isPromptMessage(msg.content) && (
                     <div className="absolute -top-2 -right-2 flex gap-1">
                       <Button
                         onClick={() => copyMessage(msg.content)}
