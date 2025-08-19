@@ -26,11 +26,7 @@ import {
   Copy,
   Share2,
   Zap,
-  Palette,
-  Languages,
-  ChevronLeft,
-  ChevronRight,
-  RotateCcw
+  Palette
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import type { StencilStyle, StencilJob } from "@shared/schema";
@@ -39,144 +35,16 @@ function StencilTool() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string>("steven");
-  const [pngOutline, setPngOutline] = useState<boolean>(true);
-  const [lineColor, setLineColor] = useState<string>("black");
+  const [quality, setQuality] = useState<number>(90);
+  const [transparentBg, setTransparentBg] = useState<boolean>(false);
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
-  const [compareMode, setCompareMode] = useState<"slider" | "side-by-side" | null>(null);
-  const [comparePosition, setComparePosition] = useState<number>(50);
-  const [language, setLanguage] = useState<"es" | "en">("es");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  // Translations
-  const t = {
-    es: {
-      title: "Transformador de Stencils",
-      subtitle: "Convierte imágenes en stencils profesionales usando IA",
-      process: "Procesar",
-      gallery: "Galería",
-      history: "Historial",
-      uploadImage: "Subir Imagen",
-      dragDrop: "Arrastra y suelta tu imagen aquí",
-      or: "o",
-      selectFile: "Selecciona archivo",
-      changeFile: "Cambiar archivo",
-      supportedFormats: "Soporta JPG, PNG, GIF hasta 10MB",
-      stencilStyle: "Estilo de Stencil",
-      exclusiveModels: "Modelos exclusivos de IA entrenados con líneas características de cada artista",
-      settings: "Configuración",
-      pngOutline: "PNG Outline (Sin Fondo)",
-      linesOnly: "Solo líneas - para fácil transferencia",
-      lineColorLabel: "Color de línea del stencil",
-      pickColor: "Elige el color de línea:",
-      createStencil: "Crear Stencil",
-      processing: "Procesando...",
-      download: "Descargar PNG",
-      reset: "Reiniciar",
-      preview: "Vista Previa",
-      sideBySide: "Lado a lado",
-      slider: "Deslizador",
-      original: "Original",
-      processed: "Procesado",
-      status: "Estado",
-      style: "Estilo",
-      completed: "Completado",
-      pending: "Pendiente",
-      noImage: "Sin imagen seleccionada",
-      procreateInstructions: "Para usar en Procreate: Mantén presionada la imagen del stencil y selecciona 'Copiar', luego pégala directamente en Procreate.",
-      recentWork: "Trabajos Recientes",
-      yourGallery: "Tu galería de stencils procesados",
-      noGalleryItems: "Aún no hay stencils procesados",
-      shareLink: "Compartir enlace",
-      copyLink: "Copiar enlace",
-      downloadAll: "Descargar todo",
-      deleteAll: "Eliminar todo",
-      credits: "Créditos",
-      unlimited: "Ilimitados",
-    },
-    en: {
-      title: "Stencil Transformer",
-      subtitle: "Convert images to professional stencils using AI",
-      process: "Process",
-      gallery: "Gallery",
-      history: "History",
-      uploadImage: "Upload Image",
-      dragDrop: "Drag and drop your image here",
-      or: "or",
-      selectFile: "Select file",
-      changeFile: "Change file",
-      supportedFormats: "Supports JPG, PNG, GIF up to 10MB",
-      stencilStyle: "Stencil Style",
-      exclusiveModels: "Exclusive AI models trained on each artist's signature lines",
-      settings: "Settings",
-      pngOutline: "PNG Outline (No Background)",
-      linesOnly: "Lines only - for easy transfer",
-      lineColorLabel: "Stencil Line Color",
-      pickColor: "Pick the line color:",
-      createStencil: "Create Stencil",
-      processing: "Processing...",
-      download: "Download PNG",
-      reset: "Reset",
-      preview: "Preview",
-      sideBySide: "Side by Side",
-      slider: "Slider",
-      original: "Original",
-      processed: "Processed",
-      status: "Status",
-      style: "Style",
-      completed: "Completed",
-      pending: "Pending",
-      noImage: "No image selected",
-      procreateInstructions: "To use in Procreate: Press and hold the stencil image above and select 'Copy', then paste it directly into Procreate.",
-      recentWork: "Recent Work",
-      yourGallery: "Your processed stencils gallery",
-      noGalleryItems: "No processed stencils yet",
-      shareLink: "Share link",
-      copyLink: "Copy link",
-      downloadAll: "Download all",
-      deleteAll: "Delete all",
-      credits: "Credits",
-      unlimited: "Unlimited",
-    }
-  };
-
-  const txt = t[language];
-
-  // Hardcoded styles with correct descriptions
-  const stencilStyles = [
-    {
-      id: "steven",
-      name: "Steven Hernandez",
-      description: language === "es" ? "Limpio, detalle clásico" : "Clean, classic detail",
-      thumbnail: "/api/placeholder/80/80"
-    },
-    {
-      id: "andres",
-      name: "Andres Makishi",
-      description: language === "es" ? "Minimalista línea fina" : "Minimalist fine-line",
-      thumbnail: "/api/placeholder/80/80"
-    },
-    {
-      id: "darwin",
-      name: "Darwin Enriquez",
-      description: language === "es" ? "Líneas limpias y detalladas" : "Clean, detailed lines",
-      thumbnail: "/api/placeholder/80/80"
-    },
-    {
-      id: "adrian",
-      name: "Adrian Rod",
-      description: language === "es" ? "Detallado y alto contraste" : "Detailed & high-contrast",
-      thumbnail: "/api/placeholder/80/80"
-    }
-  ];
-
-  // Color options for stencil lines
-  const colorOptions = [
-    { value: "black", label: "Negro", color: "#000000" },
-    { value: "red", label: "Rojo", color: "#FF0000" },
-    { value: "blue", label: "Azul", color: "#0000FF" },
-    { value: "green", label: "Verde", color: "#00FF00" }
-  ];
+  // Fetch available styles
+  const { data: styles = [] } = useQuery<StencilStyle[]>({
+    queryKey: ["/api/stencil/styles"],
+  });
 
   // Fetch gallery
   const { data: galleryItems = [] } = useQuery<StencilJob[]>({
@@ -198,13 +66,11 @@ function StencilTool() {
 
   // Create stencil job mutation
   const createJobMutation = useMutation({
-    mutationFn: async (formData: FormData): Promise<StencilJob> => {
-      const response = await fetch("/api/stencil/jobs", {
+    mutationFn: async (formData: FormData) => {
+      return apiRequest("/api/stencil/jobs", {
         method: "POST",
         body: formData,
       });
-      if (!response.ok) throw new Error("Failed to create stencil job");
-      return response.json();
     },
     onSuccess: (data: StencilJob) => {
       setCurrentJobId(data.id);
@@ -246,8 +112,8 @@ function StencilTool() {
     const formData = new FormData();
     formData.append("image", selectedFile);
     formData.append("style", selectedStyle);
-    formData.append("pngOutline", pngOutline.toString());
-    formData.append("lineColor", lineColor);
+    formData.append("quality", quality.toString());
+    formData.append("transparentBg", transparentBg.toString());
 
     createJobMutation.mutate(formData);
   };
@@ -262,19 +128,19 @@ function StencilTool() {
     link.click();
   };
 
-  // Reset all settings
-  const handleReset = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setCurrentJobId(null);
-    setCompareMode(null);
-    setSelectedStyle("steven");
-    setLineColor("black");
-    setPngOutline(true);
-  };
+  // Copy instructions for Procreate
+  const handleCopyInstructions = () => {
+    const instructions = `Instrucciones para Procreate:
+1. Mantén presionada la imagen del stencil
+2. Selecciona "Copiar imagen"
+3. Abre Procreate
+4. Crea un nuevo lienzo o abre uno existente
+5. Toca el icono de llave inglesa > Agregar > Insertar una foto
+6. Pega la imagen del stencil
+7. Ajusta el tamaño y posición según necesites`;
 
-  const isProcessing = currentJob?.status === "pending" || currentJob?.status === "processing";
-  const isCompleted = currentJob?.status === "completed";
+    navigator.clipboard.writeText(instructions);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -283,454 +149,286 @@ function StencilTool() {
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <h1 className="text-4xl font-bold">{txt.title}</h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage(language === "es" ? "en" : "es")}
-            >
-              <Languages className="h-4 w-4" />
-            </Button>
-          </div>
-          <p className="text-zinc-400">{txt.subtitle}</p>
-          <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Badge variant="secondary">{txt.credits}: {txt.unlimited}</Badge>
+          <h1 className="text-4xl font-bold mb-2">Stencil Tool</h1>
+          <p className="text-zinc-400">Transforma tus imágenes en stencils profesionales para tatuajes</p>
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <Badge variant="secondary">
+              <Zap className="h-3 w-3 mr-1" />
+              {galleryItems.length} stencils creados
+            </Badge>
+            <Badge variant="secondary">
+              <Sparkles className="h-3 w-3 mr-1" />
+              4 estilos disponibles
+            </Badge>
           </div>
         </div>
 
-        {/* Main Tabs */}
-        <Tabs defaultValue="process" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
-            <TabsTrigger value="process">{txt.process}</TabsTrigger>
-            <TabsTrigger value="gallery">{txt.gallery}</TabsTrigger>
-            <TabsTrigger value="history">{txt.history}</TabsTrigger>
-          </TabsList>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Upload Section */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* File Upload */}
+            <Card>
+              <CardHeader>
+                <CardTitle>1. Sube tu imagen</CardTitle>
+                <CardDescription>Arrastra o selecciona una imagen para convertir en stencil</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className="border-2 border-dashed border-zinc-700 rounded-lg p-8 text-center hover:border-zinc-500 transition-colors cursor-pointer"
+                  onDrop={handleDrop}
+                  onDragOver={(e) => e.preventDefault()}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {previewUrl ? (
+                    <div className="space-y-4">
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="max-w-full max-h-64 mx-auto rounded-lg"
+                      />
+                      <p className="text-sm text-zinc-400">{selectedFile?.name}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <Upload className="h-12 w-12 mx-auto text-zinc-500" />
+                      <div>
+                        <p className="font-medium">Arrastra tu imagen aquí</p>
+                        <p className="text-sm text-zinc-500 mt-1">o haz clic para seleccionar</p>
+                      </div>
+                      <p className="text-xs text-zinc-600">Formatos: JPG, PNG, GIF (máx. 10MB)</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </CardContent>
+            </Card>
 
-          {/* Process Tab */}
-          <TabsContent value="process">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - File Selection and Settings */}
-              <div className="space-y-6">
-                {/* File Upload Card */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                  <CardHeader>
-                    <CardTitle className="text-white">{txt.uploadImage}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedFile ? (
-                      <div className="space-y-4">
-                        <div className="text-center">
-                          <p className="text-sm text-zinc-400 truncate">{selectedFile.name}</p>
-                          <p className="text-xs text-zinc-500">{(selectedFile.size / 1024).toFixed(2)} KB</p>
-                        </div>
-                        <Button
-                          onClick={() => fileInputRef.current?.click()}
-                          variant="secondary"
-                          className="w-full"
+            {/* Style Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle>2. Elige el estilo</CardTitle>
+                <CardDescription>Selecciona el modelo de IA para tu stencil</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup value={selectedStyle} onValueChange={setSelectedStyle}>
+                  <div className="grid grid-cols-2 gap-4">
+                    {styles.map((style) => (
+                      <div key={style.id} className="relative">
+                        <RadioGroupItem
+                          value={style.id}
+                          id={style.id}
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor={style.id}
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-zinc-700 p-4 hover:border-zinc-500 cursor-pointer peer-data-[state=checked]:border-white peer-data-[state=checked]:bg-zinc-900 transition-all"
                         >
-                          {txt.changeFile}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div
-                        className="border-2 border-dashed border-zinc-700 rounded-lg p-8 text-center hover:border-zinc-500 transition-colors cursor-pointer"
-                        onClick={() => fileInputRef.current?.click()}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={handleDrop}
-                      >
-                        <Upload className="h-12 w-12 mx-auto text-zinc-500 mb-3" />
-                        <p className="text-sm text-zinc-400">{txt.dragDrop}</p>
-                        <p className="text-xs text-zinc-500 mt-2">{txt.supportedFormats}</p>
-                      </div>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* Stencil Style Selection */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Palette className="h-5 w-5" />
-                      {txt.stencilStyle}
-                    </CardTitle>
-                    <CardDescription className="text-zinc-400">
-                      {txt.exclusiveModels}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {stencilStyles.map((style) => (
-                      <div
-                        key={style.id}
-                        onClick={() => setSelectedStyle(style.id)}
-                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                          selectedStyle === style.id
-                            ? "bg-zinc-800 border border-zinc-600"
-                            : "hover:bg-zinc-800/50"
-                        }`}
-                      >
-                        <div className="flex-shrink-0">
-                          <div className="w-12 h-12 bg-zinc-700 rounded-lg flex items-center justify-center">
-                            <ImageIcon className="h-6 w-6 text-zinc-400" />
+                          <div className="w-20 h-20 bg-zinc-800 rounded-lg mb-3 flex items-center justify-center">
+                            <Palette className="h-8 w-8 text-zinc-400" />
                           </div>
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-white">{style.name}</p>
-                          <p className="text-xs text-zinc-400">{style.description}</p>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full ${
-                          selectedStyle === style.id ? "bg-blue-500" : "bg-zinc-700"
-                        }`} />
+                          <h3 className="font-semibold">{style.name}</h3>
+                          <p className="text-xs text-zinc-500 text-center mt-1">{style.description}</p>
+                        </Label>
                       </div>
                     ))}
-                  </CardContent>
-                </Card>
+                  </div>
+                </RadioGroup>
+              </CardContent>
+            </Card>
 
-                {/* Stencil Settings */}
-                <Card className="bg-zinc-900 border-zinc-800">
-                  <CardHeader>
-                    <CardTitle className="text-white">{txt.settings}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* PNG Outline Option */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="png-outline" className="text-white">
-                          {txt.pngOutline}
-                        </Label>
-                        <Switch
-                          id="png-outline"
-                          checked={pngOutline}
-                          onCheckedChange={setPngOutline}
-                        />
-                      </div>
-                      <p className="text-xs text-zinc-500">{txt.linesOnly}</p>
-                    </div>
-
-                    {/* Stencil Line Color */}
-                    <div className="space-y-2">
-                      <Label className="text-white">{txt.lineColorLabel}</Label>
-                      <p className="text-xs text-zinc-500">{txt.pickColor}</p>
-                      <div className="flex gap-2">
-                        {colorOptions.map((option) => (
-                          <button
-                            key={option.value}
-                            onClick={() => setLineColor(option.value)}
-                            className={`w-12 h-12 rounded-lg border-2 transition-all ${
-                              lineColor === option.value
-                                ? "border-white scale-110"
-                                : "border-zinc-700 hover:border-zinc-500"
-                            }`}
-                            style={{ backgroundColor: option.color }}
-                            aria-label={option.label}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Create Stencil Button */}
+            {/* Processing Options */}
+            <Card>
+              <CardHeader>
+                <CardTitle>3. Opciones de procesamiento</CardTitle>
+                <CardDescription>Ajusta los parámetros para tu stencil</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label>Calidad</Label>
+                    <span className="text-sm text-zinc-400">{quality}%</span>
+                  </div>
+                  <Slider
+                    value={[quality]}
+                    onValueChange={(value) => setQuality(value[0])}
+                    min={50}
+                    max={100}
+                    step={10}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="transparent-bg">Fondo transparente</Label>
+                    <p className="text-xs text-zinc-500">Elimina el fondo de la imagen</p>
+                  </div>
+                  <Switch
+                    id="transparent-bg"
+                    checked={transparentBg}
+                    onCheckedChange={setTransparentBg}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
                 <Button
                   onClick={handleProcess}
-                  disabled={!selectedFile || isProcessing}
-                  className="w-full h-14 text-lg bg-white text-black hover:bg-gray-100"
+                  disabled={!selectedFile || createJobMutation.isPending}
+                  className="w-full"
+                  size="lg"
                 >
-                  {isProcessing ? (
+                  {createJobMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      {txt.processing}
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Procesando...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      {txt.createStencil}
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generar Stencil
                     </>
                   )}
                 </Button>
+              </CardFooter>
+            </Card>
+          </div>
 
-                {/* Reset Button */}
-                {(selectedFile || currentJob) && (
-                  <Button
-                    onClick={handleReset}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <RotateCcw className="mr-2 h-4 w-4" />
-                    {txt.reset}
-                  </Button>
-                )}
-              </div>
-
-              {/* Right Column - Preview */}
-              <div className="lg:col-span-2">
-                <Card className="bg-zinc-900 border-zinc-800">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-white">{txt.preview}</CardTitle>
-                      {previewUrl && currentJob?.processedImageUrl && (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant={compareMode === "side-by-side" ? "default" : "outline"}
-                            onClick={() => setCompareMode(compareMode === "side-by-side" ? null : "side-by-side")}
-                          >
-                            {txt.sideBySide}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={compareMode === "slider" ? "default" : "outline"}
-                            onClick={() => setCompareMode(compareMode === "slider" ? null : "slider")}
-                          >
-                            {txt.slider}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-zinc-800 rounded-lg p-4 min-h-[500px] flex items-center justify-center">
-                      {!previewUrl ? (
-                        <div className="text-center">
-                          <ImageIcon className="h-16 w-16 mx-auto text-zinc-600 mb-3" />
-                          <p className="text-zinc-500">{txt.noImage}</p>
-                        </div>
-                      ) : compareMode === "side-by-side" && currentJob?.processedImageUrl ? (
-                        // Side by Side Comparison
-                        <div className="flex gap-4 w-full">
-                          <div className="flex-1">
-                            <p className="text-xs text-zinc-400 mb-2 text-center">{txt.original}</p>
-                            <img
-                              src={previewUrl}
-                              alt="Original"
-                              className="w-full rounded-lg"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-xs text-zinc-400 mb-2 text-center">{txt.processed}</p>
-                            <img
-                              src={currentJob.processedImageUrl}
-                              alt="Processed"
-                              className="w-full rounded-lg"
-                            />
-                          </div>
-                        </div>
-                      ) : compareMode === "slider" && currentJob?.processedImageUrl ? (
-                        // Slider Comparison
-                        <div className="relative w-full max-w-2xl mx-auto">
-                          <img
-                            src={currentJob.processedImageUrl}
-                            alt="Processed"
-                            className="w-full rounded-lg"
-                          />
-                          <div
-                            className="absolute inset-0 overflow-hidden rounded-lg"
-                            style={{ clipPath: `inset(0 ${100 - comparePosition}% 0 0)` }}
-                          >
-                            <img
-                              src={previewUrl}
-                              alt="Original"
-                              className="w-full rounded-lg"
-                            />
-                          </div>
-                          <div
-                            className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize"
-                            style={{ left: `${comparePosition}%` }}
-                            onMouseDown={(e) => {
-                              const startX = e.clientX;
-                              const startPos = comparePosition;
-                              const parentElement = (e.currentTarget as HTMLElement).parentElement;
-                              
-                              const handleMouseMove = (e: MouseEvent) => {
-                                const delta = e.clientX - startX;
-                                const rect = parentElement?.getBoundingClientRect();
-                                if (rect) {
-                                  const newPos = Math.max(0, Math.min(100, startPos + (delta / rect.width) * 100));
-                                  setComparePosition(newPos);
-                                }
-                              };
-                              
-                              const handleMouseUp = () => {
-                                document.removeEventListener("mousemove", handleMouseMove);
-                                document.removeEventListener("mouseup", handleMouseUp);
-                              };
-                              
-                              document.addEventListener("mousemove", handleMouseMove);
-                              document.addEventListener("mouseup", handleMouseUp);
-                            }}
-                          >
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-1">
-                              <div className="flex items-center">
-                                <ChevronLeft className="h-3 w-3 text-black" />
-                                <ChevronRight className="h-3 w-3 text-black" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : currentJob?.processedImageUrl ? (
-                        // Single Processed Image
-                        <img
-                          src={currentJob.processedImageUrl}
-                          alt="Processed"
-                          className="max-w-full max-h-full rounded-lg"
-                        />
-                      ) : (
-                        // Single Original Image
-                        <img
-                          src={previewUrl}
-                          alt="Preview"
-                          className="max-w-full max-h-full rounded-lg"
-                        />
-                      )}
-                    </div>
-
-                    {/* Status Information */}
-                    {currentJob && (
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-zinc-400">{txt.style}:</span>
-                          <Badge variant="secondary">{selectedStyle}</Badge>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-zinc-400">{txt.status}:</span>
-                          <Badge variant={isCompleted ? "default" : "secondary"}>
-                            {isCompleted ? txt.completed : txt.pending}
-                          </Badge>
-                        </div>
+          {/* Results Section */}
+          <div className="space-y-6">
+            {/* Processing Status */}
+            {currentJob && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Estado del proceso</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {currentJob.status === "pending" && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-yellow-500">
+                        <Clock className="h-4 w-4" />
+                        <span>En cola...</span>
                       </div>
-                    )}
-                  </CardContent>
-
-                  {/* Download Section */}
-                  {isCompleted && (
-                    <CardFooter>
-                      <div className="w-full space-y-3">
+                      <Progress value={25} className="w-full" />
+                    </div>
+                  )}
+                  
+                  {currentJob.status === "processing" && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-blue-500">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Procesando...</span>
+                      </div>
+                      <Progress value={50} className="w-full" />
+                    </div>
+                  )}
+                  
+                  {currentJob.status === "completed" && currentJob.processedImageUrl && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-green-500 mb-3">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>¡Completado!</span>
+                      </div>
+                      <img
+                        src={currentJob.processedImageUrl}
+                        alt="Stencil result"
+                        className="w-full rounded-lg"
+                      />
+                      <div className="space-y-2">
                         <Button
                           onClick={handleDownload}
-                          className="w-full bg-white text-black hover:bg-gray-100"
+                          className="w-full"
+                          variant="outline"
                         >
                           <Download className="mr-2 h-4 w-4" />
-                          {txt.download}
+                          Descargar
                         </Button>
-                        <p className="text-xs text-zinc-500 text-center">
-                          {txt.procreateInstructions}
-                        </p>
+                        <Button
+                          onClick={handleCopyInstructions}
+                          className="w-full"
+                          variant="secondary"
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copiar instrucciones
+                        </Button>
                       </div>
-                    </CardFooter>
+                    </div>
                   )}
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
+                  
+                  {currentJob.status === "failed" && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {currentJob.errorMessage || "Error al procesar la imagen"}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Gallery Tab */}
-          <TabsContent value="gallery">
-            <Card className="bg-zinc-900 border-zinc-800">
+            {/* Gallery Preview */}
+            <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-white">{txt.recentWork}</CardTitle>
-                    <CardDescription className="text-zinc-400">
-                      {txt.yourGallery}
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Share2 className="h-4 w-4 mr-2" />
-                      {txt.shareLink}
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      {txt.downloadAll}
-                    </Button>
-                  </div>
-                </div>
+                <CardTitle>Galería reciente</CardTitle>
+                <CardDescription>Tus últimos stencils</CardDescription>
               </CardHeader>
               <CardContent>
-                {galleryItems.length === 0 ? (
-                  <div className="text-center py-12">
-                    <ImageIcon className="h-16 w-16 mx-auto text-zinc-600 mb-3" />
-                    <p className="text-zinc-500">{txt.noGalleryItems}</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {galleryItems.map((item) => (
-                      <div key={item.id} className="group relative">
-                        <div className="aspect-square bg-zinc-800 rounded-lg overflow-hidden">
-                          <img
-                            src={item.processedImageUrl || item.originalImageUrl}
-                            alt={`Stencil ${item.style}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            <Button size="icon" variant="secondary">
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button size="icon" variant="secondary">
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="mt-2">
+                <ScrollArea className="h-96">
+                  <div className="grid grid-cols-2 gap-2">
+                    {galleryItems.slice(0, 6).map((item) => (
+                      <div
+                        key={item.id}
+                        className="relative group cursor-pointer rounded-lg overflow-hidden"
+                      >
+                        <img
+                          src={item.processedImageUrl || item.originalImageUrl}
+                          alt="Gallery item"
+                          className="w-full h-32 object-cover hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <Badge variant="secondary" className="text-xs">
                             {item.style}
                           </Badge>
-                          <p className="text-xs text-zinc-500 mt-1">
-                            {new Date(item.createdAt || "").toLocaleDateString()}
-                          </p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* History Tab */}
-          <TabsContent value="history">
-            <Card className="bg-zinc-900 border-zinc-800">
-              <CardHeader>
-                <CardTitle className="text-white">{txt.history}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[600px]">
-                  <div className="space-y-4">
-                    {galleryItems.map((item) => (
-                      <div key={item.id} className="flex items-center gap-4 p-4 bg-zinc-800 rounded-lg">
-                        <img
-                          src={item.processedImageUrl || item.originalImageUrl}
-                          alt={`Stencil ${item.style}`}
-                          className="w-16 h-16 rounded object-cover"
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium text-white">Stencil - {item.style}</p>
-                          <p className="text-sm text-zinc-400">
-                            {new Date(item.createdAt || "").toLocaleString()}
-                          </p>
-                        </div>
-                        <Badge variant={item.status === "completed" ? "default" : "secondary"}>
-                          {item.status}
-                        </Badge>
-                        <Button size="icon" variant="ghost">
-                          <Download className="h-4 w-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>
                 </ScrollArea>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+
+            {/* Usage Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Tu uso</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-zinc-400">Créditos usados</span>
+                    <Badge>3 / 10</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-zinc-400">Plan</span>
+                    <Badge variant="secondary">Gratis</Badge>
+                  </div>
+                  <Separator />
+                  <Button variant="outline" className="w-full" size="sm">
+                    <Zap className="mr-2 h-3 w-3" />
+                    Mejorar plan
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
     </div>
   );
