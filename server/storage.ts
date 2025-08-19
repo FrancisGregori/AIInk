@@ -272,24 +272,6 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.stencilJobs.set(id, job);
-    
-    // Simulate processing after 2 seconds
-    setTimeout(() => {
-      this.updateStencilJob(id, {
-        status: "processing",
-        startedAt: new Date(),
-      });
-      
-      // Complete after another 3 seconds
-      setTimeout(() => {
-        this.updateStencilJob(id, {
-          status: "completed",
-          processedImageUrl: `https://via.placeholder.com/512x512/000000/FFFFFF?text=${insertJob.style}+Stencil`,
-          completedAt: new Date(),
-        });
-      }, 3000);
-    }, 2000);
-    
     return job;
   }
 

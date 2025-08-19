@@ -234,20 +234,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const updatedJob = await storage.getStencilJob(job.id);
         res.json(updatedJob);
       } catch (processError) {
-        // If ComfyDeploy fails, still return the job but with error status
+        // If ComfyDeploy fails, return the job with error status
         await storage.updateStencilJob(job.id, {
           status: "failed",
           errorMessage: String(processError),
         });
         
-        // For development, return a mock processed image
-        const mockProcessedJob = await storage.updateStencilJob(job.id, {
-          status: "completed",
-          processedImageUrl: publicImageUrl, // Use original as fallback
-          completedAt: new Date(),
-        });
-        
-        res.json(mockProcessedJob);
+        const updatedJob = await storage.getStencilJob(job.id);
+        res.json(updatedJob);
       }
     } catch (error) {
       console.error("Error processing stencil:", error);
