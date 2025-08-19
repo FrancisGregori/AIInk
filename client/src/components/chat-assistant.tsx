@@ -92,8 +92,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const handleUseAsReference = async (imageUrl: string) => {
     try {
       toast({
-        title: language === 'es' ? "Cargando..." : "Loading...",
-        description: language === 'es' ? "Convirtiendo imagen a base64" : "Converting image to base64",
+        title: language === 'es' ? "Cargando imagen..." : "Loading image...",
+        description: language === 'es' ? "Preparando imagen para editar" : "Preparing image for editing",
       });
       
       const base64Image = await fetchImageAsBase64(imageUrl);
@@ -106,7 +106,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       }
       
       toast({
-        title: language === 'es' ? "Imagen cargada" : "Image loaded as reference",
+        title: language === 'es' ? "Imagen cargada para editar" : "Image loaded for editing",
         description: language === 'es' ? "Ya puedes editar esta imagen con nuevas instrucciones" : "You can now edit this image with a new prompt",
       });
     } catch (error) {
@@ -701,7 +701,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                               data-testid={`button-use-as-reference-chat-${msg.id}`}
                             >
                               <Edit className="h-4 w-4 mr-1" />
-                              {language === 'es' ? 'Usar como referencia' : 'Use as reference'}
+                              {language === 'es' ? 'Editar imagen' : 'Edit image'}
                             </Button>
                             <Button
                               size="sm"

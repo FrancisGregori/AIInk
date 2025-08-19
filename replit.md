@@ -14,6 +14,7 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - NO hacer cambios ni agregar funcionalidades sin preguntar primero
 - SIEMPRE pedir autorización antes de modificar código
 - USAR EXACTAMENTE el código del repositorio original que funciona - NO inventar nuevas implementaciones
+- TERMINOLOGÍA: Usar "imagen para editar" NO "imagen de referencia" - la app está diseñada para subir y editar imágenes
 
 **REPOSITORIO ORIGINAL:**
 - Design Editor original: https://github.com/darwintattoo/FluxKontextAI (clonado en temp_clone/)
