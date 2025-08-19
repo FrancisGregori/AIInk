@@ -12,8 +12,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/stencil" component={StencilTool} />
-      <Route path="/flux" component={FluxKontext} />
+      <Route path="/stencil-tool" component={StencilTool} />
+      <Route path="/flux-kontext" component={FluxKontext} />
       <Route component={NotFound} />
     </Switch>
   );
