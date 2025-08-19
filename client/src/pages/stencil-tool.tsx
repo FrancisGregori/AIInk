@@ -31,6 +31,7 @@ import {
 import Navigation from "@/components/Navigation";
 import PreviewArea from "@/components/preview-area";
 import StyleSelector from "@/components/style-selector";
+import ImageUploader from "@/components/image-uploader";
 import type { StencilJob, StencilStyle } from "@shared/schema";
 
 interface ProcessingOptions {
@@ -47,8 +48,6 @@ function StencilTool() {
     removeBackground: true,
     lineColor: "black"
   });
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const dropZoneRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   // Fetch stencil styles
@@ -122,38 +121,7 @@ function StencilTool() {
     }
   };
 
-  // Handle drag and drop
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (dropZoneRef.current) {
-      dropZoneRef.current.classList.add("border-white");
-    }
-  };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (dropZoneRef.current) {
-      dropZoneRef.current.classList.remove("border-white");
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (dropZoneRef.current) {
-      dropZoneRef.current.classList.remove("border-white");
-    }
-    
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      setCurrentJob(null);
-    }
-  };
 
   // Process image
   const handleProcess = () => {
@@ -220,61 +188,11 @@ Press and hold the stencil image above and select "Copy", then paste it directly
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           {/* Left Column - Upload & Settings */}
           <div className="xl:col-span-2 lg:col-span-2 space-y-4">
-            {/* Upload Card - More compact */}
-            <Card>
-              <CardContent className="p-4">
-                <div
-                  ref={dropZoneRef}
-                  className="border-2 border-dashed border-zinc-700 rounded-lg p-6 text-center hover:border-zinc-500 transition-colors cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <div className="flex flex-col items-center space-y-3">
-                    <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center">
-                      <Upload className="h-6 w-6 text-zinc-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold">Upload Your Image</h3>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        Drag and drop or click to browse
-                      </p>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="w-full max-w-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        fileInputRef.current?.click();
-                      }}
-                    >
-                      Choose File
-                    </Button>
-                    <p className="text-xs text-zinc-600">
-                      JPG, PNG, GIF up to 10MB
-                    </p>
-                  </div>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                
-                {selectedFile && (
-                  <div className="mt-3 p-2 bg-zinc-900 rounded-lg">
-                    <p className="text-xs truncate">{selectedFile.name}</p>
-                    <p className="text-xs text-zinc-500">
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Image Upload with Drag & Drop */}
+            <ImageUploader
+              selectedFile={selectedFile}
+              onFileSelect={setSelectedFile}
+            />
 
             {/* Style Selection - Visual */}
             <StyleSelector
