@@ -403,33 +403,9 @@ function DesignEditor() {
             {/* Prompt Input */}
             <Card>
               <CardHeader>
-                <CardTitle>{txt.prompt}</CardTitle>
+                <CardTitle>{txt.referenceImage}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={txt.promptPlaceholder}
-                  className="min-h-32"
-                />
-                
-                {/* Quick Suggestions */}
-                <div>
-                  <Label className="text-xs text-zinc-500 mb-2">{txt.suggestions}</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {promptSuggestions.map((sugg, idx) => (
-                      <Badge
-                        key={idx}
-                        variant="secondary"
-                        className="cursor-pointer hover:bg-zinc-700"
-                        onClick={() => setPrompt(sugg[language])}
-                      >
-                        {sugg[language]}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Reference Image */}
                 <div>
                   <Label>{txt.referenceImage}</Label>
@@ -476,6 +452,38 @@ function DesignEditor() {
                     onChange={handleFileSelect}
                     className="hidden"
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Description Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{txt.prompt}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder={txt.promptPlaceholder}
+                  className="min-h-32"
+                />
+                
+                {/* Quick Suggestions */}
+                <div>
+                  <Label className="text-xs text-zinc-500 mb-2">{txt.suggestions}</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {promptSuggestions.map((sugg, idx) => (
+                      <Badge
+                        key={idx}
+                        variant="secondary"
+                        className="cursor-pointer hover:bg-zinc-700"
+                        onClick={() => setPrompt(sugg[language])}
+                      >
+                        {sugg[language]}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
               
