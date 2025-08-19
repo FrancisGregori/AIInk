@@ -64,7 +64,7 @@ function DesignEditor() {
   const [compareMode, setCompareMode] = useState<boolean>(false);
   const [comparePosition, setComparePosition] = useState<number>(50);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
-  const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true
+  const [matchInput, setMatchInput] = useState<boolean>(false); // Start as false until image is loaded
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -184,6 +184,8 @@ function DesignEditor() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setReferencePreview(reader.result as string);
+        // Automatically enable match input when image is loaded
+        setMatchInput(true);
         // Simulate image analysis
         analyzeImage(reader.result as string);
       };
@@ -504,6 +506,22 @@ function DesignEditor() {
                           className="max-h-32 mx-auto rounded"
                         />
                         <p className="text-xs text-zinc-500">{referenceImage?.name}</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReferenceImage(null);
+                            setReferencePreview(null);
+                            setMatchInput(false);
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                          }}
+                          className="text-xs"
+                        >
+                          {language === "es" ? "Eliminar imagen" : "Remove image"}
+                        </Button>
                       </div>
                     ) : (
                       <div className="space-y-2">
