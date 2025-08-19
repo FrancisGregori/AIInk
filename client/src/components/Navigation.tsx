@@ -24,7 +24,7 @@ export default function Navigation() {
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                 <Bot className="text-black h-5 w-5" />
               </div>
-              <span className="text-xl font-semibold">Darwin AI</span>
+              <span className="text-xl font-semibold">TattoostencilPro</span>
             </div>
           </Link>
           
