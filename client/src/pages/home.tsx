@@ -74,121 +74,34 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Secondary Actions */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-12">
+          {/* Tools Navigation */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-12">
             <Link href="/stencil-tool">
               <Button 
                 variant="ghost"
-                className="text-gray-300 hover:text-white hover:bg-white/5 px-6 py-3 rounded-lg transition-colors"
+                className="text-gray-300 hover:text-white hover:bg-white/5 px-8 py-4 rounded-lg transition-colors text-lg font-medium"
                 data-testid="button-stencil-tool"
               >
-                <Image className="mr-2 h-4 w-4" />
-                Stencil Generator
+                <Image className="mr-3 h-5 w-5" />
+                Stencil Tool
               </Button>
             </Link>
-            <span className="text-gray-600 hidden sm:block">•</span>
+            <span className="text-gray-600 hidden sm:block text-xl">•</span>
             <Link href="/design-editor">
               <Button 
                 variant="ghost"
-                className="text-gray-300 hover:text-white hover:bg-white/5 px-6 py-3 rounded-lg transition-colors"
-                data-testid="button-ai-editor"
+                className="text-gray-300 hover:text-white hover:bg-white/5 px-8 py-4 rounded-lg transition-colors text-lg font-medium"
+                data-testid="button-design-editor"
               >
-                <Palette className="mr-2 h-4 w-4" />
-                AI Image Editor
+                <Palette className="mr-3 h-5 w-5" />
+                Design Editor
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Tools Section */}
-      <section className="py-24 bg-dark-gray/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight text-white">
-              HERRAMIENTAS
-            </h2>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              Herramientas avanzadas para artistas del tatuaje
-            </p>
-          </div>
-          
-          {/* Tools Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Stencil Generator */}
-            <Card className="group relative bg-black border-gray-700 hover:border-gray-500 transition-all duration-500 hover:transform hover:scale-[1.02] overflow-hidden">
-              <CardContent className="relative p-8">
-                <div className="mb-6">
-                  <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center mb-4 shadow-lg">
-                    <Image className="text-black h-7 w-7" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3 text-white">Stencil Generator</h3>
-                  <p className="text-gray-400 leading-relaxed">
-                    Convert designs into hand-drawn style stencils
-                  </p>
-                </div>
-                
-                <Link href="/stencil-tool">
-                  <Button 
-                    className="w-full bg-white text-black hover:bg-gray-100 py-3 rounded-lg font-medium transition-all duration-300 shadow-lg"
-                    data-testid="button-stencil-generator"
-                  >
-                    Try Now
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-            
-            {/* AI Image Editor */}
-            <Card className="group relative bg-black border-gray-700 hover:border-gray-500 transition-all duration-500 hover:transform hover:scale-[1.02] overflow-hidden">
-              <CardContent className="relative p-8">
-                <div className="mb-6">
-                  <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center mb-4 shadow-lg">
-                    <Palette className="text-black h-7 w-7" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3 text-white">AI Image Editor</h3>
-                  <p className="text-gray-400 leading-relaxed">
-                    Advanced AI-powered tattoo generator and image editor
-                  </p>
-                </div>
-                
-                <Link href="/design-editor">
-                  <Button 
-                    className="w-full bg-white text-black hover:bg-gray-100 py-3 rounded-lg font-medium transition-all duration-300 shadow-lg"
-                    data-testid="button-ai-image-editor"
-                  >
-                    Try Now
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-            
-            {/* Expression Modifier - Coming Soon */}
-            <Card className="group relative bg-black border-gray-800 overflow-hidden">
-              <CardContent className="relative p-8">
-                <div className="mb-6">
-                  <div className="w-14 h-14 bg-gray-700 rounded-xl flex items-center justify-center mb-4">
-                    <Bot className="text-gray-400 h-7 w-7" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3 text-gray-300">Expression Modifier</h3>
-                  <p className="text-gray-500 leading-relaxed">
-                    Adjust facial expressions and positions
-                  </p>
-                </div>
-                
-                <Button 
-                  disabled
-                  className="w-full bg-gray-700 text-gray-400 py-3 rounded-lg font-medium cursor-not-allowed"
-                  data-testid="button-expression-modifier"
-                >
-                  Coming Soon
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+
 
       {/* Stencil Tool Section */}
       <section id="stencil" className="py-20">
