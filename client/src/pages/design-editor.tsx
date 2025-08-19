@@ -213,31 +213,27 @@ function DesignEditor() {
 
       const result = await response.json();
       
-      const analysisMessage: InkVisionMessage = {
-        role: "assistant",
-        content: result.analysis || (language === "es" 
-          ? "🎨 He analizado tu imagen de referencia. Detecté elementos que podrían funcionar bien en un diseño de tatuaje."
-          : "🎨 I've analyzed your reference image. I detected elements that could work well in a tattoo design."),
-        timestamp: new Date(),
-        suggestions: result.suggestions || [],
-      };
-      setChatMessages(prev => [...prev, analysisMessage]);
+      if (result.analysis) {
+        const analysisMessage: InkVisionMessage = {
+          role: "assistant",
+          content: result.analysis,
+          timestamp: new Date(),
+          suggestions: result.suggestions || [],
+        };
+        setChatMessages(prev => [...prev, analysisMessage]);
+      }
     } catch (error) {
       console.error("Error analyzing image:", error);
-      // Fallback message
-      const analysisMessage: InkVisionMessage = {
+      // Show error only
+      const errorMessage: InkVisionMessage = {
         role: "assistant",
         content: language === "es" 
-          ? "🎨 He detectado tu imagen. ¿Qué estilo de tatuaje te gustaría crear?"
-          : "🎨 I've detected your image. What tattoo style would you like to create?",
+          ? "❌ Error al analizar la imagen. Verifica la configuración de Gemini."
+          : "❌ Error analyzing image. Please check Gemini configuration.",
         timestamp: new Date(),
-        suggestions: [
-          language === "es" ? "Estilo blackwork" : "Blackwork style",
-          language === "es" ? "Estilo geométrico" : "Geometric style",
-          language === "es" ? "Estilo realista" : "Realistic style",
-        ],
+        suggestions: [],
       };
-      setChatMessages(prev => [...prev, analysisMessage]);
+      setChatMessages(prev => [...prev, errorMessage]);
     }
   };
 
@@ -279,9 +275,9 @@ function DesignEditor() {
 
       const assistantMessage: InkVisionMessage = {
         role: "assistant",
-        content: result.response || generateAIResponse(currentInput, language),
+        content: result.response,
         timestamp: new Date(),
-        suggestions: result.suggestions || generateSuggestions(currentInput, language),
+        suggestions: result.suggestions || [],
       };
       setChatMessages(prev => [...prev, assistantMessage]);
       
@@ -291,55 +287,20 @@ function DesignEditor() {
       }
     } catch (error) {
       console.error("Error in InkVision chat:", error);
-      // Fallback to simulated response
-      const assistantMessage: InkVisionMessage = {
+      // Show error message instead of fallback
+      const errorMessage: InkVisionMessage = {
         role: "assistant",
-        content: generateAIResponse(currentInput, language),
+        content: language === "es" 
+          ? "❌ Error al conectar con el asistente IA. Verifica la configuración."
+          : "❌ Error connecting to AI assistant. Please check configuration.",
         timestamp: new Date(),
-        suggestions: generateSuggestions(currentInput, language),
+        suggestions: [],
       };
-      setChatMessages(prev => [...prev, assistantMessage]);
+      setChatMessages(prev => [...prev, errorMessage]);
     }
   };
 
-  // Generate AI response (simulation)
-  const generateAIResponse = (input: string, lang: "es" | "en"): string => {
-    const responses = {
-      es: [
-        "Excelente idea para un diseño. Te sugiero combinar elementos orgánicos con líneas geométricas para crear un contraste visual interesante.",
-        "Para ese estilo, recomendaría usar trazos gruesos y sombras sólidas. Funcionaría muy bien en el antebrazo o la espalda.",
-        "Considera añadir detalles ornamentales para darle más profundidad al diseño. Los patrones repetitivos pueden crear un efecto hipnótico.",
-      ],
-      en: [
-        "Excellent design idea. I suggest combining organic elements with geometric lines to create an interesting visual contrast.",
-        "For that style, I'd recommend using thick strokes and solid shadows. It would work great on the forearm or back.",
-        "Consider adding ornamental details to give more depth to the design. Repetitive patterns can create a hypnotic effect.",
-      ],
-    };
-    
-    const langResponses = responses[lang];
-    return langResponses[Math.floor(Math.random() * langResponses.length)];
-  };
 
-  // Generate suggestions based on input
-  const generateSuggestions = (input: string, lang: "es" | "en"): string[] => {
-    const suggestions = {
-      es: [
-        "Aplicar este estilo al diseño",
-        "Ver ejemplos similares",
-        "Modificar composición",
-        "Cambiar paleta de colores",
-      ],
-      en: [
-        "Apply this style to design",
-        "View similar examples",
-        "Modify composition",
-        "Change color palette",
-      ],
-    };
-    
-    return suggestions[lang].slice(0, 3);
-  };
 
   // Apply suggestion to prompt
   const applySuggestion = (suggestion: string) => {

@@ -379,36 +379,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     });
   };
 
-  // Generate technical prompt based on user input
-  const generateTechnicalPrompt = (input: string, lang: "es" | "en"): string => {
-    const lowerInput = input.toLowerCase();
-    
-    // Common transformations mapping
-    if (lowerInput.includes('frente') || lowerInput.includes('front')) {
-      return "Change to front facing view, maintaining composition and style";
-    }
-    if (lowerInput.includes('color') || lowerInput.includes('colorear')) {
-      return "Add vibrant colors, maintaining original composition";
-    }
-    if (lowerInput.includes('sonri') || lowerInput.includes('smil')) {
-      return "Add smiling expression, maintaining pose and style";
-    }
-    if (lowerInput.includes('quitar fondo') || lowerInput.includes('remove background')) {
-      return "Remove background, maintaining subject with transparent background";
-    }
-    if (lowerInput.includes('realista') || lowerInput.includes('realistic')) {
-      return "Change to photorealistic style, maintaining composition";
-    }
-    if (lowerInput.includes('geometr') || lowerInput.includes('geometric')) {
-      return "Change to geometric style with clean lines, maintaining composition";
-    }
-    if (lowerInput.includes('acuarela') || lowerInput.includes('watercolor')) {
-      return "Change to watercolor painting style, maintaining composition";
-    }
-    
-    // Default technical prompt for modifications
-    return `Modify image based on: ${input}, maintaining overall composition and quality`;
-  };
+
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
