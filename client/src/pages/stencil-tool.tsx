@@ -259,10 +259,16 @@ Press and hold the stencil image above and select "Copy", then paste it directly
     navigator.clipboard.writeText(instructions);
   };
 
-  // Load job from gallery
+  // Load job from gallery - NO permitir si hay proceso en curso
   const loadFromGallery = (job: StencilJob) => {
+    // Prevenir cargar de galería si hay un trabajo procesando
+    if (isProcessing || (currentJob && currentJob.status === 'processing')) {
+      return; // Ignorar la acción silenciosamente
+    }
+    
     setCurrentJob(job);
     setSelectedStyle(job.style);
+    setRecoveredImageUrl(null); // Limpiar imagen recuperada
     // Set a fake file to enable preview
     const fakeFile = new File([""], "loaded-image.png", { type: "image/png" });
     setSelectedFile(fakeFile);
@@ -464,11 +470,13 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                 <ScrollArea className="h-[500px] pr-2">
                   {recentJobs.length > 0 ? (
                     <div className="grid grid-cols-1 gap-2">
-                      {recentJobs.map((job) => (
+                      {recentJobs.map((job) => {
+                        const isDisabled = isProcessing || (currentJob && currentJob.status === 'processing');
+                        return (
                         <div
                           key={job.id}
-                          className="group cursor-pointer"
-                          onClick={() => loadFromGallery(job)}
+                          className={`group ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                          onClick={() => !isDisabled && loadFromGallery(job)}
                         >
                           <div className="relative overflow-hidden rounded-lg bg-zinc-900 aspect-video">
                             <img
@@ -487,7 +495,8 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                             </div>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-8">
