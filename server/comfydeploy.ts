@@ -122,33 +122,26 @@ export class ComfyDeployService {
       
       // Check if outputs is an array with results
       if (Array.isArray(data.outputs) && data.outputs.length > 0) {
-        // Look for the output with output_id: 'output_images' or any output with images
-        for (const output of data.outputs) {
-          if (output?.data) {
-            // Check for images array (ComfyDeploy structure)
-            if (output.data.images && Array.isArray(output.data.images) && output.data.images.length > 0) {
+        // Look specifically for output with output_id: 'output_images'
+        const imageOutput = data.outputs.find((output: any) => output.output_id === 'output_images');
+        
+        if (imageOutput?.data?.images?.[0]?.url) {
+          outputUrl = imageOutput.data.images[0].url;
+          console.log("Found image URL from output_images:", outputUrl);
+        } else {
+          // Fallback: look for any output with images
+          for (const output of data.outputs) {
+            if (output?.data?.images?.[0]?.url) {
               outputUrl = output.data.images[0].url;
               console.log("Found image URL in output:", outputUrl);
-              break; // Stop once we find the first image
-            }
-            
-            // Try other possible field names if no images array
-            if (!outputUrl) {
-              outputUrl = output.data.output_image || 
-                         output.data.image || 
-                         output.data.image_url ||
-                         output.data.url ||
-                         output.data.output;
-              if (outputUrl) break;
+              break;
             }
           }
         }
         
-        // Log the outputs for debugging
+        // Log for debugging
         console.log("All outputs checked, found URL:", outputUrl);
-        
-        // Also log each output for debugging
-        data.outputs.forEach((output, index) => {
+        data.outputs.forEach((output: any, index: number) => {
           console.log(`Output ${index}:`, {
             output_id: output.output_id,
             hasImages: !!output.data?.images,
