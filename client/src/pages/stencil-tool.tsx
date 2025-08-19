@@ -55,25 +55,34 @@ function StencilTool() {
   const { addJob, updateJob, getJob } = useJobs();
   const { activeJobsOfType } = useJobRecovery('stencil');
 
-  // Recuperar trabajo en progreso al cargar la página
+  // Recuperar trabajo en progreso - CARGA INSTANTÁNEA desde localStorage
   useEffect(() => {
     const activeStencilJobs = activeJobsOfType.filter(job => job.status === 'processing');
     if (activeStencilJobs.length > 0 && !currentJob) {
       const latestJob = activeStencilJobs[0];
-      // Cargar el trabajo más reciente
+      
+      // CARGAR INMEDIATAMENTE desde localStorage sin esperar servidor
+      setCurrentJob(latestJob as unknown as StencilJob);
+      setSelectedStyle(latestJob.style || "steven");
+      if (latestJob.status === 'processing') {
+        setIsProcessing(true);
+      }
+      // Configurar la imagen recuperada INMEDIATAMENTE
+      if (latestJob.originalImageUrl) {
+        setRecoveredImageUrl(latestJob.originalImageUrl);
+        const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
+        setSelectedFile(fakeFile);
+      }
+      
+      // Después actualizar desde servidor en segundo plano
       fetch(`/api/stencil/jobs/${latestJob.id}`)
         .then(res => res.json())
-        .then(job => {
-          setCurrentJob(job);
-          setSelectedStyle(job.style);
-          if (job.status === 'processing') {
-            setIsProcessing(true);
-          }
-          // Configurar la imagen recuperada
-          if (job.originalImageUrl) {
-            setRecoveredImageUrl(job.originalImageUrl);
-            const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
-            setSelectedFile(fakeFile);
+        .then(serverJob => {
+          if (serverJob.status !== latestJob.status || serverJob.processedImageUrl !== latestJob.processedImageUrl) {
+            setCurrentJob(serverJob);
+            if (serverJob.status === 'completed') {
+              setIsProcessing(false);
+            }
           }
         })
         .catch(console.error);
@@ -187,7 +196,26 @@ function StencilTool() {
   const handleProcess = () => {
     if (!selectedFile || !selectedStyle) return;
 
+    // MOSTRAR INMEDIATAMENTE el estado de procesamiento
     setIsProcessing(true);
+    
+    // Crear un trabajo temporal inmediatamente para mostrar en el preview
+    const tempJob: StencilJob = {
+      id: 'temp-' + Date.now(),
+      userId: 'demo-user',
+      originalImageUrl: '',
+      processedImageUrl: null,
+      style: selectedStyle,
+      status: 'processing',
+      comfyDeployRunId: null,
+      processingOptions: processingOptions,
+      errorMessage: null,
+      startedAt: new Date(),
+      completedAt: null,
+      createdAt: new Date()
+    };
+    setCurrentJob(tempJob);
+
     const formData = new FormData();
     formData.append("image", selectedFile);
     formData.append("style", selectedStyle);
