@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
-import { summarizeArticle, analyzeSentiment, analyzeImage } from "./gemini";
+import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat } from "./gemini";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
 import { ObjectStorageService } from "./objectStorage";
@@ -355,6 +355,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error analyzing image:", error);
       res.status(500).json({ error: "Error analyzing image" });
+    }
+  });
+
+  // InkVision API Routes for Design Editor
+  
+  // Analyze image for tattoo design suggestions
+  app.post("/api/inkvision/analyze", async (req, res) => {
+    try {
+      const { imageBase64, language = "es" } = req.body;
+      
+      if (!imageBase64) {
+        return res.status(400).json({ error: "No image data provided" });
+      }
+
+      const result = await analyzeImageForTattoo(imageBase64, language);
+      res.json(result);
+    } catch (error) {
+      console.error("Error in InkVision analysis:", error);
+      const { language = "es" } = req.body;
+      res.status(500).json({ 
+        error: "Error analyzing image",
+        analysis: language === "es" 
+          ? "No pude analizar la imagen. Por favor intenta con otra."
+          : "Could not analyze the image. Please try another one.",
+        suggestions: [],
+        styles: []
+      });
+    }
+  });
+
+  // InkVision chat endpoint
+  app.post("/api/inkvision/chat", async (req, res) => {
+    try {
+      const { message, context = "", language = "es" } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: "No message provided" });
+      }
+
+      const result = await inkVisionChat(message, context, language);
+      res.json(result);
+    } catch (error) {
+      console.error("Error in InkVision chat:", error);
+      const { language = "es" } = req.body;
+      res.status(500).json({ 
+        error: "Error processing chat message",
+        response: language === "es" 
+          ? "Disculpa, no pude procesar tu mensaje. ¿Podrías reformularlo?"
+          : "Sorry, I couldn't process your message. Could you rephrase it?",
+        suggestions: []
+      });
     }
   });
 

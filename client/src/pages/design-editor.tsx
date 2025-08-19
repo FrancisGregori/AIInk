@@ -195,24 +195,52 @@ function DesignEditor() {
   };
 
   // Analyze image with InkVision
-  const analyzeImage = (imageData: string) => {
-    const analysisMessage: InkVisionMessage = {
-      role: "assistant",
-      content: language === "es" 
-        ? "🎨 He analizado tu imagen de referencia. Detecté elementos que podrían funcionar bien en un diseño de tatuaje. ¿Te gustaría que sugiera algunos estilos basados en esta imagen?"
-        : "🎨 I've analyzed your reference image. I detected elements that could work well in a tattoo design. Would you like me to suggest some styles based on this image?",
-      timestamp: new Date(),
-      suggestions: [
-        language === "es" ? "Convertir a estilo blackwork" : "Convert to blackwork style",
-        language === "es" ? "Añadir elementos geométricos" : "Add geometric elements",
-        language === "es" ? "Crear versión realista" : "Create realistic version",
-      ],
-    };
-    setChatMessages(prev => [...prev, analysisMessage]);
+  const analyzeImage = async (imageData: string) => {
+    try {
+      // Call InkVision API
+      const response = await fetch("/api/inkvision/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          imageBase64: imageData,
+          language: language,
+        }),
+      });
+
+      const result = await response.json();
+      
+      const analysisMessage: InkVisionMessage = {
+        role: "assistant",
+        content: result.analysis || (language === "es" 
+          ? "🎨 He analizado tu imagen de referencia. Detecté elementos que podrían funcionar bien en un diseño de tatuaje."
+          : "🎨 I've analyzed your reference image. I detected elements that could work well in a tattoo design."),
+        timestamp: new Date(),
+        suggestions: result.suggestions || [],
+      };
+      setChatMessages(prev => [...prev, analysisMessage]);
+    } catch (error) {
+      console.error("Error analyzing image:", error);
+      // Fallback message
+      const analysisMessage: InkVisionMessage = {
+        role: "assistant",
+        content: language === "es" 
+          ? "🎨 He detectado tu imagen. ¿Qué estilo de tatuaje te gustaría crear?"
+          : "🎨 I've detected your image. What tattoo style would you like to create?",
+        timestamp: new Date(),
+        suggestions: [
+          language === "es" ? "Estilo blackwork" : "Blackwork style",
+          language === "es" ? "Estilo geométrico" : "Geometric style",
+          language === "es" ? "Estilo realista" : "Realistic style",
+        ],
+      };
+      setChatMessages(prev => [...prev, analysisMessage]);
+    }
   };
 
   // Handle chat submission
-  const handleChatSubmit = () => {
+  const handleChatSubmit = async () => {
     if (!chatInput.trim()) return;
 
     const userMessage: InkVisionMessage = {
@@ -222,15 +250,36 @@ function DesignEditor() {
     };
 
     setChatMessages(prev => [...prev, userMessage]);
+    const currentInput = chatInput;
     setChatInput("");
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Build context from previous messages
+      const context = chatMessages
+        .slice(-5) // Last 5 messages for context
+        .map(msg => `${msg.role}: ${msg.content}`)
+        .join("\n");
+
+      // Call InkVision chat API
+      const response = await fetch("/api/inkvision/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: currentInput,
+          context: context,
+          language: language,
+        }),
+      });
+
+      const result = await response.json();
+
       const assistantMessage: InkVisionMessage = {
         role: "assistant",
-        content: generateAIResponse(chatInput, language),
+        content: result.response || generateAIResponse(currentInput, language),
         timestamp: new Date(),
-        suggestions: generateSuggestions(chatInput, language),
+        suggestions: result.suggestions || generateSuggestions(currentInput, language),
       };
       setChatMessages(prev => [...prev, assistantMessage]);
       
@@ -238,7 +287,17 @@ function DesignEditor() {
       if (chatScrollRef.current) {
         chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
       }
-    }, 1500);
+    } catch (error) {
+      console.error("Error in InkVision chat:", error);
+      // Fallback to simulated response
+      const assistantMessage: InkVisionMessage = {
+        role: "assistant",
+        content: generateAIResponse(currentInput, language),
+        timestamp: new Date(),
+        suggestions: generateSuggestions(currentInput, language),
+      };
+      setChatMessages(prev => [...prev, assistantMessage]);
+    }
   };
 
   // Generate AI response (simulation)
