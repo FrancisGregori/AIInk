@@ -22,17 +22,17 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-8 mb-16">
             {/* Main Title */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
               <span className="text-white">
                 CREA DISEÑOS PROFESIONALES
               </span>
-              <span className="block text-2xl md:text-3xl lg:text-4xl text-gray-400 font-normal mt-4">
+              <span className="block text-xl md:text-2xl lg:text-3xl text-gray-400 font-normal mt-2">
                 EN SEGUNDOS
               </span>
             </h1>
             
             {/* Subtitle */}
-            <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
               Herramientas IA profesionales para tatuadores. Transforma tus ideas en arte profesional.
             </p>
             
@@ -40,8 +40,8 @@ export default function Home() {
             <div className="pt-4">
               <Link href="/design-editor">
                 <Button 
-                  size="lg"
-                  className="bg-white text-black px-10 py-4 text-lg font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-2xl"
+                  size="default"
+                  className="bg-white text-black px-8 py-3 text-base font-medium rounded-lg hover:bg-gray-100 transition-all duration-300 shadow-lg"
                   data-testid="button-start-creating"
                 >
                   Comenzar gratis
@@ -75,25 +75,25 @@ export default function Home() {
           </div>
 
           {/* Tools Navigation */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-12">
             <Link href="/stencil-tool">
               <Button 
                 variant="ghost"
-                className="text-gray-300 hover:text-white hover:bg-white/5 px-8 py-4 rounded-lg transition-colors text-lg font-medium"
+                className="text-gray-300 hover:text-white hover:bg-white/5 px-6 py-3 rounded-lg transition-colors text-base font-medium"
                 data-testid="button-stencil-tool"
               >
-                <Image className="mr-3 h-5 w-5" />
+                <Image className="mr-2 h-4 w-4" />
                 Stencil Tool
               </Button>
             </Link>
-            <span className="text-gray-600 hidden sm:block text-xl">•</span>
+            <span className="text-gray-600 hidden sm:block text-lg">•</span>
             <Link href="/design-editor">
               <Button 
                 variant="ghost"
-                className="text-gray-300 hover:text-white hover:bg-white/5 px-8 py-4 rounded-lg transition-colors text-lg font-medium"
+                className="text-gray-300 hover:text-white hover:bg-white/5 px-6 py-3 rounded-lg transition-colors text-base font-medium"
                 data-testid="button-design-editor"
               >
-                <Palette className="mr-3 h-5 w-5" />
+                <Palette className="mr-2 h-4 w-4" />
                 Design Editor
               </Button>
             </Link>
@@ -108,8 +108,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">Stencil Tool</h2>
-              <p className="text-xl text-light-gray mb-8 leading-relaxed">
+              <h2 className="text-2xl md:text-3xl font-bold mb-6">Stencil Tool</h2>
+              <p className="text-base md:text-lg text-light-gray mb-8 leading-relaxed">
                 Transforma cualquier imagen en un stencil profesional con nuestros algoritmos de IA. 
                 Perfecto para artistas, diseñadores y profesionales del tatuaje.
               </p>
@@ -219,8 +219,8 @@ export default function Home() {
             </div>
             
             <div className="order-1 lg:order-2">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">Design Editor</h2>
-              <p className="text-xl text-light-gray mb-8 leading-relaxed">
+              <h2 className="text-2xl md:text-3xl font-bold mb-6">Design Editor</h2>
+              <p className="text-base md:text-lg text-light-gray mb-8 leading-relaxed">
                 Editor de diseños potenciado por IA con asistente Gemini integrado. 
                 Crea, edita y perfecciona tus diseños con ayuda inteligente.
               </p>
