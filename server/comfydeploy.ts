@@ -104,15 +104,27 @@ export class ComfyDeployService {
 
       const data = await response.json();
       
+      console.log("ComfyDeploy status response:", {
+        runId,
+        status: data.status,
+        outputs: data.outputs,
+      });
+      
       // Map ComfyDeploy status to our status
       let status = data.status?.toLowerCase() || "processing";
-      if (status === "success") {
+      if (status === "success" || status === "completed") {
         status = "completed";
       }
       
+      // Get the output image URL from the response
+      let outputUrl = data.outputs?.output_image || 
+                      data.outputs?.image || 
+                      data.outputs?.image_url ||
+                      data.output_url;
+      
       return {
         status,
-        outputUrl: data.outputs?.output_image || data.outputs?.image || data.outputs?.image_url,
+        outputUrl,
         error: data.error,
       };
     } catch (error) {
