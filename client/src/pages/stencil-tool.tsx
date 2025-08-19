@@ -29,6 +29,7 @@ import {
   X
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import PreviewArea from "@/components/preview-area";
 import type { StencilJob, StencilStyle } from "@shared/schema";
 
 interface ProcessingOptions {
@@ -38,7 +39,6 @@ interface ProcessingOptions {
 
 function StencilTool() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string>("steven");
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentJob, setCurrentJob] = useState<StencilJob | null>(null);
@@ -46,8 +46,6 @@ function StencilTool() {
     removeBackground: true,
     lineColor: "black"
   });
-  const [viewMode, setViewMode] = useState<"preview" | "sidebyside" | "slider">("preview");
-  const [sliderPosition, setSliderPosition] = useState(50);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -119,8 +117,6 @@ function StencilTool() {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
       setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
       setCurrentJob(null);
     }
   };
@@ -175,10 +171,12 @@ function StencilTool() {
   // Reset all
   const handleReset = () => {
     setSelectedFile(null);
-    setPreviewUrl(null);
     setCurrentJob(null);
-    setViewMode("preview");
-    setSliderPosition(50);
+    setSelectedStyle("steven");
+    setProcessingOptions({
+      removeBackground: true,
+      lineColor: "black"
+    });
   };
 
   // Download processed image
@@ -201,9 +199,10 @@ Press and hold the stencil image above and select "Copy", then paste it directly
   // Load job from gallery
   const loadFromGallery = (job: StencilJob) => {
     setCurrentJob(job);
-    setPreviewUrl(job.originalImageUrl);
     setSelectedStyle(job.style);
-    setViewMode("sidebyside");
+    // Set a fake file to enable preview
+    const fakeFile = new File([""], "loaded-image.png", { type: "image/png" });
+    setSelectedFile(fakeFile);
   };
 
   return (
@@ -442,189 +441,40 @@ Press and hold the stencil image above and select "Copy", then paste it directly
 
           {/* Middle Column - Preview (Adaptive) */}
           <div className="xl:col-span-2 lg:col-span-2">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Preview</CardTitle>
-                  {currentJob && (
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant={viewMode === "preview" ? "default" : "ghost"}
-                        onClick={() => setViewMode("preview")}
-                        className="h-7 px-2"
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={viewMode === "sidebyside" ? "default" : "ghost"}
-                        onClick={() => setViewMode("sidebyside")}
-                        className="h-7 px-2"
-                      >
-                        <Columns className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={viewMode === "slider" ? "default" : "ghost"}
-                        onClick={() => setViewMode("slider")}
-                        className="h-7 px-2"
-                      >
-                        <SlidersHorizontal className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {currentJob ? (
-                  <div className="space-y-3">
-                    {/* View Mode Display - Adaptive height */}
-                    <div className="relative bg-zinc-900 rounded-lg overflow-hidden">
-                      {viewMode === "preview" && (
-                        <img
-                          src={currentJob.processedImageUrl || ""}
-                          alt="Processed"
-                          className="w-full h-auto object-contain"
-                        />
-                      )}
-                      
-                      {viewMode === "sidebyside" && (
-                        <div className="flex gap-2">
-                          <div className="flex-1 bg-white rounded p-1">
-                            <img
-                              src={previewUrl || ""}
-                              alt="Original"
-                              className="w-full h-auto object-contain"
-                            />
-                          </div>
-                          <div className="flex-1 bg-black rounded p-1">
-                            <img
-                              src={currentJob.processedImageUrl || ""}
-                              alt="Processed"
-                              className="w-full h-auto object-contain"
-                            />
-                          </div>
-                        </div>
-                      )}
-                      
-                      {viewMode === "slider" && (
-                        <div className="relative">
-                          <img
-                            src={currentJob.processedImageUrl || ""}
-                            alt="Processed"
-                            className="w-full h-auto"
-                          />
-                          <div
-                            className="absolute inset-0 overflow-hidden"
-                            style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
-                          >
-                            <img
-                              src={previewUrl || ""}
-                              alt="Original"
-                              className="absolute inset-0 w-full h-full object-cover"
-                            />
-                          </div>
-                          <div
-                            className="absolute top-0 bottom-0 w-0.5 bg-white cursor-ew-resize"
-                            style={{ left: `${sliderPosition}%` }}
-                            onMouseDown={(e) => {
-                              const startX = e.clientX;
-                              const startPos = sliderPosition;
-                              const container = e.currentTarget.parentElement;
-                              if (!container) return;
-                              const containerWidth = container.offsetWidth;
-                              
-                              const handleMouseMove = (e: MouseEvent) => {
-                                const delta = e.clientX - startX;
-                                const deltaPercent = (delta / containerWidth) * 100;
-                                const newPos = Math.max(0, Math.min(100, startPos + deltaPercent));
-                                setSliderPosition(newPos);
-                              };
-                              
-                              const handleMouseUp = () => {
-                                document.removeEventListener("mousemove", handleMouseMove);
-                                document.removeEventListener("mouseup", handleMouseUp);
-                              };
-                              
-                              document.addEventListener("mousemove", handleMouseMove);
-                              document.addEventListener("mouseup", handleMouseUp);
-                            }}
-                          >
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-0.5">
-                              <ChevronLeft className="h-2 w-2 text-black inline" />
-                              <ChevronRight className="h-2 w-2 text-black inline" />
-                            </div>
-                          </div>
-                          <div className="absolute top-2 left-2 bg-white text-black px-1.5 py-0.5 rounded text-xs">
-                            Original
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Job Info - Compact */}
-                    <div className="flex justify-between items-center text-xs">
-                      <div className="flex items-center gap-1">
-                        <span className="text-zinc-500">Style:</span>
-                        <span className="font-medium">{currentJob.style}</span>
-                      </div>
-                      <Badge 
-                        variant={currentJob.status === "completed" ? "default" : "secondary"}
-                        className="text-xs h-5"
-                      >
-                        {currentJob.status === "completed" ? "Completed" : currentJob.status}
-                      </Badge>
-                    </div>
-
-                    {/* Download Section - Compact */}
-                    <div className="bg-zinc-900 rounded-lg p-3">
-                      <Button
-                        onClick={handleDownload}
-                        className="w-full mb-2"
-                        size="sm"
-                      >
-                        <Download className="mr-2 h-3 w-3" />
-                        Download PNG
-                      </Button>
-                      
-                      <div className="text-xs text-zinc-400 space-y-1">
-                        <p>Procreate: Press & hold image → Copy → Paste</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-xs"
-                          onClick={copyProcreateInstructions}
-                        >
-                          <Copy className="h-2.5 w-2.5 mr-1" />
-                          Copy tip
-                        </Button>
-                      </div>
-                    </div>
+            <PreviewArea 
+              selectedFile={selectedFile}
+              selectedStyle={selectedStyle}
+              jobId={currentJob?.id || null}
+            />
+            
+            {/* Download Section */}
+            {currentJob?.status === "completed" && currentJob.processedImageUrl && (
+              <Card className="mt-4">
+                <CardContent className="p-4">
+                  <Button
+                    onClick={handleDownload}
+                    className="w-full mb-2"
+                    size="sm"
+                  >
+                    <Download className="mr-2 h-3 w-3" />
+                    Download PNG
+                  </Button>
+                  
+                  <div className="text-xs text-zinc-400 space-y-1">
+                    <p>Procreate: Press & hold image → Copy → Paste</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={copyProcreateInstructions}
+                    >
+                      <Copy className="h-2.5 w-2.5 mr-1" />
+                      Copy tip
+                    </Button>
                   </div>
-                ) : previewUrl ? (
-                  <div className="space-y-2">
-                    <div className="bg-zinc-900 rounded-lg p-2">
-                      <img
-                        src={previewUrl}
-                        alt="Original"
-                        className="w-full h-auto rounded"
-                      />
-                    </div>
-                    <p className="text-center text-xs text-zinc-500">
-                      Imagen lista para procesar
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="text-center">
-                      <Upload className="h-8 w-8 mx-auto mb-2 text-zinc-600" />
-                      <p className="text-sm text-zinc-500">No image selected</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Column - Gallery */}
