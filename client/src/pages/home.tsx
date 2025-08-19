@@ -19,15 +19,12 @@ export default function Home() {
           }}></div>
         </div>
         
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="space-y-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-8 mb-16">
             {/* Main Title */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               <span className="text-white">
-                CREA DISEÑOS
-              </span>
-              <span className="block text-white">
-                PROFESIONALES
+                CREA DISEÑOS PROFESIONALES
               </span>
               <span className="block text-2xl md:text-3xl lg:text-4xl text-gray-400 font-normal mt-4">
                 EN SEGUNDOS
@@ -36,49 +33,70 @@ export default function Home() {
             
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-              Herramientas IA profesionales para tatuadores.
-              <span className="block mt-2 text-gray-400">
-                Transforma tus ideas en arte profesional con tecnología avanzada.
-              </span>
+              Herramientas IA profesionales para tatuadores. Transforma tus ideas en arte profesional.
             </p>
             
             {/* CTA Button */}
-            <div className="pt-8">
+            <div className="pt-4">
               <Link href="/design-editor">
                 <Button 
                   size="lg"
-                  className="bg-white text-black px-10 py-6 text-lg font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-2xl"
+                  className="bg-white text-black px-10 py-4 text-lg font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-2xl"
                   data-testid="button-start-creating"
                 >
                   Comenzar gratis
                 </Button>
               </Link>
             </div>
-            
-            {/* Secondary Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-              <Link href="/stencil-tool">
-                <Button 
-                  variant="ghost"
-                  className="text-gray-300 hover:text-white hover:bg-white/5 px-6 py-3 rounded-lg transition-colors"
-                  data-testid="button-stencil-tool"
-                >
-                  <Image className="mr-2 h-4 w-4" />
-                  Stencil Generator
-                </Button>
-              </Link>
-              <span className="text-gray-600 hidden sm:block">•</span>
-              <Link href="/design-editor">
-                <Button 
-                  variant="ghost"
-                  className="text-gray-300 hover:text-white hover:bg-white/5 px-6 py-3 rounded-lg transition-colors"
-                  data-testid="button-ai-editor"
-                >
-                  <Palette className="mr-2 h-4 w-4" />
-                  AI Image Editor
-                </Button>
-              </Link>
+          </div>
+
+          {/* Video/Media Section */}
+          <div className="relative max-w-5xl mx-auto">
+            <div className="relative bg-gray-900 rounded-2xl border border-gray-700 overflow-hidden shadow-2xl">
+              {/* Video Placeholder - Replace with actual video */}
+              <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 opacity-80 hover:opacity-100 transition-opacity cursor-pointer">
+                    <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                    </svg>
+                  </div>
+                  <p className="text-gray-300 text-lg font-medium">Ver demo de las herramientas</p>
+                  <p className="text-gray-500 text-sm mt-2">Video demostrativo próximamente</p>
+                </div>
+              </div>
+              
+              {/* Sample thumbnails around video */}
+              <div className="absolute -left-4 top-8 w-24 h-32 bg-gray-700 rounded-lg opacity-80 hidden lg:block"></div>
+              <div className="absolute -left-8 bottom-16 w-28 h-20 bg-gray-600 rounded-lg opacity-60 hidden lg:block"></div>
+              <div className="absolute -right-4 top-12 w-24 h-32 bg-gray-700 rounded-lg opacity-80 hidden lg:block"></div>
+              <div className="absolute -right-8 bottom-20 w-28 h-20 bg-gray-600 rounded-lg opacity-60 hidden lg:block"></div>
             </div>
+          </div>
+
+          {/* Secondary Actions */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-12">
+            <Link href="/stencil-tool">
+              <Button 
+                variant="ghost"
+                className="text-gray-300 hover:text-white hover:bg-white/5 px-6 py-3 rounded-lg transition-colors"
+                data-testid="button-stencil-tool"
+              >
+                <Image className="mr-2 h-4 w-4" />
+                Stencil Generator
+              </Button>
+            </Link>
+            <span className="text-gray-600 hidden sm:block">•</span>
+            <Link href="/design-editor">
+              <Button 
+                variant="ghost"
+                className="text-gray-300 hover:text-white hover:bg-white/5 px-6 py-3 rounded-lg transition-colors"
+                data-testid="button-ai-editor"
+              >
+                <Palette className="mr-2 h-4 w-4" />
+                AI Image Editor
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
