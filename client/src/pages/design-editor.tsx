@@ -18,20 +18,14 @@ import { Switch } from "@/components/ui/switch";
 import ChatAssistant, { ChatAssistantRef } from "@/components/chat-assistant";
 import { 
   Sparkles, 
-  Send, 
   Download, 
   Image as ImageIcon, 
   Upload,
   Loader2,
-  MessageSquare,
-  Wand2,
   Settings,
   History,
   Copy,
   Languages,
-  Brain,
-  Bot,
-  User,
   RefreshCw,
   Maximize2,
   Camera,
@@ -41,14 +35,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
-import type { FluxProject, GeminiChat } from "@shared/schema";
-
-interface InkVisionMessage {
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-  suggestions?: string[];
-}
+import type { FluxProject } from "@shared/schema";
 
 function DesignEditor() {
   const [prompt, setPrompt] = useState<string>("");
@@ -59,15 +46,12 @@ function DesignEditor() {
   const [width, setWidth] = useState<number>(1024);
   const [height, setHeight] = useState<number>(1024);
   const [language, setLanguage] = useState<"es" | "en">("es");
-  const [chatMessages, setChatMessages] = useState<InkVisionMessage[]>([]);
-  const [chatInput, setChatInput] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [compareMode, setCompareMode] = useState<boolean>(false);
   const [comparePosition, setComparePosition] = useState<number>(50);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
   const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true for Match Input
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
   const chatAssistantRef = useRef<ChatAssistantRef>(null);
   const queryClient = useQueryClient();
 
@@ -189,125 +173,17 @@ function DesignEditor() {
         // Automatically select Match Input when image is loaded
         setAspectRatio("Match Input");
         setMatchInput(true);
-        // Simulate image analysis
-        analyzeImage(reader.result as string);
+
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Analyze image with InkVision
-  const analyzeImage = async (imageData: string) => {
-    try {
-      // Call InkVision API
-      const response = await fetch("/api/inkvision/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          imageBase64: imageData,
-          language: language,
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (result.analysis) {
-        const analysisMessage: InkVisionMessage = {
-          role: "assistant",
-          content: result.analysis,
-          timestamp: new Date(),
-          suggestions: result.suggestions || [],
-        };
-        setChatMessages(prev => [...prev, analysisMessage]);
-      }
-    } catch (error) {
-      console.error("Error analyzing image:", error);
-      // Show error only
-      const errorMessage: InkVisionMessage = {
-        role: "assistant",
-        content: language === "es" 
-          ? "❌ Error al analizar la imagen. Verifica la configuración de Gemini."
-          : "❌ Error analyzing image. Please check Gemini configuration.",
-        timestamp: new Date(),
-        suggestions: [],
-      };
-      setChatMessages(prev => [...prev, errorMessage]);
-    }
-  };
-
-  // Handle chat submission
-  const handleChatSubmit = async () => {
-    if (!chatInput.trim()) return;
-
-    const userMessage: InkVisionMessage = {
-      role: "user",
-      content: chatInput,
-      timestamp: new Date(),
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
-    const currentInput = chatInput;
-    setChatInput("");
-
-    try {
-      // Build context from previous messages
-      const context = chatMessages
-        .slice(-5) // Last 5 messages for context
-        .map(msg => `${msg.role}: ${msg.content}`)
-        .join("\n");
-
-      // Call InkVision chat API
-      const response = await fetch("/api/inkvision/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: currentInput,
-          context: context,
-          language: language,
-        }),
-      });
-
-      const result = await response.json();
-
-      const assistantMessage: InkVisionMessage = {
-        role: "assistant",
-        content: result.response,
-        timestamp: new Date(),
-        suggestions: result.suggestions || [],
-      };
-      setChatMessages(prev => [...prev, assistantMessage]);
-      
-      // Auto-scroll to bottom
-      if (chatScrollRef.current) {
-        chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-      }
-    } catch (error) {
-      console.error("Error in InkVision chat:", error);
-      // Show error message instead of fallback
-      const errorMessage: InkVisionMessage = {
-        role: "assistant",
-        content: language === "es" 
-          ? "❌ Error al conectar con el asistente IA. Verifica la configuración."
-          : "❌ Error connecting to AI assistant. Please check configuration.",
-        timestamp: new Date(),
-        suggestions: [],
-      };
-      setChatMessages(prev => [...prev, errorMessage]);
-    }
-  };
 
 
 
-  // Apply suggestion to prompt
-  const applySuggestion = (suggestion: string) => {
-    setPrompt(prev => `${prev} ${suggestion}`.trim());
-    // Auto-scroll to generation area and trigger generation
-    handleGenerate();
-  };
+
+
 
   // Handle design generation
   const handleGenerate = () => {
@@ -411,83 +287,7 @@ function DesignEditor() {
           <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar - InkVision Chat */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
-                  {txt.inkVision}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea ref={chatScrollRef} className="h-96 pr-4">
-                  <div className="space-y-4">
-                    {chatMessages.length === 0 && (
-                      <div className="text-center text-zinc-500 py-8">
-                        <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">{txt.messagePlaceholder}</p>
-                      </div>
-                    )}
-                    
-                    {chatMessages.map((msg, idx) => (
-                      <div key={idx} className="space-y-2">
-                        <div className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}>
-                          {msg.role === "assistant" && <Bot className="h-5 w-5 mt-1 text-zinc-400" />}
-                          <div className={`flex-1 rounded-lg p-3 ${
-                            msg.role === "user" 
-                              ? "bg-zinc-800 ml-8" 
-                              : "bg-zinc-900 mr-8"
-                          }`}>
-                            <p className="text-sm">{msg.content}</p>
-                          </div>
-                          {msg.role === "user" && <User className="h-5 w-5 mt-1 text-zinc-400" />}
-                        </div>
-                        
-                        {msg.suggestions && (
-                          <div className="ml-7 space-y-1">
-                            {msg.suggestions.map((sugg, sIdx) => (
-                              <Button
-                                key={sIdx}
-                                variant="ghost"
-                                size="sm"
-                                className="w-full justify-start text-xs"
-                                onClick={() => applySuggestion(sugg)}
-                              >
-                                <Wand2 className="h-3 w-3 mr-1" />
-                                {sugg}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-                
-                <Separator className="my-3" />
-                
-                <div className="flex gap-2">
-                  <Input
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleChatSubmit()}
-                    placeholder={txt.messagePlaceholder}
-                    className="flex-1"
-                  />
-                  <Button
-                    size="icon"
-                    onClick={handleChatSubmit}
-                    disabled={!chatInput.trim()}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Prompt Input */}
