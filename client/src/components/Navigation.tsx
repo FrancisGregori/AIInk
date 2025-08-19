@@ -16,69 +16,85 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-dark-gray">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-b border-gray-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+          {/* Logo */}
           <Link href="/">
-            <div className="flex items-center space-x-2 cursor-pointer" data-testid="link-home-nav">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <Bot className="text-black h-5 w-5" />
+            <div className="flex items-center space-x-3 cursor-pointer group" data-testid="link-home-nav">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Bot className="text-white h-5 w-5" />
               </div>
-              <span className="text-xl font-semibold">TattoostencilPro</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                TattooStencilPro
+              </span>
             </div>
           </Link>
           
+          {/* Center Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {location === "/" ? (
               <>
                 <button 
                   onClick={() => scrollToSection("inicio")} 
-                  className="text-light-gray hover:text-white transition-colors"
+                  className="text-gray-300 hover:text-white transition-colors font-medium"
                   data-testid="button-nav-inicio"
                 >
-                  Inicio
+                  Home
                 </button>
                 <button 
                   onClick={() => scrollToSection("stencil")} 
-                  className="text-light-gray hover:text-white transition-colors"
+                  className="text-gray-300 hover:text-white transition-colors font-medium"
                   data-testid="button-nav-stencil"
                 >
-                  Stencil Tool
+                  Tools
                 </button>
                 <button 
                   onClick={() => scrollToSection("flux")} 
-                  className="text-light-gray hover:text-white transition-colors"
+                  className="text-gray-300 hover:text-white transition-colors font-medium"
                   data-testid="button-nav-design"
                 >
-                  Design Editor
-                </button>
-                <button 
-                  onClick={() => scrollToSection("contacto")} 
-                  className="text-light-gray hover:text-white transition-colors"
-                  data-testid="button-nav-contacto"
-                >
-                  Contacto
+                  Features
                 </button>
               </>
             ) : (
               <>
                 <Link href="/">
-                  <span className="text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-nav-home">
-                    Inicio
+                  <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-home">
+                    Home
                   </span>
                 </Link>
                 <Link href="/stencil-tool">
-                  <span className="text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-nav-stencil">
-                    Stencil Tool
+                  <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-stencil">
+                    Stencil
                   </span>
                 </Link>
                 <Link href="/design-editor">
-                  <span className="text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-nav-design">
-                    Design Editor
+                  <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-design">
+                    Editor
                   </span>
                 </Link>
               </>
             )}
+          </div>
+          
+          {/* Right Side Actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors"
+              data-testid="button-nav-pricing"
+            >
+              Pricing
+            </Button>
+            <Button
+              size="sm"
+              className="bg-white text-black hover:bg-gray-100 font-medium px-6"
+              data-testid="button-nav-signup"
+            >
+              Sign Up
+            </Button>
           </div>
           
           <Button
