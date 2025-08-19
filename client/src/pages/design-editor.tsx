@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
 import { 
   Sparkles, 
   Send, 
@@ -34,7 +36,8 @@ import {
   Camera,
   Palette,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import type { FluxProject, GeminiChat } from "@shared/schema";
@@ -60,6 +63,8 @@ function DesignEditor() {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [compareMode, setCompareMode] = useState<boolean>(false);
   const [comparePosition, setComparePosition] = useState<number>(50);
+  const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
+  const [matchInput, setMatchInput] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -291,6 +296,7 @@ function DesignEditor() {
       width,
       height,
       referenceImage: referencePreview,
+      matchInput,
     };
     
     createProjectMutation.mutate({ prompt, settings });
@@ -498,57 +504,81 @@ function DesignEditor() {
 
             {/* Generation Settings */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  {txt.settings}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Model Selection */}
-                <div>
-                  <Label>{txt.model}</Label>
-                  <RadioGroup value={modelVariant} onValueChange={setModelVariant} className="mt-2">
-                    <div className="flex gap-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="pro" id="pro" />
-                        <Label htmlFor="pro">Pro</Label>
+              <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-zinc-900/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Settings className="h-5 w-5" />
+                        {txt.settings}
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="max" id="max" />
-                        <Label htmlFor="max">Max</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {/* Aspect Ratio */}
-                <div>
-                  <Label>{txt.aspectRatio}</Label>
-                  <RadioGroup value={aspectRatio} onValueChange={setAspectRatio} className="mt-2">
-                    <div className="grid grid-cols-5 gap-2">
-                      {["1:1", "3:4", "4:3", "16:9", "9:16"].map((ratio) => (
-                        <div key={ratio} className="flex items-center space-x-1">
-                          <RadioGroupItem value={ratio} id={ratio} />
-                          <Label htmlFor={ratio} className="text-xs">{ratio}</Label>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-4">
+                    {/* Model Selection */}
+                    <div>
+                      <Label>{txt.model}</Label>
+                      <RadioGroup value={modelVariant} onValueChange={setModelVariant} className="mt-2">
+                        <div className="flex gap-4">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="pro" id="pro" />
+                            <Label htmlFor="pro">Pro</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="max" id="max" />
+                            <Label htmlFor="max">Max</Label>
+                          </div>
                         </div>
-                      ))}
+                      </RadioGroup>
                     </div>
-                  </RadioGroup>
-                </div>
 
-                {/* Dimensions Display */}
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <Label className="text-xs">{txt.width}</Label>
-                    <p className="text-sm font-mono">{width}px</p>
-                  </div>
-                  <div className="flex-1">
-                    <Label className="text-xs">{txt.height}</Label>
-                    <p className="text-sm font-mono">{height}px</p>
-                  </div>
-                </div>
-              </CardContent>
+                    {/* Match Input Option */}
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="match-input" className="cursor-pointer">
+                        Match Input
+                        <span className="text-xs text-zinc-500 block">
+                          {language === "es" ? "Coincidir con imagen de entrada" : "Match input image"}
+                        </span>
+                      </Label>
+                      <Switch 
+                        id="match-input"
+                        checked={matchInput}
+                        onCheckedChange={setMatchInput}
+                      />
+                    </div>
+
+                    {/* Aspect Ratio */}
+                    <div>
+                      <Label>{txt.aspectRatio}</Label>
+                      <RadioGroup value={aspectRatio} onValueChange={setAspectRatio} className="mt-2">
+                        <div className="grid grid-cols-5 gap-2">
+                          {["1:1", "3:4", "4:3", "16:9", "9:16"].map((ratio) => (
+                            <div key={ratio} className="flex items-center space-x-1">
+                              <RadioGroupItem value={ratio} id={ratio} />
+                              <Label htmlFor={ratio} className="text-xs">{ratio}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Dimensions Display */}
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <Label className="text-xs">{txt.width}</Label>
+                        <p className="text-sm font-mono">{width}px</p>
+                      </div>
+                      <div className="flex-1">
+                        <Label className="text-xs">{txt.height}</Label>
+                        <p className="text-sm font-mono">{height}px</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
             </Card>
           </div>
 
