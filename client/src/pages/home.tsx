@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bot, Image, Palette, Shield, Rocket, Settings, Upload, Cog, Download, Edit, Zap, CheckCircle } from "lucide-react";
+import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
 
 export default function Home() {
   return (
@@ -306,13 +307,9 @@ export default function Home() {
           <div className="border-t border-medium-gray pt-8 text-center">
             <div className="flex items-center justify-center mb-4">
               <img 
-                src="/attached_assets/1Asset 3zzz_1755637024508.png" 
+                src={logoPath} 
                 alt="TattooStencilPro" 
                 className="h-8 w-auto"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.innerHTML = '<span class="text-xl font-bold text-white">TattooStencilPro</span>';
-                }}
               />
             </div>
             <p className="text-light-gray">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Bot, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,13 +24,9 @@ export default function Navigation() {
           <Link href="/">
             <div className="flex items-center cursor-pointer group" data-testid="link-home-nav">
               <img 
-                src="/attached_assets/1Asset 3zzz_1755637024508.png" 
+                src={logoPath} 
                 alt="TattooStencilPro" 
                 className="h-8 w-auto group-hover:scale-105 transition-transform"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.innerHTML = '<span class="text-xl font-bold text-white">TattooStencilPro</span>';
-                }}
               />
             </div>
           </Link>
