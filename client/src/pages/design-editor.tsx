@@ -67,7 +67,7 @@ function DesignEditor() {
       subtitle: "Editor de diseños con IA",
       prompt: "Descripción del diseño",
       promptPlaceholder: "Describe tu diseño de tatuaje aquí...",
-      referenceImage: "Imagen de referencia",
+      referenceImage: "Imagen para editar",
       generate: "Generar diseño",
       regenerate: "Regenerar",
       download: "Descargar",
@@ -100,7 +100,7 @@ function DesignEditor() {
       subtitle: "AI Design Editor",
       prompt: "Design description",
       promptPlaceholder: "Describe your tattoo design here...",
-      referenceImage: "Reference image",
+      referenceImage: "Image to edit",
       generate: "Generate design",
       regenerate: "Regenerate",
       download: "Download",
@@ -465,7 +465,7 @@ function DesignEditor() {
                     ) : (
                       <div className="space-y-2">
                         <Upload className="h-8 w-8 mx-auto text-zinc-500" />
-                        <p className="text-sm text-zinc-500">{txt.referenceImage}</p>
+                        <p className="text-sm text-zinc-500">{language === 'es' ? 'Sube una imagen para editar' : 'Upload an image to edit'}</p>
                       </div>
                     )}
                   </div>
