@@ -500,7 +500,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                     {msg.content}
                   </p>
                   {msg.role === 'assistant' && msg.content && !msg.isAnalyzing && isPromptMessage(msg.content) && (
-                    <div className="absolute -top-2 -right-2 flex gap-1">
+                    <div className="mt-3 flex gap-2 justify-end">
                       <Button
                         onClick={() => copyMessage(msg.content)}
                         variant="ghost"
