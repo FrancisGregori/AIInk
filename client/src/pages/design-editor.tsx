@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -12,686 +10,480 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { 
   Sparkles, 
-  Send, 
-  Download, 
-  Image as ImageIcon, 
   Upload,
   Loader2,
-  MessageSquare,
-  Wand2,
-  Settings,
-  History,
-  Copy,
-  Languages,
-  Brain,
-  Bot,
-  User,
+  Download,
   RefreshCw,
+  History,
+  Eye,
+  EyeOff,
   Maximize2,
-  Camera,
-  Palette,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Info,
+  Wand2,
+  Image as ImageIcon,
+  Settings,
+  Copy,
+  Trash2,
+  X
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
-import type { FluxProject, GeminiChat } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
-interface InkVisionMessage {
-  role: "user" | "assistant";
-  content: string;
+interface EditHistory {
+  id: string;
+  prompt: string;
+  originalImage: string;
+  editedImage: string;
   timestamp: Date;
-  suggestions?: string[];
+  settings: {
+    strength: number;
+    style: string;
+  };
 }
 
 function DesignEditor() {
-  const [prompt, setPrompt] = useState<string>("");
-  const [referenceImage, setReferenceImage] = useState<File | null>(null);
-  const [referencePreview, setReferencePreview] = useState<string | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<string>("1:1");
-  const [modelVariant, setModelVariant] = useState<string>("pro");
-  const [width, setWidth] = useState<number>(512);
-  const [height, setHeight] = useState<number>(512);
-  const [language, setLanguage] = useState<"es" | "en">("es");
-  const [chatMessages, setChatMessages] = useState<InkVisionMessage[]>([]);
-  const [chatInput, setChatInput] = useState<string>("");
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [compareMode, setCompareMode] = useState<boolean>(false);
-  const [comparePosition, setComparePosition] = useState<number>(50);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
+  const [editedImage, setEditedImage] = useState<string | null>(null);
+  const [editPrompt, setEditPrompt] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [editHistory, setEditHistory] = useState<EditHistory[]>([]);
+  const [strength, setStrength] = useState([0.7]);
+  const [editStyle, setEditStyle] = useState("auto");
+  const [showComparison, setShowComparison] = useState(true);
+  const [comparePosition, setComparePosition] = useState(50);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Translations
-  const t = {
-    es: {
-      title: "Design Editor",
-      subtitle: "Editor de diseños con IA",
-      prompt: "Descripción del diseño",
-      promptPlaceholder: "Describe tu diseño de tatuaje aquí...",
-      referenceImage: "Imagen de referencia",
-      generate: "Generar diseño",
-      regenerate: "Regenerar",
-      download: "Descargar",
-      share: "Compartir",
-      aspectRatio: "Proporción",
-      model: "Modelo",
-      dimensions: "Dimensiones",
-      width: "Ancho",
-      height: "Alto",
-      inkVision: "InkVision - Asistente IA",
-      sendMessage: "Enviar mensaje",
-      messagePlaceholder: "Pregunta sobre diseños o solicita ideas...",
-      apply: "Aplicar",
-      compareMode: "Modo comparación",
-      history: "Historial",
-      settings: "Configuración",
-      analyzing: "Analizando imagen...",
-      generating: "Generando diseño...",
-      suggestions: "Sugerencias rápidas",
-      styles: "Estilos populares",
-      traditional: "Tradicional",
-      realism: "Realismo",
-      geometric: "Geométrico",
-      watercolor: "Acuarela",
-      blackwork: "Blackwork",
-      neoTraditional: "Neo-tradicional",
-    },
-    en: {
-      title: "Design Editor",
-      subtitle: "AI Design Editor",
-      prompt: "Design description",
-      promptPlaceholder: "Describe your tattoo design here...",
-      referenceImage: "Reference image",
-      generate: "Generate design",
-      regenerate: "Regenerate",
-      download: "Download",
-      share: "Share",
-      aspectRatio: "Aspect ratio",
-      model: "Model",
-      dimensions: "Dimensions",
-      width: "Width",
-      height: "Height",
-      inkVision: "InkVision - AI Assistant",
-      sendMessage: "Send message",
-      messagePlaceholder: "Ask about designs or request ideas...",
-      apply: "Apply",
-      compareMode: "Compare mode",
-      history: "History",
-      settings: "Settings",
-      analyzing: "Analyzing image...",
-      generating: "Generating design...",
-      suggestions: "Quick suggestions",
-      styles: "Popular styles",
-      traditional: "Traditional",
-      realism: "Realism",
-      geometric: "Geometric",
-      watercolor: "Watercolor",
-      blackwork: "Blackwork",
-      neoTraditional: "Neo-traditional",
-    }
-  };
-
-  const txt = t[language];
-
-  // Quick prompt suggestions
-  const promptSuggestions = [
-    { es: "Rosa realista en blanco y negro", en: "Realistic black and white rose" },
-    { es: "Lobo geométrico minimalista", en: "Minimalist geometric wolf" },
-    { es: "Mandala con detalles florales", en: "Mandala with floral details" },
-    { es: "Dragón japonés tradicional", en: "Traditional Japanese dragon" },
-    { es: "Fénix en acuarela", en: "Watercolor phoenix" },
-    { es: "Calavera mexicana ornamental", en: "Ornamental Mexican skull" },
+  // Edit style options
+  const editStyles = [
+    { id: "auto", name: "Auto", description: "Let AI decide the best approach" },
+    { id: "realistic", name: "Realistic", description: "Photorealistic edits" },
+    { id: "artistic", name: "Artistic", description: "Creative interpretation" },
+    { id: "minimal", name: "Minimal", description: "Subtle changes only" },
+    { id: "dramatic", name: "Dramatic", description: "Bold transformations" },
   ];
 
-  // Fetch user's projects
-  const { data: projects = [] } = useQuery<FluxProject[]>({
-    queryKey: ["/api/flux/projects"],
-  });
+  // Prompt suggestions
+  const promptSuggestions = [
+    "Change the background to a sunset",
+    "Make it look like a painting",
+    "Add tattoo style shading",
+    "Convert to black and white sketch",
+    "Make it more vibrant and colorful",
+    "Transform into geometric art",
+    "Add neon glow effects",
+    "Make it look vintage",
+  ];
 
-  // Create project mutation
-  const createProjectMutation = useMutation({
-    mutationFn: async (data: { prompt: string; settings: any }) => {
-      return apiRequest("POST", "/api/flux/create", {
-        name: data.prompt.slice(0, 50),
-        description: data.prompt,
-        prompt: data.prompt,
-        settings: data.settings,
-        userId: "demo-user",
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
-      setIsGenerating(false);
-    },
-    onError: () => {
-      setIsGenerating(false);
-    },
-  });
-
-  // Handle file selection
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      setReferenceImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setReferencePreview(reader.result as string);
-        // Simulate image analysis
-        analyzeImage(reader.result as string);
+        setOriginalImage(reader.result as string);
+        setEditedImage(null);
+        setEditHistory([]);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Analyze image with InkVision
-  const analyzeImage = (imageData: string) => {
-    const analysisMessage: InkVisionMessage = {
-      role: "assistant",
-      content: language === "es" 
-        ? "🎨 He analizado tu imagen de referencia. Detecté elementos que podrían funcionar bien en un diseño de tatuaje. ¿Te gustaría que sugiera algunos estilos basados en esta imagen?"
-        : "🎨 I've analyzed your reference image. I detected elements that could work well in a tattoo design. Would you like me to suggest some styles based on this image?",
-      timestamp: new Date(),
-      suggestions: [
-        language === "es" ? "Convertir a estilo blackwork" : "Convert to blackwork style",
-        language === "es" ? "Añadir elementos geométricos" : "Add geometric elements",
-        language === "es" ? "Crear versión realista" : "Create realistic version",
-      ],
-    };
-    setChatMessages(prev => [...prev, analysisMessage]);
-  };
-
-  // Handle chat submission
-  const handleChatSubmit = () => {
-    if (!chatInput.trim()) return;
-
-    const userMessage: InkVisionMessage = {
-      role: "user",
-      content: chatInput,
-      timestamp: new Date(),
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
-    setChatInput("");
-
-    // Simulate AI response
-    setTimeout(() => {
-      const assistantMessage: InkVisionMessage = {
-        role: "assistant",
-        content: generateAIResponse(chatInput, language),
-        timestamp: new Date(),
-        suggestions: generateSuggestions(chatInput, language),
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setOriginalImage(reader.result as string);
+        setEditedImage(null);
+        setEditHistory([]);
       };
-      setChatMessages(prev => [...prev, assistantMessage]);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleProcessEdit = async () => {
+    if (!originalImage || !editPrompt.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please upload an image and enter edit instructions",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    // Simulate processing (replace with actual API call)
+    setTimeout(() => {
+      const newEdit: EditHistory = {
+        id: Date.now().toString(),
+        prompt: editPrompt,
+        originalImage: originalImage,
+        editedImage: originalImage, // This would be the actual edited image from API
+        timestamp: new Date(),
+        settings: {
+          strength: strength[0],
+          style: editStyle,
+        },
+      };
       
-      // Auto-scroll to bottom
-      if (chatScrollRef.current) {
-        chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-      }
-    }, 1500);
+      setEditedImage(originalImage); // This would be the actual edited image
+      setEditHistory([newEdit, ...editHistory]);
+      setIsProcessing(false);
+      
+      toast({
+        title: "Edit complete",
+        description: "Your image has been successfully edited",
+      });
+    }, 3000);
   };
 
-  // Generate AI response (simulation)
-  const generateAIResponse = (input: string, lang: "es" | "en"): string => {
-    const responses = {
-      es: [
-        "Excelente idea para un diseño. Te sugiero combinar elementos orgánicos con líneas geométricas para crear un contraste visual interesante.",
-        "Para ese estilo, recomendaría usar trazos gruesos y sombras sólidas. Funcionaría muy bien en el antebrazo o la espalda.",
-        "Considera añadir detalles ornamentales para darle más profundidad al diseño. Los patrones repetitivos pueden crear un efecto hipnótico.",
-      ],
-      en: [
-        "Excellent design idea. I suggest combining organic elements with geometric lines to create an interesting visual contrast.",
-        "For that style, I'd recommend using thick strokes and solid shadows. It would work great on the forearm or back.",
-        "Consider adding ornamental details to give more depth to the design. Repetitive patterns can create a hypnotic effect.",
-      ],
-    };
-    
-    const langResponses = responses[lang];
-    return langResponses[Math.floor(Math.random() * langResponses.length)];
+  const handleRevertToHistory = (historyItem: EditHistory) => {
+    setEditedImage(historyItem.editedImage);
+    setEditPrompt(historyItem.prompt);
+    setStrength([historyItem.settings.strength]);
+    setEditStyle(historyItem.settings.style);
   };
 
-  // Generate suggestions based on input
-  const generateSuggestions = (input: string, lang: "es" | "en"): string[] => {
-    const suggestions = {
-      es: [
-        "Aplicar este estilo al diseño",
-        "Ver ejemplos similares",
-        "Modificar composición",
-        "Cambiar paleta de colores",
-      ],
-      en: [
-        "Apply this style to design",
-        "View similar examples",
-        "Modify composition",
-        "Change color palette",
-      ],
-    };
-    
-    return suggestions[lang].slice(0, 3);
+  const handleReset = () => {
+    setOriginalImage(null);
+    setEditedImage(null);
+    setEditPrompt("");
+    setEditHistory([]);
+    setStrength([0.7]);
+    setEditStyle("auto");
   };
 
-  // Apply suggestion to prompt
-  const applySuggestion = (suggestion: string) => {
-    setPrompt(prev => `${prev} ${suggestion}`.trim());
-    // Auto-scroll to generation area and trigger generation
-    handleGenerate();
+  const handleDownload = () => {
+    if (!editedImage) return;
+    
+    const link = document.createElement("a");
+    link.href = editedImage;
+    link.download = `edited-design-${Date.now()}.png`;
+    link.click();
   };
-
-  // Handle design generation
-  const handleGenerate = () => {
-    if (!prompt.trim()) return;
-    
-    setIsGenerating(true);
-    
-    const settings = {
-      aspectRatio,
-      modelVariant,
-      width,
-      height,
-      referenceImage: referencePreview,
-    };
-    
-    createProjectMutation.mutate({ prompt, settings });
-  };
-
-  // Update dimensions based on aspect ratio
-  useEffect(() => {
-    const ratios: { [key: string]: [number, number] } = {
-      "1:1": [512, 512],
-      "3:4": [384, 512],
-      "4:3": [512, 384],
-      "16:9": [512, 288],
-      "9:16": [288, 512],
-    };
-    
-    const [w, h] = ratios[aspectRatio] || [512, 512];
-    setWidth(w);
-    setHeight(h);
-  }, [aspectRatio]);
 
   return (
     <div className="min-h-screen bg-black text-white">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <h1 className="text-4xl font-bold">{txt.title}</h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage(language === "es" ? "en" : "es")}
-            >
-              <Languages className="h-4 w-4" />
-            </Button>
-          </div>
-          <p className="text-zinc-400">{txt.subtitle}</p>
-          <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
+      <div className="max-w-7xl mx-auto px-4 py-8 mt-16">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-3">Design Editor</h1>
+          <p className="text-light-gray text-lg">
+            Transform your images with AI-powered text instructions
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar - InkVision Chat */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Panel - Upload and Controls */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Upload Card */}
+            <Card className="bg-dark-gray border-medium-gray">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
-                  {txt.inkVision}
-                </CardTitle>
+                <CardTitle className="text-white text-lg">Upload Image</CardTitle>
+                <CardDescription className="text-light-gray">
+                  Upload an image to start editing
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea ref={chatScrollRef} className="h-96 pr-4">
-                  <div className="space-y-4">
-                    {chatMessages.length === 0 && (
-                      <div className="text-center text-zinc-500 py-8">
-                        <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">{txt.messagePlaceholder}</p>
-                      </div>
-                    )}
-                    
-                    {chatMessages.map((msg, idx) => (
-                      <div key={idx} className="space-y-2">
-                        <div className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}>
-                          {msg.role === "assistant" && <Bot className="h-5 w-5 mt-1 text-zinc-400" />}
-                          <div className={`flex-1 rounded-lg p-3 ${
-                            msg.role === "user" 
-                              ? "bg-zinc-800 ml-8" 
-                              : "bg-zinc-900 mr-8"
-                          }`}>
-                            <p className="text-sm">{msg.content}</p>
-                          </div>
-                          {msg.role === "user" && <User className="h-5 w-5 mt-1 text-zinc-400" />}
-                        </div>
-                        
-                        {msg.suggestions && (
-                          <div className="ml-7 space-y-1">
-                            {msg.suggestions.map((sugg, sIdx) => (
-                              <Button
-                                key={sIdx}
-                                variant="ghost"
-                                size="sm"
-                                className="w-full justify-start text-xs"
-                                onClick={() => applySuggestion(sugg)}
-                              >
-                                <Wand2 className="h-3 w-3 mr-1" />
-                                {sugg}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-                
-                <Separator className="my-3" />
-                
-                <div className="flex gap-2">
-                  <Input
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleChatSubmit()}
-                    placeholder={txt.messagePlaceholder}
-                    className="flex-1"
-                  />
-                  <Button
-                    size="icon"
-                    onClick={handleChatSubmit}
-                    disabled={!chatInput.trim()}
+                {!originalImage ? (
+                  <div
+                    className="border-2 border-dashed border-medium-gray rounded-lg p-8 text-center cursor-pointer hover:border-light-gray transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
                   >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
+                    <Upload className="mx-auto h-10 w-10 text-light-gray mb-3" />
+                    <p className="text-light-gray mb-1">Click or drag image here</p>
+                    <p className="text-sm text-medium-gray">PNG, JPG up to 10MB</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <img
+                      src={originalImage}
+                      alt="Original"
+                      className="w-full rounded-lg"
+                    />
+                    <Button
+                      onClick={() => setOriginalImage(null)}
+                      size="icon"
+                      variant="destructive"
+                      className="absolute top-2 right-2"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Prompt Input */}
-            <Card>
+            {/* Edit Instructions */}
+            <Card className="bg-dark-gray border-medium-gray">
               <CardHeader>
-                <CardTitle>{txt.prompt}</CardTitle>
+                <CardTitle className="text-white text-lg">Edit Instructions</CardTitle>
+                <CardDescription className="text-light-gray">
+                  Describe what you want to change
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={txt.promptPlaceholder}
-                  className="min-h-32"
+                  placeholder="e.g., 'Change the background to a sunset' or 'Make it look like a watercolor painting'"
+                  value={editPrompt}
+                  onChange={(e) => setEditPrompt(e.target.value)}
+                  className="min-h-[100px] bg-black border-medium-gray text-white placeholder:text-medium-gray"
+                  disabled={!originalImage}
                 />
                 
                 {/* Quick Suggestions */}
-                <div>
-                  <Label className="text-xs text-zinc-500 mb-2">{txt.suggestions}</Label>
+                <div className="space-y-2">
+                  <Label className="text-sm text-light-gray">Quick suggestions:</Label>
                   <div className="flex flex-wrap gap-2">
-                    {promptSuggestions.map((sugg, idx) => (
+                    {promptSuggestions.slice(0, 4).map((suggestion) => (
                       <Badge
-                        key={idx}
-                        variant="secondary"
-                        className="cursor-pointer hover:bg-zinc-700"
-                        onClick={() => setPrompt(sugg[language])}
+                        key={suggestion}
+                        variant="outline"
+                        className="cursor-pointer hover:bg-white hover:text-black transition-colors border-medium-gray text-light-gray"
+                        onClick={() => setEditPrompt(suggestion)}
                       >
-                        {sugg[language]}
+                        {suggestion}
                       </Badge>
                     ))}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Reference Image */}
-                <div>
-                  <Label>{txt.referenceImage}</Label>
-                  <div
-                    className="mt-2 border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center hover:border-zinc-500 transition-colors cursor-pointer"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {referencePreview ? (
-                      <div className="space-y-2">
-                        <img
-                          src={referencePreview}
-                          alt="Reference"
-                          className="max-h-32 mx-auto rounded"
-                        />
-                        <p className="text-xs text-zinc-500">{referenceImage?.name}</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Upload className="h-8 w-8 mx-auto text-zinc-500" />
-                        <p className="text-sm text-zinc-500">{txt.referenceImage}</p>
-                      </div>
-                    )}
+            {/* Settings */}
+            <Card className="bg-dark-gray border-medium-gray">
+              <CardHeader>
+                <CardTitle className="text-white text-lg flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Edit Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Strength Slider */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label className="text-light-gray">Edit Strength</Label>
+                    <span className="text-sm text-medium-gray">{(strength[0] * 100).toFixed(0)}%</span>
                   </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
+                  <Slider
+                    value={strength}
+                    onValueChange={setStrength}
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    className="[&>span]:bg-white"
+                    disabled={!originalImage}
                   />
+                  <p className="text-xs text-medium-gray">
+                    Higher values make more dramatic changes
+                  </p>
+                </div>
+
+                {/* Style Selection */}
+                <div className="space-y-2">
+                  <Label className="text-light-gray">Edit Style</Label>
+                  <RadioGroup value={editStyle} onValueChange={setEditStyle} disabled={!originalImage}>
+                    {editStyles.map((style) => (
+                      <div key={style.id} className="flex items-start space-x-2">
+                        <RadioGroupItem value={style.id} id={style.id} className="mt-1" />
+                        <Label htmlFor={style.id} className="cursor-pointer">
+                          <div>
+                            <p className="text-white">{style.name}</p>
+                            <p className="text-xs text-medium-gray">{style.description}</p>
+                          </div>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
               </CardContent>
-              
               <CardFooter>
                 <Button
-                  onClick={handleGenerate}
-                  disabled={!prompt.trim() || isGenerating}
-                  className="w-full"
-                  size="lg"
+                  onClick={handleProcessEdit}
+                  disabled={!originalImage || !editPrompt.trim() || isProcessing}
+                  className="w-full bg-white text-black hover:bg-gray-100"
                 >
-                  {isGenerating ? (
+                  {isProcessing ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {txt.generating}
+                      Processing Edit...
                     </>
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-4 w-4" />
-                      {txt.generate}
+                      Apply Edit
                     </>
                   )}
                 </Button>
               </CardFooter>
             </Card>
+          </div>
 
-            {/* Generation Settings */}
-            <Card>
+          {/* Middle Panel - Preview */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Preview Area */}
+            <Card className="bg-dark-gray border-medium-gray">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  {txt.settings}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Model Selection */}
-                <div>
-                  <Label>{txt.model}</Label>
-                  <RadioGroup value={modelVariant} onValueChange={setModelVariant} className="mt-2">
-                    <div className="flex gap-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="pro" id="pro" />
-                        <Label htmlFor="pro">Pro</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="max" id="max" />
-                        <Label htmlFor="max">Max</Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-white">Preview</CardTitle>
+                  <div className="flex gap-2">
+                    {editedImage && (
+                      <>
+                        <Button
+                          onClick={() => setShowComparison(!showComparison)}
+                          size="sm"
+                          variant="outline"
+                          className="border-medium-gray"
+                        >
+                          {showComparison ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button
+                          onClick={handleDownload}
+                          size="sm"
+                          variant="outline"
+                          className="border-medium-gray"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    {originalImage && (
+                      <Button
+                        onClick={handleReset}
+                        size="sm"
+                        variant="outline"
+                        className="border-medium-gray text-red-500 hover:text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
+              </CardHeader>
+              <CardContent>
+                {!originalImage && !editedImage ? (
+                  <div className="flex flex-col items-center justify-center h-[400px] border-2 border-dashed border-medium-gray rounded-lg">
+                    <ImageIcon className="h-12 w-12 text-medium-gray mb-3" />
+                    <p className="text-light-gray">No image uploaded yet</p>
+                    <p className="text-sm text-medium-gray mt-1">Upload an image to start editing</p>
+                  </div>
+                ) : (
+                  <div className="relative overflow-hidden rounded-lg">
+                    {showComparison && originalImage && editedImage ? (
+                      // Comparison View
+                      <div className="relative h-[500px]">
+                        <div className="absolute inset-0">
+                          <img
+                            src={originalImage}
+                            alt="Original"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div 
+                          className="absolute inset-0 overflow-hidden"
+                          style={{ clipPath: `inset(0 ${100 - comparePosition}% 0 0)` }}
+                        >
+                          <img
+                            src={editedImage}
+                            alt="Edited"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div
+                          className="absolute top-0 bottom-0 w-0.5 bg-white cursor-ew-resize"
+                          style={{ left: `${comparePosition}%` }}
+                          draggable
+                          onDrag={(e) => {
+                            if (e.clientX > 0) {
+                              const rect = e.currentTarget.parentElement?.getBoundingClientRect();
+                              if (rect) {
+                                const newPosition = ((e.clientX - rect.left) / rect.width) * 100;
+                                setComparePosition(Math.max(0, Math.min(100, newPosition)));
+                              }
+                            }
+                          }}
+                        >
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-2">
+                            <ChevronLeft className="h-3 w-3 text-black inline" />
+                            <ChevronRight className="h-3 w-3 text-black inline" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Single Image View
+                      <img
+                        src={editedImage || originalImage || ""}
+                        alt={editedImage ? "Edited" : "Original"}
+                        className="w-full h-[500px] object-contain"
+                      />
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-                {/* Aspect Ratio */}
-                <div>
-                  <Label>{txt.aspectRatio}</Label>
-                  <RadioGroup value={aspectRatio} onValueChange={setAspectRatio} className="mt-2">
-                    <div className="grid grid-cols-5 gap-2">
-                      {["1:1", "3:4", "4:3", "16:9", "9:16"].map((ratio) => (
-                        <div key={ratio} className="flex items-center space-x-1">
-                          <RadioGroupItem value={ratio} id={ratio} />
-                          <Label htmlFor={ratio} className="text-xs">{ratio}</Label>
+            {/* Edit History */}
+            {editHistory.length > 0 && (
+              <Card className="bg-dark-gray border-medium-gray">
+                <CardHeader>
+                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                    <History className="h-5 w-5" />
+                    Edit History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[200px]">
+                    <div className="space-y-3">
+                      {editHistory.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-3 bg-black rounded-lg border border-medium-gray hover:border-light-gray transition-colors cursor-pointer"
+                          onClick={() => handleRevertToHistory(item)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={item.editedImage}
+                              alt="History"
+                              className="w-12 h-12 rounded object-cover"
+                            />
+                            <div>
+                              <p className="text-sm text-white line-clamp-1">{item.prompt}</p>
+                              <p className="text-xs text-medium-gray">
+                                {new Date(item.timestamp).toLocaleTimeString()}
+                              </p>
+                            </div>
+                          </div>
+                          <RefreshCw className="h-4 w-4 text-light-gray" />
                         </div>
                       ))}
                     </div>
-                  </RadioGroup>
-                </div>
-
-                {/* Dimensions Display */}
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <Label className="text-xs">{txt.width}</Label>
-                    <p className="text-sm font-mono">{width}px</p>
-                  </div>
-                  <div className="flex-1">
-                    <Label className="text-xs">{txt.height}</Label>
-                    <p className="text-sm font-mono">{height}px</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Sidebar - Results */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Latest Design */}
-            {projects.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Último diseño</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="relative group">
-                      <img
-                        src={projects[0].imageUrl || ""}
-                        alt="Latest design"
-                        className="w-full rounded-lg"
-                      />
-                      
-                      {/* Image Comparison Slider */}
-                      {compareMode && referencePreview && (
-                        <div className="absolute inset-0 overflow-hidden rounded-lg">
-                          <img
-                            src={referencePreview}
-                            alt="Original"
-                            className="absolute inset-0 w-full h-full object-cover"
-                            style={{ clipPath: `inset(0 ${100 - comparePosition}% 0 0)` }}
-                          />
-                          <div
-                            className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize"
-                            style={{ left: `${comparePosition}%` }}
-                            onMouseDown={(e) => {
-                              const startX = e.clientX;
-                              const startPos = comparePosition;
-                              
-                              const handleMouseMove = (e: MouseEvent) => {
-                                const delta = e.clientX - startX;
-                                const newPos = Math.max(0, Math.min(100, startPos + (delta / 2)));
-                                setComparePosition(newPos);
-                              };
-                              
-                              const handleMouseUp = () => {
-                                document.removeEventListener("mousemove", handleMouseMove);
-                                document.removeEventListener("mouseup", handleMouseUp);
-                              };
-                              
-                              document.addEventListener("mousemove", handleMouseMove);
-                              document.addEventListener("mouseup", handleMouseUp);
-                            }}
-                          >
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-1">
-                              <ChevronLeft className="h-3 w-3 text-black inline" />
-                              <ChevronRight className="h-3 w-3 text-black inline" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <Button size="icon" variant="secondary">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="secondary">
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                        {referencePreview && (
-                          <Button 
-                            size="icon" 
-                            variant="secondary"
-                            onClick={() => setCompareMode(!compareMode)}
-                          >
-                            <Maximize2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <p className="text-xs text-zinc-500 line-clamp-2">{projects[0].prompt}</p>
-                      <p className="text-xs text-zinc-600">{new Date(projects[0].createdAt || "").toLocaleDateString()}</p>
-                    </div>
-                  </div>
+                  </ScrollArea>
                 </CardContent>
               </Card>
             )}
-
-            {/* History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <History className="h-4 w-4" />
-                  {txt.history}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-64">
-                  <div className="space-y-2">
-                    {projects.slice(1, 6).map((project) => (
-                      <div key={project.id} className="flex gap-2 p-2 hover:bg-zinc-900 rounded cursor-pointer">
-                        <img
-                          src={project.imageUrl || ""}
-                          alt={project.name}
-                          className="w-12 h-12 rounded object-cover"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs truncate">{project.name}</p>
-                          <p className="text-xs text-zinc-600">{new Date(project.createdAt || "").toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-
-            {/* Style Examples */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Palette className="h-4 w-4" />
-                  {txt.styles}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {[txt.traditional, txt.realism, txt.geometric, txt.watercolor, txt.blackwork, txt.neoTraditional].map((style) => (
-                    <Button
-                      key={style}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => setPrompt(`${style} ${prompt}`.trim())}
-                    >
-                      {style}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
