@@ -20,13 +20,14 @@ interface ChatAssistantProps {
   onApplyPrompt: (prompt: string) => void;
   language?: "es" | "en";
   embedded?: boolean;
+  currentJob?: any; // Current active job for updating
 }
 
 export interface ChatAssistantRef {
   open: () => void;
 }
 
-const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false }, ref) => {
+const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, currentJob }, ref) => {
   const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastImageAnalyzed, setLastImageAnalyzed] = useState<string>("");
@@ -488,7 +489,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             prompt: content,
             inputImageUrl: storedImage, // Send current image as base64
             model: 'pro', // Use professional model
-            aspectRatio: 'match_input_image'
+            aspectRatio: 'match_input_image',
+            projectId: currentJob?.id // Update existing project if available
           }),
         });
 
@@ -520,35 +522,42 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           
           setMessages(prev => [...prev, generatedMessage]);
 
-          // También crear un nuevo proyecto para que aparezca en el editor principal
-          try {
-            const projectResponse = await fetch('/api/flux/create', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                name: content.slice(0, 50) + " - InkVision",
-                description: content,
-                prompt: content,
-                imageUrl: result.imageUrl,
-                settings: {
-                  aspectRatio: 'match_input_image',
-                  modelVariant: 'pro',
-                  referenceImage: storedImage
+          // Si hay un currentJob, solo actualizar proyectos. Si no, crear uno nuevo.
+          if (currentJob?.id) {
+            // Refrescar la lista de proyectos para que aparezca la imagen actualizada
+            queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+            console.log('Project updated from InkVision successfully');
+          } else {
+            // Crear un nuevo proyecto solo si no hay currentJob
+            try {
+              const projectResponse = await fetch('/api/flux/create', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
                 },
-                userId: "demo-user",
-                source: "inkvision"
-              }),
-            });
+                body: JSON.stringify({
+                  name: content.slice(0, 50) + " - InkVision",
+                  description: content,
+                  prompt: content,
+                  imageUrl: result.imageUrl,
+                  settings: {
+                    aspectRatio: 'match_input_image',
+                    modelVariant: 'pro',
+                    referenceImage: storedImage
+                  },
+                  userId: "demo-user",
+                  source: "inkvision"
+                }),
+              });
 
-            if (projectResponse.ok) {
-              // Refrescar la lista de proyectos para que aparezca en el editor
-              queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
-              console.log('Project created from InkVision successfully');
+              if (projectResponse.ok) {
+                // Refrescar la lista de proyectos para que aparezca en el editor
+                queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+                console.log('Project created from InkVision successfully');
+              }
+            } catch (projectError) {
+              console.error('Error creating project from InkVision:', projectError);
             }
-          } catch (projectError) {
-            console.error('Error creating project from InkVision:', projectError);
           }
           
         } else {

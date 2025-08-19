@@ -498,7 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Replicate FLUX Kontext endpoint - Exact implementation from your original
   app.post("/api/generate", async (req, res) => {
     try {
-      const { prompt, inputImageUrl, width, height, aspectRatio, model } = generateImageSchema.parse(req.body);
+      const { prompt, inputImageUrl, width, height, aspectRatio, model, projectId } = req.body;
       
       const replicateToken = process.env.REPLICATE_API_TOKEN;
       
@@ -669,11 +669,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Si se proporciona projectId, actualizar el proyecto existente
+      if (projectId) {
+        try {
+          const updatedProject = await storage.updateFluxProject(projectId, {
+            imageUrl,
+            updatedAt: new Date()
+          });
+          console.log(`Project ${projectId} updated with generated image`);
+        } catch (updateError) {
+          console.error(`Error updating project ${projectId}:`, updateError);
+        }
+      }
+
       // Devolver la URL de la imagen generada - Igual que tu repositorio
       res.json({
         imageUrl,
         prompt,
         model: modelName,
+        projectId: projectId || null,
         success: true
       });
       

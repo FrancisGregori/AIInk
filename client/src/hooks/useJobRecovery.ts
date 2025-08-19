@@ -36,6 +36,7 @@ export function useJobRecovery(jobType: 'stencil' | 'design') {
             const updatedJob = JSON.parse(text);
             
             // Update job in global context
+            console.log(`Updating job ${job.id} with status: ${updatedJob.status}`);
             updateJob(job.id, {
               status: updatedJob.status,
               processedImageUrl: updatedJob.processedImageUrl || undefined,
@@ -49,6 +50,7 @@ export function useJobRecovery(jobType: 'stencil' | 'design') {
 
             // If job is completed or failed, stop polling
             if (updatedJob.status === 'completed' || updatedJob.status === 'failed') {
+              console.log(`Job ${job.id} completed, stopping polling`);
               clearInterval(interval);
               setRecoveredJobs(prev => [...prev, job.id]);
             }
