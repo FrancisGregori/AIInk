@@ -46,6 +46,7 @@ function StencilTool() {
   const [selectedStyle, setSelectedStyle] = useState<string>("steven");
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentJob, setCurrentJob] = useState<StencilJob | null>(null);
+  const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
   const [processingOptions, setProcessingOptions] = useState<ProcessingOptions>({
     removeBackground: true,
     lineColor: "black"
@@ -68,8 +69,9 @@ function StencilTool() {
           if (job.status === 'processing') {
             setIsProcessing(true);
           }
-          // Simular que el usuario tenía una imagen cargada
+          // Configurar la imagen recuperada
           if (job.originalImageUrl) {
+            setRecoveredImageUrl(job.originalImageUrl);
             const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
             setSelectedFile(fakeFile);
           }
@@ -171,6 +173,7 @@ function StencilTool() {
     setSelectedFile(file);
     if (file) {
       setCurrentJob(null);
+      setRecoveredImageUrl(null); // Limpiar imagen recuperada cuando se selecciona nueva
       // Auto-scroll to style section when image is loaded
       setTimeout(() => {
         styleSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -203,6 +206,7 @@ function StencilTool() {
   const handleReset = () => {
     setSelectedFile(null);
     setCurrentJob(null);
+    setRecoveredImageUrl(null);
     setSelectedStyle("steven");
     setProcessingOptions({
       removeBackground: true,
@@ -256,6 +260,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
             <ImageUploader
               selectedFile={selectedFile}
               onFileSelect={handleFileSelectWithScroll}
+              externalPreview={recoveredImageUrl}
             />
 
             {/* Style Selection - Visual */}

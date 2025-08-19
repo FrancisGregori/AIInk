@@ -7,9 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ImageUploaderProps {
   selectedFile: File | null;
   onFileSelect: (file: File | null) => void;
+  externalPreview?: string | null;
 }
 
-export default function ImageUploader({ selectedFile, onFileSelect }: ImageUploaderProps) {
+export default function ImageUploader({ selectedFile, onFileSelect, externalPreview }: ImageUploaderProps) {
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -35,7 +36,9 @@ export default function ImageUploader({ selectedFile, onFileSelect }: ImageUploa
 
   // Create preview URL when file changes
   useEffect(() => {
-    if (selectedFile) {
+    if (externalPreview) {
+      setPreview(externalPreview);
+    } else if (selectedFile) {
       const objectUrl = URL.createObjectURL(selectedFile);
       setPreview(objectUrl);
       
@@ -44,7 +47,7 @@ export default function ImageUploader({ selectedFile, onFileSelect }: ImageUploa
     } else {
       setPreview(null);
     }
-  }, [selectedFile]);
+  }, [selectedFile, externalPreview]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
