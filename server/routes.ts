@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { summarizeArticle, analyzeSentiment, analyzeImage } from "./gemini";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
+import { ObjectStorageService } from "./objectStorage";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -22,8 +23,24 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize ComfyDeploy service
+  // Initialize services
   const comfyDeploy = new ComfyDeployService();
+  const objectStorageService = new ObjectStorageService();
+  
+  // Serve public objects from object storage
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      await objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error serving public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
   
   // Stencil Tool Routes
   
@@ -156,13 +173,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Convert image buffer to base64 URL for now
-      const originalImageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      // Upload image to object storage and get public URL
+      let publicImageUrl;
+      try {
+        // Generate unique filename
+        const timestamp = Date.now();
+        const filename = `stencil-${timestamp}-${req.file.originalname || 'image.png'}`;
+        
+        // Upload to object storage
+        const objectPath = `/replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b/public/${filename}`;
+        const objectStorageService = new ObjectStorageService();
+        
+        // Save the file to object storage
+        await objectStorageService.uploadPublicFile(req.file.buffer, filename);
+        
+        // Create public URL for the image
+        publicImageUrl = `https://${req.get('host')}/public-objects/${filename}`;
+        console.log("Image uploaded to object storage:", publicImageUrl);
+      } catch (uploadError) {
+        console.error("Error uploading to object storage:", uploadError);
+        return res.status(500).json({ error: "Failed to upload image" });
+      }
       
       // Create the stencil job
       const job = await storage.createStencilJob({
         userId,
-        originalImageUrl,
+        originalImageUrl: publicImageUrl,
         style,
         processingOptions: options,
       });
@@ -170,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Start processing with ComfyDeploy
       try {
         const result = await comfyDeploy.processImage(
-          originalImageUrl,
+          publicImageUrl,
           style as any,
           options
         );
@@ -195,7 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For development, return a mock processed image
         const mockProcessedJob = await storage.updateStencilJob(job.id, {
           status: "completed",
-          processedImageUrl: originalImageUrl, // Use original as fallback
+          processedImageUrl: publicImageUrl, // Use original as fallback
           completedAt: new Date(),
         });
         
