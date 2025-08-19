@@ -1,0 +1,188 @@
+25-06-02 22:18:33.34
+c7c12d47
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-06-02 22:18:35.32
+c7c12d47
+User
+> rest-express@1.0.0 start
+2025-06-02 22:18:35.32
+c7c12d47
+User
+> NODE_ENV=production node dist/index.js
+2025-06-02 22:18:36.63
+c7c12d47
+User
+2:18:36 AM [express] serving on port 5000
+2025-06-02 22:20:57.17
+c7c12d47
+System
+system: received signal terminated
+2025-06-02 22:20:57.55
+c7c12d47
+User
+2:20:57 AM [express] GET /api/images 200 in 5197ms :: [{"id":361,"prompt":"Front view looking direct…
+2025-06-02 22:21:00.88
+c7c12d47
+System
+starting up user application
+2025-06-02 22:21:01.00
+c7c12d47
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-06-02 22:21:02.49
+c7c12d47
+User
+> rest-express@1.0.0 start
+2025-06-02 22:21:02.49
+c7c12d47
+User
+> NODE_ENV=production node dist/index.js
+2025-06-02 22:21:03.51
+c7c12d47
+User
+2:21:03 AM [express] serving on port 5000
+2025-06-02 22:21:05.27
+c7c12d47
+User
+2:21:05 AM [express] POST /api/upload 200 in 6ms :: {"imageUrl":"data:image/png;base64,iVBORw0KGgoAA…
+2025-06-02 22:21:10.63
+c7c12d47
+User
+Final input object: {
+2025-06-02 22:21:10.63
+c7c12d47
+User
+"prompt": "Front view looking directly at camera, keep the same composition and elements",
+2025-06-02 22:21:10.63
+c7c12d47
+User
+"width": 1024,
+2025-06-02 22:21:10.63
+c7c12d47
+User
+"height": 1024
+2025-06-02 22:21:10.63
+c7c12d47
+User
+}
+2025-06-02 22:21:10.63
+c7c12d47
+User
+Using model: black-forest-labs/flux-kontext-pro
+2025-06-02 22:21:10.63
+c7c12d47
+User
+Generating image (attempt 1/3) with black-forest-labs/flux-kontext-pro...
+2025-06-02 22:21:14.54
+c7c12d47
+User
+Replicate output received: ReadableStream { locked: false, state: 'readable', supportsBYOB: false }
+2025-06-02 22:21:14.54
+c7c12d47
+User
+Processing async iterable stream from Replicate...
+2025-06-02 22:21:14.84
+c7c12d47
+User
+Original image buffer size: 2055847
+2025-06-02 22:21:14.84
+c7c12d47
+User
+Image saved without any compression or processing
+2025-06-02 22:21:16.05
+c7c12d47
+User
+2:21:16 AM [express] POST /api/generate 200 in 5409ms :: {"id":362,"prompt":"Front view looking dire…
+2025-06-02 22:21:18.48
+c7c12d47
+System
+system: received signal terminated
+2025-06-02 22:21:18.85
+c7c12d47
+User
+2:21:18 AM [express] GET /api/images 200 in 4839ms :: [{"id":361,"prompt":"Front view looking direct…
+2025-06-02 22:21:21.91
+c7c12d47
+System
+starting up user application
+2025-06-02 22:21:22.04
+c7c12d47
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-06-02 22:21:23.27
+c7c12d47
+User
+> rest-express@1.0.0 start
+2025-06-02 22:21:23.27
+c7c12d47
+User
+> NODE_ENV=production node dist/index.js
+2025-06-02 22:21:23.93
+c7c12d47
+User
+2:21:23 AM [express] serving on port 5000
+2025-06-02 22:22:58.14
+b7296dff
+System
+system: received signal terminated
+2025-06-02 22:30:02.51
+c7c12d47
+User
+2:30:02 AM [express] POST /api/upload 200 in 7ms :: {"imageUrl":"data:image/png;base64,iVBORw0KGgoAA…
+2025-06-02 22:44:24.75
+97310ce9
+System
+starting up user application
+2025-06-02 22:44:24.98
+97310ce9
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-06-02 22:44:26.77
+97310ce9
+User
+> rest-express@1.0.0 start
+2025-06-02 22:44:26.77
+97310ce9
+User
+> NODE_ENV=production node dist/index.js
+2025-06-02 22:44:28.07
+97310ce9
+User
+2:44:27 AM [express] serving on port 5000
+2025-06-02 22:44:54.28
+97310ce9
+System
+system: received signal terminated
+2025-06-02 22:44:54.62
+97310ce9
+User
+2:44:54 AM [express] GET /api/images 200 in 4238ms :: [{"id":363,"prompt":"Over-the-shoulder perspec…
+2025-06-02 22:45:33.90
+c7c12d47
+System
+system: received signal terminated
+2025-06-02 22:45:57.10
+97310ce9
+System
+starting up user application
+2025-06-02 22:45:57.47
+97310ce9
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-06-02 22:45:58.83
+97310ce9
+User
+> rest-express@1.0.0 start
+2025-06-02 22:45:58.83
+97310ce9
+User
+> NODE_ENV=production node dist/index.js
+2025-06-02 22:45:59.52
+97310ce9
+User
+2:45:59 AM [express] serving on port 5000
+
+Wrap
+
+Colors

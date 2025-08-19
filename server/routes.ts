@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
-import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat } from "./gemini";
+import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
 import { ObjectStorageService } from "./objectStorage";
@@ -406,6 +406,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : "Sorry, I couldn't process your message. Could you rephrase it?",
         suggestions: []
       });
+    }
+  });
+
+  // Chat streaming endpoint for InkVision assistant
+  app.post("/api/chat/stream", async (req, res) => {
+    try {
+      const { messages, image } = req.body;
+      
+      console.log('Chat stream request received');
+      console.log('Messages count:', messages?.length || 0);
+      console.log('Has image:', !!image);
+      
+      // Set headers for SSE
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      
+      // Get streaming response from Gemini
+      const stream = await streamChatResponseGemini(messages, image);
+      const reader = stream.getReader();
+      
+      // Process and send chunks
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        // Send the chunk directly to the client
+        res.write(value);
+      }
+      
+      res.end();
+    } catch (error) {
+      console.error("Error in chat stream:", error);
+      res.write(`data: ${JSON.stringify({ error: "Failed to process chat" })}\n\n`);
+      res.end();
     }
   });
 

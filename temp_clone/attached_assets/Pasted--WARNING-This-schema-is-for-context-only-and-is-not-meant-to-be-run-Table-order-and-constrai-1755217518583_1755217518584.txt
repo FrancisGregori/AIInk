@@ -1,0 +1,70 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.entitlements (
+  plan text NOT NULL,
+  monthly_renders integer NOT NULL,
+  max_resolution_px integer NOT NULL,
+  concurrent_jobs integer NOT NULL,
+  storage_quota_gb integer NOT NULL,
+  CONSTRAINT entitlements_pkey PRIMARY KEY (plan)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  full_name text,
+  avatar_url text,
+  plan text NOT NULL DEFAULT 'free'::text,
+  status text NOT NULL DEFAULT 'active'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id),
+  CONSTRAINT profiles_plan_fkey FOREIGN KEY (plan) REFERENCES public.entitlements(plan)
+);
+CREATE TABLE public.stencil_jobs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  original_image_url text NOT NULL,
+  processed_image_url text,
+  style character varying NOT NULL,
+  line_color character varying DEFAULT 'black'::character varying,
+  transparent_background boolean DEFAULT false,
+  quality integer DEFAULT 75,
+  status character varying DEFAULT 'pending'::character varying CHECK (status::text = ANY (ARRAY['pending'::character varying, 'processing'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])),
+  error text,
+  comfy_deploy_run_id text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT stencil_jobs_pkey PRIMARY KEY (id),
+  CONSTRAINT stencil_jobs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.subscriptions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  provider text DEFAULT 'stripe'::text,
+  provider_customer_id text,
+  provider_subscription_id text,
+  provider_price_id text,
+  status text NOT NULL DEFAULT 'inactive'::text,
+  current_period_end timestamp with time zone,
+  CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
+  CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.usage_counters (
+  user_id uuid NOT NULL,
+  period_start date NOT NULL,
+  renders_count integer NOT NULL DEFAULT 0,
+  renders_in_progress integer NOT NULL DEFAULT 0,
+  CONSTRAINT usage_counters_pkey PRIMARY KEY (user_id, period_start),
+  CONSTRAINT usage_counters_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_images (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id uuid,
+  image_url text NOT NULL,
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  is_public boolean DEFAULT false,
+  app_source text DEFAULT 'stencil'::text,
+  CONSTRAINT user_images_pkey PRIMARY KEY (id),
+  CONSTRAINT user_images_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
