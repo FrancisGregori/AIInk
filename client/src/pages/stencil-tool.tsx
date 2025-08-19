@@ -194,7 +194,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
         {/* Header */}
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold mb-1">Stencil Tool</h1>
-          <p className="text-zinc-400 text-sm">Transforma imágenes en stencils profesionales</p>
+          <p className="text-zinc-400 text-sm">Transform images into professional tattoo stencils</p>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
@@ -217,14 +217,14 @@ Press and hold the stencil image above and select "Copy", then paste it directly
             {/* Processing Settings - Compact */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Stencil Settings</CardTitle>
+                <CardTitle className="text-base">Processing Options</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {/* PNG Outline Toggle */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="remove-bg" className="text-sm">PNG Outline</Label>
-                    <p className="text-xs text-zinc-500">No background</p>
+                    <Label htmlFor="remove-bg" className="text-sm">Remove Background</Label>
+                    <p className="text-xs text-zinc-500">PNG with transparent background</p>
                   </div>
                   <Switch
                     id="remove-bg"
@@ -239,7 +239,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
 
                 {/* Line Color Selection - Compact */}
                 <div>
-                  <Label className="text-sm mb-2 block">Line Color</Label>
+                  <Label className="text-sm mb-2 block">Stencil Color</Label>
                   <div className="grid grid-cols-4 gap-1">
                     {["black", "red", "blue", "green"].map((color) => (
                       <button
@@ -272,7 +272,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                     <AlertDescription className="text-xs">
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>Procesando... puede tardar hasta 40 segundos</span>
+                        <span>Processing... this may take up to 40 seconds</span>
                       </div>
                     </AlertDescription>
                   </Alert>
@@ -287,10 +287,10 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                     {isProcessing ? (
                       <>
                         <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                        Processing...
+                        Generating Stencil...
                       </>
                     ) : (
-                      "Process"
+                      "Generate Stencil"
                     )}
                   </Button>
                   <Button
@@ -299,7 +299,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                     size="sm"
                     disabled={isProcessing}
                   >
-                    Reset
+                    Clear
                   </Button>
                 </div>
               </CardFooter>
@@ -310,20 +310,20 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <CreditCard className="h-4 w-4" />
-                  Tu Uso
+                  Your Usage
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-400">Créditos usados</span>
+                    <span className="text-xs text-zinc-400">Credits used</span>
                     <Badge variant="secondary" className="text-xs">12 / 50</Badge>
                   </div>
                   <div className="w-full bg-zinc-800 rounded-full h-1.5">
                     <div className="bg-white h-1.5 rounded-full" style={{ width: "24%" }} />
                   </div>
                   <p className="text-xs text-zinc-500">
-                    38 créditos restantes
+                    38 credits remaining
                   </p>
                 </div>
               </CardContent>
