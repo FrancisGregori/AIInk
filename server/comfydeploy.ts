@@ -146,6 +146,15 @@ export class ComfyDeployService {
         
         // Log the outputs for debugging
         console.log("All outputs checked, found URL:", outputUrl);
+        
+        // Also log each output for debugging
+        data.outputs.forEach((output, index) => {
+          console.log(`Output ${index}:`, {
+            output_id: output.output_id,
+            hasImages: !!output.data?.images,
+            imageUrl: output.data?.images?.[0]?.url
+          });
+        });
       } else if (data.outputs && typeof data.outputs === 'object') {
         // Fallback for object format
         outputUrl = data.outputs.output_image || 
