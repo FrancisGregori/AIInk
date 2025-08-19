@@ -380,14 +380,86 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     });
   };
 
-  const applyPrompt = (content: string) => {
+  const applyPrompt = async (content: string) => {
+    // Apply the prompt to the parent component first
     onApplyPrompt(content);
-    toast({
-      title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
-      description: language === 'es' 
-        ? "El prompt se ha aplicado y se está generando"
-        : "The prompt has been applied and is generating"
-    });
+    
+    // Also trigger image generation if we have an image
+    if (storedImage) {
+      try {
+        // Show loading toast
+        toast({
+          title: language === 'es' ? "Generando imagen..." : "Generating image...",
+          description: language === 'es' 
+            ? "El prompt se está procesando con Flux Kontext"
+            : "The prompt is being processed with Flux Kontext"
+        });
+
+        // Call Replicate API with the current image and prompt
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt: content,
+            inputImageUrl: storedImage, // Send current image as base64
+            model: 'pro', // Use professional model
+            aspectRatio: 'match_input_image'
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success && result.imageUrl) {
+          // Success toast
+          toast({
+            title: language === 'es' ? "¡Imagen generada!" : "Image generated!",
+            description: language === 'es' 
+              ? "La edición se completó exitosamente"
+              : "The edit completed successfully"
+          });
+          
+          // Add a new message showing the generated image
+          const generatedMessage: Message = {
+            id: `generated-${Date.now()}`,
+            role: 'assistant',
+            content: language === 'es' 
+              ? '✨ Aquí está tu imagen editada:'
+              : '✨ Here\'s your edited image:',
+            image: result.imageUrl,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, generatedMessage]);
+          
+        } else {
+          throw new Error(result.details || 'Unknown error');
+        }
+        
+      } catch (error: any) {
+        console.error('Error generating image:', error);
+        toast({
+          title: language === 'es' ? "Error al generar" : "Generation error",
+          description: language === 'es' 
+            ? "No se pudo generar la imagen. Verifica la configuración."
+            : "Could not generate image. Check configuration.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // No image, just apply the prompt
+      toast({
+        title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
+        description: language === 'es' 
+          ? "El prompt se ha aplicado al campo de edición"
+          : "The prompt has been applied to the edit field"
+      });
+    }
   };
 
   // Function to determine if a message contains a prompt that should have action buttons

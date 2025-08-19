@@ -6,6 +6,8 @@ import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
 import { ObjectStorageService } from "./objectStorage";
+import Replicate from "replicate";
+import { z } from "zod";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -20,6 +22,25 @@ const upload = multer({
       cb(new Error('Only image files are allowed'));
     }
   },
+});
+
+// Validation schema for Replicate generation
+const generateImageSchema = z.object({
+  prompt: z.string().min(1, "Prompt is required"),
+  inputImageUrl: z.string().optional().refine((val) => {
+    if (!val || val === "") return true; // Allow empty string
+    try {
+      new URL(val);
+      return true;
+    } catch {
+      // Allow internal API paths and static file paths
+      return val.startsWith('/api/image/') || val.startsWith('/images/');
+    }
+  }, "Invalid URL or file path"),
+  width: z.number().optional().default(1024),
+  height: z.number().optional().default(1024),
+  aspectRatio: z.string().optional().default("match_input_image"),
+  model: z.enum(["max", "pro"]).optional().default("max"),
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -442,6 +463,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error in chat stream:", error);
       res.write(`data: ${JSON.stringify({ error: "Failed to process chat" })}\n\n`);
       res.end();
+    }
+  });
+
+  // Replicate FLUX Kontext endpoint - Exact implementation from your original
+  app.post("/api/generate", async (req, res) => {
+    try {
+      const { prompt, inputImageUrl, width, height, aspectRatio, model } = generateImageSchema.parse(req.body);
+      
+      const replicateToken = process.env.REPLICATE_API_TOKEN;
+      
+      if (!replicateToken) {
+        return res.status(400).json({ 
+          error: "Replicate API token not configured. Please set REPLICATE_API_TOKEN in your environment." 
+        });
+      }
+
+      const replicate = new Replicate({
+        auth: replicateToken,
+      });
+
+      // Configuración de entrada para FLUX Kontext Max
+      const input: any = {
+        prompt: prompt,
+      };
+
+      // Si hay imagen de entrada, la incluimos
+      if (inputImageUrl) {
+        console.log("Input image URL received:", inputImageUrl);
+        console.log("URL type:", typeof inputImageUrl);
+        console.log("URL length:", inputImageUrl.length);
+        
+        if (inputImageUrl.startsWith('data:')) {
+          // Es una imagen base64, usarla directamente
+          input.input_image = inputImageUrl;
+          console.log("Using base64 image data directly");
+        } else {
+          // Verificar si es una URL válida antes de enviar a Replicate
+          try {
+            new URL(inputImageUrl);
+            // Es una URL válida, usarla directamente
+            input.input_image = inputImageUrl;
+            console.log("Using external URL:", inputImageUrl);
+          } catch {
+            // No es una URL válida, reportar error
+            console.error("Invalid image URL format that doesn't match any known pattern:", inputImageUrl);
+            return res.status(400).json({ error: "Invalid reference image URL format" });
+          }
+        }
+        
+        if (aspectRatio && aspectRatio !== "match_input_image") {
+          input.aspect_ratio = aspectRatio;
+        }
+      } else {
+        // Para generación desde texto, usar dimensiones específicas
+        input.width = width;
+        input.height = height;
+      }
+
+      console.log("Final input object for Replicate:", JSON.stringify(input, null, 2));
+      
+      // Validación final: asegurar que input_image es válido si existe
+      if (input.input_image && typeof input.input_image === 'string') {
+        if (!input.input_image.startsWith('data:') && !input.input_image.startsWith('http')) {
+          console.error("CRITICAL: input_image is not a valid URI or base64:", input.input_image);
+          return res.status(400).json({ error: "Reference image format is invalid for Replicate API" });
+        }
+      }
+
+      // Seleccionar el modelo basado en el parámetro
+      const modelName = model === "pro" 
+        ? "black-forest-labs/flux-kontext-pro" 
+        : "black-forest-labs/flux-kontext-max";
+      
+      console.log(`Using model: ${modelName}`);
+
+      // Usar el SDK de Replicate con reintentos para manejar interrupciones
+      let output;
+      let retries = 3;
+      
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`Generating image (attempt ${attempt}/${retries}) with ${modelName}...`);
+          output = await replicate.run(modelName, { input });
+          break; // Éxito, salir del bucle
+        } catch (error: any) {
+          console.log(`Attempt ${attempt} failed:`, error.message);
+          
+          // Si es error de contenido sensible, no reintentar
+          if (error.message?.includes("flagged as sensitive")) {
+            throw new Error("Content was flagged as sensitive. Please try with a different prompt or image.");
+          }
+          
+          if (attempt === retries || !error.message?.includes("Prediction interrupted")) {
+            throw error; // Último intento o error diferente
+          }
+          
+          // Esperar antes del siguiente intento
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+        }
+      }
+      
+      console.log("Replicate output received:", output);
+      
+      // Manejar diferentes formatos de output de FLUX Kontext Max
+      let imageUrl: string;
+      
+      if (typeof output === 'string') {
+        imageUrl = output;
+      } else if (Array.isArray(output) && output.length > 0) {
+        imageUrl = output[0];
+      } else {
+        console.error("Unexpected output format from Replicate:", output);
+        return res.status(500).json({ error: "Unexpected response format from AI service" });
+      }
+
+      // Devolver la URL de la imagen generada
+      res.json({
+        imageUrl,
+        prompt,
+        model: modelName,
+        success: true
+      });
+      
+    } catch (error: any) {
+      console.error("DETAILED ERROR in /api/generate:", error);
+      console.error("Error stack:", error.stack);
+      console.error("Error message:", error.message);
+      
+      res.status(500).json({ 
+        error: "Failed to generate image",
+        details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      });
     }
   });
 
