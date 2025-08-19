@@ -18,6 +18,8 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import ChatAssistant, { ChatAssistantRef } from "@/components/chat-assistant";
 import { useToast } from "@/hooks/use-toast";
+import { useJobs } from "@/contexts/JobContext";
+import { useJobRecovery } from "@/hooks/useJobRecovery";
 import { 
   Sparkles, 
   Download, 
@@ -35,7 +37,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Edit
+  Edit,
+  Clock
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import type { FluxProject } from "@shared/schema";
@@ -59,6 +62,8 @@ function DesignEditor() {
   const chatAssistantRef = useRef<ChatAssistantRef>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { addJob, updateJob, getJob } = useJobs();
+  const { activeJobsOfType, recoveredJobs } = useJobRecovery('design');
 
   // Translations
   const t = {
@@ -149,16 +154,27 @@ function DesignEditor() {
 
   // Create project mutation
   const createProjectMutation = useMutation({
-    mutationFn: async (data: { prompt: string; settings: any }) => {
-      return apiRequest("POST", "/api/flux/create", {
+    mutationFn: async (data: { prompt: string; settings: any }): Promise<FluxProject> => {
+      const response = await apiRequest("POST", "/api/flux/create", {
         name: data.prompt.slice(0, 50),
         description: data.prompt,
         prompt: data.prompt,
         settings: data.settings,
         userId: "demo-user",
       });
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: FluxProject) => {
+      // Register job in global context
+      addJob({
+        id: data.id,
+        status: 'processing',
+        type: 'design',
+        originalImageUrl: data.settings && typeof data.settings === 'object' && 'referenceImage' in data.settings ? String(data.settings.referenceImage) : undefined,
+        style: data.prompt?.slice(0, 30) || undefined,
+        startedAt: new Date().toISOString()
+      });
+      
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
       setIsGenerating(false);
     },
@@ -375,6 +391,25 @@ function DesignEditor() {
           <p className="text-zinc-400">{txt.subtitle}</p>
           <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
         </div>
+
+        {/* Active Jobs Recovery Section */}
+        {activeJobsOfType.length > 0 && (
+          <Alert className="mb-6 bg-blue-950/50 border-blue-800 text-blue-100">
+            <Clock className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <span>
+                  {activeJobsOfType.length} trabajo{activeJobsOfType.length > 1 ? 's' : ''} de diseño en progreso encontrado{activeJobsOfType.length > 1 ? 's' : ''}. 
+                  Se están actualizando automáticamente.
+                </span>
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span className="text-xs">Sincronizando...</span>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar - InkVision Chat (movido del flotante) */}

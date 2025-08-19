@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useJobs } from "@/contexts/JobContext";
+import { useJobRecovery } from "@/hooks/useJobRecovery";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -49,6 +51,8 @@ function StencilTool() {
     lineColor: "black"
   });
   const queryClient = useQueryClient();
+  const { addJob, updateJob, getJob } = useJobs();
+  const { activeJobsOfType, recoveredJobs } = useJobRecovery('stencil');
   
   // Refs for scroll behavior
   const styleSectionRef = useRef<HTMLDivElement>(null);
@@ -78,6 +82,20 @@ function StencilTool() {
     },
     onSuccess: (data: StencilJob) => {
       setCurrentJob(data);
+      
+      // Register job in global context
+      addJob({
+        id: data.id,
+        status: data.status as 'processing' | 'completed' | 'failed',
+        type: 'stencil',
+        originalImageUrl: data.originalImageUrl || undefined,
+        processedImageUrl: data.processedImageUrl || undefined,
+        style: data.style || undefined,
+        startedAt: data.startedAt ? (typeof data.startedAt === 'string' ? data.startedAt : data.startedAt.toISOString()) : new Date().toISOString(),
+        completedAt: data.completedAt ? (typeof data.completedAt === 'string' ? data.completedAt : data.completedAt.toISOString()) : undefined,
+        errorMessage: data.errorMessage || undefined
+      });
+      
       // Only set processing to false if job is completed or failed
       if (data.status === "completed" || data.status === "failed") {
         setIsProcessing(false);
@@ -101,6 +119,14 @@ function StencilTool() {
         if (response.ok) {
           const updatedJob = await response.json();
           setCurrentJob(updatedJob);
+          
+          // Update job in global context
+          updateJob(updatedJob.id, {
+            status: updatedJob.status as 'processing' | 'completed' | 'failed',
+            processedImageUrl: updatedJob.processedImageUrl || undefined,
+            completedAt: updatedJob.completedAt ? (typeof updatedJob.completedAt === 'string' ? updatedJob.completedAt : updatedJob.completedAt.toISOString()) : undefined,
+            errorMessage: updatedJob.errorMessage || undefined
+          });
           
           if (updatedJob.status === "completed" || updatedJob.status === "failed") {
             setIsProcessing(false);
@@ -196,6 +222,25 @@ Press and hold the stencil image above and select "Copy", then paste it directly
           <h1 className="text-3xl font-bold mb-1">Stencil Tool</h1>
           <p className="text-zinc-400 text-sm">Transform images into professional tattoo stencils</p>
         </div>
+
+        {/* Active Jobs Recovery Section */}
+        {activeJobsOfType.length > 0 && (
+          <Alert className="mb-6 bg-blue-950/50 border-blue-800 text-blue-100">
+            <Clock className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <span>
+                  {activeJobsOfType.length} trabajo{activeJobsOfType.length > 1 ? 's' : ''} en progreso encontrado{activeJobsOfType.length > 1 ? 's' : ''}. 
+                  Se están actualizando automáticamente.
+                </span>
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span className="text-xs">Sincronizando...</span>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           {/* Left Column - Upload & Settings */}
