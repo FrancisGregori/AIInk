@@ -1,26 +1,21 @@
 import { StencilJob } from "@shared/schema";
 
-interface ComfyDeployWorkflow {
-  steven: string;
-  makishi: string;
-  darwin: string;
-  adrian: string;
-}
-
-// ComfyDeploy workflow IDs for each stencil style
-const WORKFLOW_IDS: ComfyDeployWorkflow = {
-  steven: "workflow_steven_id", // Replace with actual workflow ID
-  makishi: "workflow_makishi_id", // Replace with actual workflow ID
-  darwin: "workflow_darwin_id", // Replace with actual workflow ID
-  adrian: "workflow_adrian_id", // Replace with actual workflow ID
+// Map style names to LoRA model files
+const LORA_MODELS: Record<string, string> = {
+  steven: "flux/stevenstyle.safetensors",
+  makishi: "flux/MakiStyle.safetensors",
+  darwin: "flux/DarwinStyle.safetensors",
+  adrian: "flux/Adrianstyle.safetensors",
 };
 
 export class ComfyDeployService {
   private apiKey: string;
+  private deploymentId: string = "7df83d8e-f274-4d6a-8947-833705e86d9e"; // Single deployment for all styles
   private baseUrl = "https://api.comfydeploy.com/v1";
 
   constructor() {
     this.apiKey = process.env.COMFY_DEPLOY_API_KEY || "";
+    
     if (!this.apiKey) {
       console.warn("ComfyDeploy API key not found. Processing will fail.");
     }
@@ -28,7 +23,7 @@ export class ComfyDeployService {
 
   async processImage(
     imageUrl: string,
-    style: keyof ComfyDeployWorkflow,
+    style: string,
     processingOptions?: any
   ): Promise<{ runId: string; status: string; outputUrl?: string }> {
     if (!this.apiKey) {
@@ -42,19 +37,20 @@ export class ComfyDeployService {
     }
 
     try {
-      // Deploy the workflow
-      const deployResponse = await fetch(`${this.baseUrl}/deploy`, {
+      // Deploy the workflow with correct parameters for ComfyDeploy
+      const deployResponse = await fetch(`${this.baseUrl}/run`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          workflow_id: WORKFLOW_IDS[style],
+          deployment_id: this.deploymentId,
           inputs: {
-            image_url: imageUrl,
-            remove_background: processingOptions?.removeBackground || true,
+            input_image: imageUrl, // Correct parameter name for ComfyDeploy
+            "fondo transparente": processingOptions?.removeBackground || false,
             line_color: processingOptions?.lineColor || "black",
+            lora_path: LORA_MODELS[style] || LORA_MODELS.steven, // Use full LoRA path
           },
         }),
       });
@@ -64,7 +60,7 @@ export class ComfyDeployService {
       }
 
       const deployData = await deployResponse.json();
-      const runId = deployData.run_id;
+      const runId = deployData.run_id || deployData.id;
 
       // Return immediately with the run ID
       return {
@@ -77,7 +73,7 @@ export class ComfyDeployService {
     }
   }
 
-  async checkStatus(runId: string): Promise<{ status: string; outputUrl?: string }> {
+  async checkRunStatus(runId: string): Promise<{ status: string; outputUrl?: string; error?: string }> {
     if (!this.apiKey || runId.startsWith("mock-")) {
       return {
         status: "completed",
@@ -86,7 +82,7 @@ export class ComfyDeployService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/status/${runId}`, {
+      const response = await fetch(`${this.baseUrl}/run/${runId}`, {
         headers: {
           "Authorization": `Bearer ${this.apiKey}`,
         },
@@ -98,9 +94,16 @@ export class ComfyDeployService {
 
       const data = await response.json();
       
+      // Map ComfyDeploy status to our status
+      let status = data.status?.toLowerCase() || "processing";
+      if (status === "success") {
+        status = "completed";
+      }
+      
       return {
-        status: data.status,
-        outputUrl: data.outputs?.image_url,
+        status,
+        outputUrl: data.outputs?.output_image || data.outputs?.image || data.outputs?.image_url,
+        error: data.error,
       };
     } catch (error) {
       console.error("Error checking ComfyDeploy status:", error);
