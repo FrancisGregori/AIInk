@@ -42,20 +42,16 @@ export default function Navigation() {
                 >
                   Home
                 </button>
-                <button 
-                  onClick={() => scrollToSection("stencil")} 
-                  className="text-gray-300 hover:text-white transition-colors font-medium"
-                  data-testid="button-nav-stencil"
-                >
-                  Tools
-                </button>
-                <button 
-                  onClick={() => scrollToSection("flux")} 
-                  className="text-gray-300 hover:text-white transition-colors font-medium"
-                  data-testid="button-nav-design"
-                >
-                  Features
-                </button>
+                <Link href="/stencil-tool">
+                  <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-stencil">
+                    Stencil Tool
+                  </span>
+                </Link>
+                <Link href="/design-editor">
+                  <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-design">
+                    Design Editor
+                  </span>
+                </Link>
               </>
             ) : (
               <>
@@ -66,12 +62,12 @@ export default function Navigation() {
                 </Link>
                 <Link href="/stencil-tool">
                   <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-stencil">
-                    Stencil
+                    Stencil Tool
                   </span>
                 </Link>
                 <Link href="/design-editor">
                   <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-design">
-                    Editor
+                    Design Editor
                   </span>
                 </Link>
               </>
