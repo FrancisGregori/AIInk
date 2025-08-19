@@ -37,6 +37,22 @@ export class ComfyDeployService {
     }
 
     try {
+      const requestBody = {
+        deployment_id: this.deploymentId,
+        inputs: {
+          input_image: imageUrl, // Correct parameter name for ComfyDeploy
+          "fondo transparente": processingOptions?.removeBackground || false,
+          line_color: processingOptions?.lineColor || "black",
+          lora_path: LORA_MODELS[style] || LORA_MODELS.steven, // Use full LoRA path
+        },
+      };
+
+      console.log("Sending request to ComfyDeploy:", {
+        url: `${this.baseUrl}/run`,
+        deployment_id: this.deploymentId,
+        inputs: requestBody.inputs,
+      });
+
       // Deploy the workflow with correct parameters for ComfyDeploy
       const deployResponse = await fetch(`${this.baseUrl}/run`, {
         method: "POST",
@@ -44,19 +60,13 @@ export class ComfyDeployService {
           "Authorization": `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          deployment_id: this.deploymentId,
-          inputs: {
-            input_image: imageUrl, // Correct parameter name for ComfyDeploy
-            "fondo transparente": processingOptions?.removeBackground || false,
-            line_color: processingOptions?.lineColor || "black",
-            lora_path: LORA_MODELS[style] || LORA_MODELS.steven, // Use full LoRA path
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!deployResponse.ok) {
-        throw new Error(`ComfyDeploy API error: ${deployResponse.statusText}`);
+        const errorText = await deployResponse.text();
+        console.error("ComfyDeploy API error response:", errorText);
+        throw new Error(`ComfyDeploy API error: ${deployResponse.statusText} - ${errorText}`);
       }
 
       const deployData = await deployResponse.json();
