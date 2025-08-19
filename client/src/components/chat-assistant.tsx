@@ -229,20 +229,19 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     } catch (error) {
       console.error('Image analysis error:', error);
       
-      // Remove analyzing message and show fallback analysis
+      // Remove analyzing message
       setMessages(prev => prev.filter(msg => msg.id !== analyzingMessage.id));
       
-      // Provide a simulated analysis when API fails
-      const fallbackAnalysis: Message = {
-        id: `analysis-${Date.now()}`,
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
         role: 'assistant',
         content: language === 'es'
-          ? '📸 He recibido tu imagen. Veo un diseño con gran potencial para transformación artística.\n\nElementos detectados:\n• Composición interesante con buenos contrastes\n• Detalles que se pueden realzar o simplificar\n• Base sólida para aplicar diferentes estilos\n\n¿Qué modificación te gustaría hacer? Por ejemplo:\n• Cambiar a vista frontal\n• Añadir color\n• Cambiar expresión\n• Modificar el estilo artístico'
-          : '📸 I\'ve received your image. I see a design with great potential for artistic transformation.\n\nDetected elements:\n• Interesting composition with good contrasts\n• Details that can be enhanced or simplified\n• Solid base for applying different styles\n\nWhat modification would you like to make? For example:\n• Change to front view\n• Add color\n• Change expression\n• Modify artistic style',
+          ? '❌ Error al analizar la imagen. Por favor verifica que la API key de Gemini esté configurada correctamente.'
+          : '❌ Error analyzing image. Please verify that the Gemini API key is configured correctly.',
         timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, fallbackAnalysis]);
+      setMessages(prev => [...prev, errorMessage]);
     }
   };
 
@@ -355,28 +354,16 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     } catch (error) {
       console.error('Chat error:', error);
       
-      // Provide fallback response when API fails
-      const fallbackMessage: Message = {
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: generateTechnicalPrompt(inputMessage, language),
+        content: language === 'es'
+          ? '❌ Error al procesar el mensaje. Verifica la configuración de la API.'
+          : '❌ Error processing message. Please check API configuration.',
         timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, fallbackMessage]);
-      
-      // Auto-apply if it's a technical prompt
-      if (fallbackMessage.content.includes('maintaining')) {
-        setTimeout(() => {
-          onApplyPrompt(fallbackMessage.content);
-          toast({
-            title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
-            description: language === 'es' 
-              ? "El prompt se ha aplicado al campo de edición"
-              : "The prompt has been applied to the edit field"
-          });
-        }, 500);
-      }
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
