@@ -154,17 +154,12 @@ function DesignEditor() {
   // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: async (data: { prompt: string; settings: any }) => {
-      return apiRequest({
-        url: "/api/flux/create",
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.prompt.slice(0, 50),
-          description: data.prompt,
-          prompt: data.prompt,
-          settings: data.settings,
-          userId: "demo-user",
-        }),
+      return apiRequest("POST", "/api/flux/create", {
+        name: data.prompt.slice(0, 50),
+        description: data.prompt,
+        prompt: data.prompt,
+        settings: data.settings,
+        userId: "demo-user",
       });
     },
     onSuccess: () => {

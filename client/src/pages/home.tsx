@@ -225,7 +225,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Flux Kontext Section */}
+      {/* Design Editor Section */}
       <section id="flux" className="py-20 bg-dark-gray/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -259,7 +259,7 @@ export default function Home() {
             </div>
             
             <div className="order-1 lg:order-2">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">Flux Kontext</h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">Design Editor</h2>
               <p className="text-xl text-light-gray mb-8 leading-relaxed">
                 Editor de diseños potenciado por IA con asistente Gemini integrado. 
                 Crea, edita y perfecciona tus diseños con ayuda inteligente.
@@ -291,19 +291,19 @@ export default function Home() {
                     <Zap className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Flux Kontext</h4>
+                    <h4 className="font-semibold mb-1">Procesamiento Inteligente</h4>
                     <p className="text-light-gray">Modelo de IA especializado en diseño</p>
                   </div>
                 </div>
               </div>
               
-              <Link href="/flux-kontext">
+              <Link href="/design-editor">
                 <Button 
                   variant="outline"
                   className="border-medium-gray text-white px-8 py-4 rounded-lg font-medium hover:bg-dark-gray transition-colors"
                   data-testid="button-open-flux"
                 >
-                  Abrir Flux Kontext
+                  Abrir Design Editor
                 </Button>
               </Link>
             </div>
