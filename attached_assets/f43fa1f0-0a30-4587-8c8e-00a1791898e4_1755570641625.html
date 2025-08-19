@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TattoostencilPro - Professional Stencil Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'app-black': '#000000',
+                        'app-dark': '#0F0F0F',
+                        'app-gray-dark': '#1A1A1A',
+                        'app-gray': '#333333',
+                        'app-gray-light': '#CCCCCC',
+                        'app-success': '#10B981',
+                        'app-warning': '#F59E0B',
+                        'app-error': '#EF4444',
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-app-black text-white font-inter min-h-screen">
+    <!-- @COMPONENT: AppHeader -->
+    <header class="border-b border-app-gray px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                    <i class="fas fa-paint-brush text-app-black text-sm"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white">TattoostencilPro</h1>
+            </div>
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="#" class="text-app-gray-light hover:text-white transition-colors">Gallery</a>
+                <a href="#" class="text-app-gray-light hover:text-white transition-colors">Help</a>
+                <button class="bg-white text-app-black px-4 py-2 rounded-lg font-medium hover:bg-app-gray-light transition-colors">
+                    Pro Version
+                </button>
+            </nav>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: AppHeader -->
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- @COMPONENT: MainWorkspace -->
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Left Panel - Image Upload & Controls -->
+            <div class="space-y-6">
+                <!-- @COMPONENT: ImageUploader -->
+                <div class="bg-app-gray-dark rounded-2xl p-6 border-2 border-dashed border-app-gray hover:border-app-gray-light transition-colors">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-app-gray rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-cloud-upload-alt text-2xl text-app-gray-light"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Upload Your Image</h3>
+                        <p class="text-app-gray-light mb-6">Drag and drop your image here, or click to browse</p>
+                        
+                        <!-- Hidden file input -->
+                        <input type="file" id="imageUpload" class="hidden" accept="image/*" data-mock="true">
+                        
+                        <div class="space-y-3">
+                            <button onclick="document.getElementById('imageUpload').click()" 
+                                    class="w-full bg-white text-app-black py-3 px-6 rounded-xl font-medium hover:bg-app-gray-light transition-colors"
+                                    data-event="click:handleFileSelect">
+                                Choose File
+                            </button>
+                            <p class="text-sm text-app-gray-light">Supports JPG, PNG, GIF up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: ImageUploader -->
+
+                <!-- @COMPONENT: StencilStyleSelector -->
+                <div class="bg-app-gray-dark rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">Stencil Style</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Style Option 1 -->
+                        <div class="relative">
+                            <input type="radio" id="style-classic" name="stencil-style" value="classic" class="sr-only" data-mock="true">
+                            <label for="style-classic" class="block p-4 bg-app-gray rounded-xl border-2 border-transparent hover:border-app-gray-light cursor-pointer transition-colors">
+                                <div class="text-center">
+                                    <i class="fas fa-image text-xl mb-2 text-app-gray-light"></i>
+                                    <div class="font-medium">Classic</div>
+                                    <div class="text-sm text-app-gray-light">Traditional bold lines</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Style Option 2 -->
+                        <div class="relative">
+                            <input type="radio" id="style-detailed" name="stencil-style" value="detailed" class="sr-only" data-mock="true">
+                            <label for="style-detailed" class="block p-4 bg-app-gray rounded-xl border-2 border-transparent hover:border-app-gray-light cursor-pointer transition-colors">
+                                <div class="text-center">
+                                    <i class="fas fa-th text-xl mb-2 text-app-gray-light"></i>
+                                    <div class="font-medium">Detailed</div>
+                                    <div class="text-sm text-app-gray-light">Fine line work</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Style Option 3 -->
+                        <div class="relative">
+                            <input type="radio" id="style-sketch" name="stencil-style" value="sketch" class="sr-only" data-mock="true">
+                            <label for="style-sketch" class="block p-4 bg-app-gray rounded-xl border-2 border-transparent hover:border-app-gray-light cursor-pointer transition-colors">
+                                <div class="text-center">
+                                    <i class="fas fa-pencil-alt text-xl mb-2 text-app-gray-light"></i>
+                                    <div class="font-medium">Sketch</div>
+                                    <div class="text-sm text-app-gray-light">Hand-drawn style</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Style Option 4 -->
+                        <div class="relative">
+                            <input type="radio" id="style-minimal" name="stencil-style" value="minimal" class="sr-only" data-mock="true">
+                            <label for="style-minimal" class="block p-4 bg-app-gray rounded-xl border-2 border-transparent hover:border-app-gray-light cursor-pointer transition-colors">
+                                <div class="text-center">
+                                    <i class="fas fa-minus text-xl mb-2 text-app-gray-light"></i>
+                                    <div class="font-medium">Minimal</div>
+                                    <div class="text-sm text-app-gray-light">Clean & simple</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: StencilStyleSelector -->
+
+                <!-- @COMPONENT: ProcessingOptions -->
+                <div class="bg-app-gray-dark rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">Processing Options</h3>
+                    
+                    <!-- Transparent Background Toggle -->
+                    <div class="flex items-center justify-between p-4 bg-app-gray rounded-xl mb-4">
+                        <div>
+                            <div class="font-medium">Transparent Background</div>
+                            <div class="text-sm text-app-gray-light">Remove background for easy transfer</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" data-mock="true" data-bind="transparentBackground">
+                            <div class="w-11 h-6 bg-app-gray peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-success"></div>
+                        </label>
+                    </div>
+
+                    <!-- Quality Slider -->
+                    <div class="p-4 bg-app-gray rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-medium">Quality</span>
+                            <span class="text-app-gray-light" data-bind="qualityValue">85%</span>
+                        </div>
+                        <input type="range" min="50" max="100" value="85" 
+                               class="w-full h-2 bg-app-gray-dark rounded-lg appearance-none cursor-pointer slider"
+                               data-mock="true" data-bind="quality">
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: ProcessingOptions -->
+
+                <!-- @COMPONENT: ActionButtons -->
+                <div class="space-y-3">
+                    <button class="w-full bg-app-success text-white py-4 px-6 rounded-xl font-semibold hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+                            data-event="click:processImage" data-implementation="Should validate inputs and call API">
+                        <i class="fas fa-magic"></i>
+                        <span>Generate Stencil</span>
+                    </button>
+                    
+                    <button class="w-full bg-app-gray text-white py-3 px-6 rounded-xl font-medium hover:bg-app-gray-light transition-colors flex items-center justify-center space-x-2"
+                            data-event="click:resetForm" data-implementation="Should clear all inputs and preview">
+                        <i class="fas fa-redo"></i>
+                        <span>Reset</span>
+                    </button>
+                </div>
+                <!-- @END_COMPONENT: ActionButtons -->
+            </div>
+
+            <!-- Right Panel - Preview Area -->
+            <div class="space-y-6">
+                <!-- @COMPONENT: PreviewArea -->
+                <div class="bg-app-gray-dark rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">Preview</h3>
+                        <div class="flex space-x-2">
+                            <button class="p-2 bg-app-gray rounded-lg hover:bg-app-gray-light transition-colors"
+                                    data-event="click:toggleOriginal" data-implementation="Toggle between original and stencil view">
+                                <i class="fas fa-eye text-sm"></i>
+                            </button>
+                            <button class="p-2 bg-app-gray rounded-lg hover:bg-app-gray-light transition-colors"
+                                    data-event="click:zoomIn" data-implementation="Zoom functionality">
+                                <i class="fas fa-search-plus text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preview Container -->
+                    <div class="aspect-square bg-app-gray rounded-xl border-2 border-dashed border-app-gray-light flex items-center justify-center relative overflow-hidden">
+                        <!-- @STATE: hasImage:boolean = false -->
+                        <!-- @STATE: isProcessing:boolean = false -->
+                        <!-- @STATE: processedImage:string = null -->
+                        
+                        <!-- Default State -->
+                        <div class="text-center text-app-gray-light" data-show-when="!hasImage">
+                            <i class="fas fa-image text-4xl mb-4"></i>
+                            <p class="text-lg font-medium">No image uploaded</p>
+                            <p class="text-sm">Upload an image to see the preview</p>
+                        </div>
+
+                        <!-- Processing State -->
+                        <div class="absolute inset-0 bg-app-gray-dark bg-opacity-90 flex items-center justify-center" data-show-when="isProcessing" style="display: none;">
+                            <div class="text-center">
+                                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                                <p class="text-lg font-medium">Processing your stencil...</p>
+                                <p class="text-sm text-app-gray-light">This may take a few moments</p>
+                            </div>
+                        </div>
+
+                        <!-- Sample Preview (Mock) -->
+                        <!-- A detailed black and white tattoo stencil of a rose with intricate line work -->
+                        <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=800" 
+                             alt="Stencil preview" 
+                             class="w-full h-full object-cover rounded-lg"
+                             data-mock-image="true" 
+                             data-implementation="Replace with processed stencil image from API"
+                             style="display: none;" />
+                    </div>
+
+                    <!-- Preview Info -->
+                    <div class="mt-4 p-4 bg-app-gray rounded-xl">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-app-gray-light">Dimensions:</span>
+                                <span class="ml-2 font-medium" data-bind="imageDimensions">--</span>
+                            </div>
+                            <div>
+                                <span class="text-app-gray-light">File Size:</span>
+                                <span class="ml-2 font-medium" data-bind="fileSize">--</span>
+                            </div>
+                            <div>
+                                <span class="text-app-gray-light">Style:</span>
+                                <span class="ml-2 font-medium" data-bind="selectedStyle">--</span>
+                            </div>
+                            <div>
+                                <span class="text-app-gray-light">Status:</span>
+                                <span class="ml-2 font-medium text-app-success" data-bind="processingStatus">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: PreviewArea -->
+
+                <!-- @COMPONENT: DownloadSection -->
+                <div class="bg-app-gray-dark rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">Download</h3>
+                    
+                    <div class="space-y-3">
+                        <!-- Download Options -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="flex items-center justify-center space-x-2 p-3 bg-app-gray rounded-xl hover:bg-app-gray-light transition-colors"
+                                    data-event="click:downloadPNG" data-implementation="Download stencil as PNG">
+                                <i class="fas fa-download"></i>
+                                <span>PNG</span>
+                            </button>
+                            <button class="flex items-center justify-center space-x-2 p-3 bg-app-gray rounded-xl hover:bg-app-gray-light transition-colors"
+                                    data-event="click:downloadJPG" data-implementation="Download stencil as JPG">
+                                <i class="fas fa-download"></i>
+                                <span>JPG</span>
+                            </button>
+                        </div>
+
+                        <!-- High Resolution Option -->
+                        <button class="w-full flex items-center justify-center space-x-2 p-4 bg-white text-app-black rounded-xl font-semibold hover:bg-app-gray-light transition-colors"
+                                data-event="click:downloadHD" data-implementation="Download high resolution version">
+                            <i class="fas fa-star"></i>
+                            <span>Download HD (Pro)</span>
+                        </button>
+
+                        <!-- Save to Gallery -->
+                        <button class="w-full flex items-center justify-center space-x-2 p-3 bg-app-gray rounded-xl hover:bg-app-gray-light transition-colors"
+                                data-event="click:saveToGallery" data-implementation="Save to user gallery">
+                            <i class="fas fa-bookmark"></i>
+                            <span>Save to Gallery</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: DownloadSection -->
+            </div>
+        </div>
+        <!-- @END_COMPONENT: MainWorkspace -->
+
+        <!-- @COMPONENT: RecentWork -->
+        <div class="mt-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">Recent Work</h2>
+                <button class="text-app-gray-light hover:text-white transition-colors">View All</button>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- @MAP: recentStencils.map(stencil => ( -->
+                <div class="aspect-square bg-app-gray-dark rounded-xl overflow-hidden hover:bg-app-gray transition-colors cursor-pointer group"
+                     data-event="click:loadStencil" data-implementation="Load previous stencil for editing">
+                    <!-- A minimalist geometric tattoo stencil design -->
+                    <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=400" 
+                         alt="Recent stencil work" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                         data-mock-image="true" />
+                </div>
+                <!-- Repeat for more items -->
+                <div class="aspect-square bg-app-gray-dark rounded-xl overflow-hidden hover:bg-app-gray transition-colors cursor-pointer group">
+                    <!-- A traditional style dragon tattoo stencil -->
+                    <img src="https://pixabay.com/get/g08b6f574179f380c737ddf8eb748ae0bb6d716a7474ad16688f031f33f5a9ef08ceab0334ecd61081f17f0838b6976737bea850346c5a71d3e02377f53e70ffe_1280.jpg" 
+                         alt="Recent stencil work" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                         data-mock-image="true" />
+                </div>
+                <div class="aspect-square bg-app-gray-dark rounded-xl overflow-hidden hover:bg-app-gray transition-colors cursor-pointer group">
+                    <!-- A delicate floral tattoo stencil design -->
+                    <img src="https://images.unsplash.com/photo-1563089145-599997674d42?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=400" 
+                         alt="Recent stencil work" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                         data-mock-image="true" />
+                </div>
+                <div class="aspect-square bg-app-gray-dark rounded-xl overflow-hidden hover:bg-app-gray transition-colors cursor-pointer group">
+                    <!-- An abstract line art tattoo stencil -->
+                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=400" 
+                         alt="Recent stencil work" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                         data-mock-image="true" />
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+        <!-- @END_COMPONENT: RecentWork -->
+    </main>
+
+    <!-- @COMPONENT: Footer -->
+    <footer class="border-t border-app-gray mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-3 mb-4 md:mb-0">
+                    <div class="w-6 h-6 bg-white rounded flex items-center justify-center">
+                        <i class="fas fa-paint-brush text-app-black text-xs"></i>
+                    </div>
+                    <span class="font-semibold">TattoostencilPro</span>
+                </div>
+                <div class="flex items-center space-x-6 text-sm text-app-gray-light">
+                    <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-white transition-colors">Terms</a>
+                    <a href="#" class="hover:text-white transition-colors">Support</a>
+                    <span>© 2024 TattoostencilPro</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- @END_COMPONENT: Footer -->
+
+    <style>
+        /* Custom slider styling */
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #10B981;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #10B981;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Drag and drop styling */
+        .drag-over {
+            border-color: #10B981 !important;
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+
+        /* Selected style styling */
+        input[type="radio"]:checked + label {
+            border-color: #10B981 !important;
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+    </style>
+
+    <script>
+        (function() {
+            // TODO: Implement drag and drop functionality
+            // TODO: Implement file upload and validation
+            // TODO: Implement API integration for stencil processing
+            // TODO: Implement preview functionality
+            // TODO: Implement download functionality
+            // TODO: Implement gallery features
+            
+            // Mock interactions for demonstration
+            const uploadArea = document.querySelector('.bg-app-gray-dark.rounded-2xl');
+            const fileInput = document.getElementById('imageUpload');
+            
+            // Drag and drop visual feedback
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('drag-over');
+                });
+                
+                uploadArea.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                });
+                
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    // TODO: Handle dropped files
+                });
+            }
+
+            // Style selection visual feedback
+            const styleInputs = document.querySelectorAll('input[name="stencil-style"]');
+            styleInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    // TODO: Update preview based on selected style
+                    console.log('Style selected:', this.value);
+                });
+            });
+
+            // Quality slider feedback
+            const qualitySlider = document.querySelector('input[type="range"]');
+            const qualityValue = document.querySelector('[data-bind="qualityValue"]');
+            
+            if (qualitySlider && qualityValue) {
+                qualitySlider.addEventListener('input', function() {
+                    qualityValue.textContent = this.value + '%';
+                });
+            }
+
+            // Toggle switch feedback
+            const toggles = document.querySelectorAll('input[type="checkbox"]');
+            toggles.forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    // TODO: Update processing options
+                    console.log('Toggle changed:', this.checked);
+                });
+            });
+            
+        })();
+    </script>
+</body>
+</html>

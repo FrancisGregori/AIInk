@@ -99,22 +99,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const status = await comfyDeploy.checkRunStatus(job.comfyDeployRunId);
           
+          console.log("Polling result for job", job.id, "ComfyDeploy run:", job.comfyDeployRunId);
+          console.log("Status from ComfyDeploy:", {
+            status: status.status,
+            outputUrl: status.outputUrl,
+            error: status.error
+          });
+          
           // Update job based on ComfyDeploy status
           if (status.status === "completed" && status.outputUrl) {
+            console.log("Job completed! Updating with URL:", status.outputUrl);
             await storage.updateStencilJob(job.id, {
               status: "completed",
               processedImageUrl: status.outputUrl,
               completedAt: new Date(),
             });
           } else if (status.status === "failed") {
+            console.log("Job failed:", status.error);
             await storage.updateStencilJob(job.id, {
               status: "failed",
               errorMessage: status.error || "Processing failed",
             });
+          } else {
+            console.log("Job still processing, status:", status.status);
           }
           
           // Return the updated job
           const updatedJob = await storage.getStencilJob(req.params.id);
+          console.log("Returning updated job:", updatedJob);
           return res.json(updatedJob);
         } catch (error) {
           console.error("Error checking ComfyDeploy status:", error);
