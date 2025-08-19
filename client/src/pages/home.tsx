@@ -22,14 +22,14 @@ export default function Home() {
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="space-y-8">
             {/* Main Title */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
               <span className="text-white">
                 CREA DISEÑOS
               </span>
               <span className="block text-white">
                 PROFESIONALES
               </span>
-              <span className="block text-3xl md:text-4xl lg:text-5xl text-gray-400 font-normal mt-4">
+              <span className="block text-2xl md:text-3xl lg:text-4xl text-gray-400 font-normal mt-4">
                 EN SEGUNDOS
               </span>
             </h1>
@@ -87,8 +87,8 @@ export default function Home() {
       <section className="py-24 bg-dark-gray/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight text-white">
               TOOLS
             </h2>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
