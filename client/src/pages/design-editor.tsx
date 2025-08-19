@@ -46,7 +46,7 @@ interface InkVisionMessage {
   suggestions?: string[];
 }
 
-function FluxKontext() {
+function DesignEditor() {
   const [prompt, setPrompt] = useState<string>("");
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
@@ -67,8 +67,8 @@ function FluxKontext() {
   // Translations
   const t = {
     es: {
-      title: "FLUX Kontext Pro",
-      subtitle: "Generador de diseños con IA",
+      title: "Design Editor",
+      subtitle: "Editor de diseños con IA",
       prompt: "Descripción del diseño",
       promptPlaceholder: "Describe tu diseño de tatuaje aquí...",
       referenceImage: "Imagen de referencia",
@@ -100,8 +100,8 @@ function FluxKontext() {
       neoTraditional: "Neo-tradicional",
     },
     en: {
-      title: "FLUX Kontext Pro",
-      subtitle: "AI Design Generator",
+      title: "Design Editor",
+      subtitle: "AI Design Editor",
       prompt: "Design description",
       promptPlaceholder: "Describe your tattoo design here...",
       referenceImage: "Reference image",
@@ -154,7 +154,8 @@ function FluxKontext() {
   // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: async (data: { prompt: string; settings: any }) => {
-      return apiRequest("/api/flux/create", {
+      return apiRequest({
+        url: "/api/flux/create",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -700,4 +701,4 @@ function FluxKontext() {
   );
 }
 
-export default FluxKontext;
+export default DesignEditor;

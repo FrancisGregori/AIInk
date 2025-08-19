@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import StencilTool from "@/pages/stencil-tool";
-import FluxKontext from "@/pages/flux-kontext";
+import DesignEditor from "@/pages/design-editor";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -13,7 +13,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/stencil-tool" component={StencilTool} />
-      <Route path="/flux-kontext" component={FluxKontext} />
+      <Route path="/design-editor" component={DesignEditor} />
       <Route component={NotFound} />
     </Switch>
   );

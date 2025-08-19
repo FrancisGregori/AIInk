@@ -48,9 +48,9 @@ export default function Navigation() {
                 <button 
                   onClick={() => scrollToSection("flux")} 
                   className="text-light-gray hover:text-white transition-colors"
-                  data-testid="button-nav-flux"
+                  data-testid="button-nav-design"
                 >
-                  Flux Kontext
+                  Design Editor
                 </button>
                 <button 
                   onClick={() => scrollToSection("contacto")} 
@@ -67,14 +67,14 @@ export default function Navigation() {
                     Inicio
                   </span>
                 </Link>
-                <Link href="/stencil">
+                <Link href="/stencil-tool">
                   <span className="text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-nav-stencil">
                     Stencil Tool
                   </span>
                 </Link>
-                <Link href="/flux">
-                  <span className="text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-nav-flux">
-                    Flux Kontext
+                <Link href="/design-editor">
+                  <span className="text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-nav-design">
+                    Design Editor
                   </span>
                 </Link>
               </>
@@ -115,9 +115,9 @@ export default function Navigation() {
                   <button 
                     onClick={() => scrollToSection("flux")} 
                     className="block px-3 py-2 text-light-gray hover:text-white transition-colors"
-                    data-testid="button-mobile-nav-flux"
+                    data-testid="button-mobile-nav-design"
                   >
-                    Flux Kontext
+                    Design Editor
                   </button>
                   <button 
                     onClick={() => scrollToSection("contacto")} 
@@ -134,14 +134,14 @@ export default function Navigation() {
                       Inicio
                     </span>
                   </Link>
-                  <Link href="/stencil">
+                  <Link href="/stencil-tool">
                     <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-stencil">
                       Stencil Tool
                     </span>
                   </Link>
-                  <Link href="/flux">
-                    <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-flux">
-                      Flux Kontext
+                  <Link href="/design-editor">
+                    <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-design">
+                      Design Editor
                     </span>
                   </Link>
                 </>

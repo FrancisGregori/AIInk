@@ -106,7 +106,7 @@ export default function Home() {
                   <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mb-4">
                     <Palette className="text-black text-2xl h-8 w-8" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3">Editor Flux Kontext</h3>
+                  <h3 className="text-2xl font-bold mb-3">Design Editor</h3>
                   <p className="text-light-gray text-lg leading-relaxed">
                     Editor avanzado de diseños con integración de IA. Incluye asistente Gemini para 
                     una experiencia de diseño completamente intuitiva.
@@ -128,13 +128,13 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <Link href="/flux-kontext">
+                <Link href="/design-editor">
                   <Button 
                     variant="outline"
                     className="w-full border-medium-gray text-white py-3 rounded-lg font-medium hover:bg-dark-gray transition-colors"
-                    data-testid="button-use-flux"
+                    data-testid="button-use-design"
                   >
-                    Usar Flux Kontext
+                    Usar Design Editor
                   </Button>
                 </Link>
               </CardContent>
