@@ -479,7 +479,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             : "The prompt is being processed with Flux Kontext"
         });
 
-        // Call Replicate API with the current image and prompt
+        // Call Replicate API with just the prompt (no image sending)
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: {
@@ -487,7 +487,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           },
           body: JSON.stringify({
             prompt: content,
-            inputImageUrl: storedImage, // Send current image as base64
             model: 'pro', // Use professional model
             aspectRatio: 'match_input_image',
             projectId: currentJob?.id // Update existing project if available
