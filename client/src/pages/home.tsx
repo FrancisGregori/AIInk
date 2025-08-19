@@ -11,14 +11,11 @@ export default function Home() {
       
       {/* Hero Section */}
       <section id="inicio" className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-        {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/10 to-indigo-900/20"></div>
-        
         {/* Subtle Pattern Overlay */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 25% 25%, white 2px, transparent 2px)`,
-            backgroundSize: '50px 50px'
+            backgroundImage: `radial-gradient(circle at 25% 25%, white 1px, transparent 1px)`,
+            backgroundSize: '60px 60px'
           }}></div>
         </div>
         
@@ -26,10 +23,10 @@ export default function Home() {
           <div className="space-y-8">
             {/* Main Title */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
+              <span className="text-white">
                 CREA DISEÑOS
               </span>
-              <span className="block bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
+              <span className="block text-white">
                 PROFESIONALES
               </span>
               <span className="block text-3xl md:text-4xl lg:text-5xl text-gray-400 font-normal mt-4">
@@ -50,7 +47,7 @@ export default function Home() {
               <Link href="/design-editor">
                 <Button 
                   size="lg"
-                  className="bg-white text-black px-10 py-6 text-lg font-semibold rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-xl"
+                  className="bg-white text-black px-10 py-6 text-lg font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-2xl"
                   data-testid="button-start-creating"
                 >
                   Comenzar gratis
@@ -87,14 +84,12 @@ export default function Home() {
       </section>
 
       {/* Tools Section */}
-      <section className="py-24 bg-gradient-to-b from-black via-gray-950/50 to-black">
+      <section className="py-24 bg-dark-gray/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-              <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                TOOLS
-              </span>
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white">
+              TOOLS
             </h2>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
               Advanced tools for tattoo artists
@@ -104,15 +99,11 @@ export default function Home() {
           {/* Tools Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Stencil Generator */}
-            <Card className="group relative bg-gradient-to-br from-gray-900/80 via-gray-900/60 to-gray-800/40 border-gray-700/50 hover:border-gray-600/50 transition-all duration-500 hover:transform hover:scale-[1.02] overflow-hidden">
-              {/* Background Image/Preview */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-purple-600/5 to-indigo-600/5"></div>
-              <div className="absolute top-4 right-4 w-16 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg opacity-50"></div>
-              
+            <Card className="group relative bg-black border-gray-700 hover:border-gray-500 transition-all duration-500 hover:transform hover:scale-[1.02] overflow-hidden">
               <CardContent className="relative p-8">
                 <div className="mb-6">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 shadow-lg">
-                    <Image className="text-white h-7 w-7" />
+                  <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                    <Image className="text-black h-7 w-7" />
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-white">Stencil Generator</h3>
                   <p className="text-gray-400 leading-relaxed">
@@ -122,7 +113,7 @@ export default function Home() {
                 
                 <Link href="/stencil-tool">
                   <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
+                    className="w-full bg-white text-black hover:bg-gray-100 py-3 rounded-lg font-medium transition-all duration-300 shadow-lg"
                     data-testid="button-stencil-generator"
                   >
                     Try Now
@@ -132,15 +123,11 @@ export default function Home() {
             </Card>
             
             {/* AI Image Editor */}
-            <Card className="group relative bg-gradient-to-br from-gray-900/80 via-gray-900/60 to-gray-800/40 border-gray-700/50 hover:border-gray-600/50 transition-all duration-500 hover:transform hover:scale-[1.02] overflow-hidden">
-              {/* Background Image/Preview */}
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/5 via-teal-600/5 to-cyan-600/5"></div>
-              <div className="absolute top-4 right-4 w-16 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-lg opacity-50"></div>
-              
+            <Card className="group relative bg-black border-gray-700 hover:border-gray-500 transition-all duration-500 hover:transform hover:scale-[1.02] overflow-hidden">
               <CardContent className="relative p-8">
                 <div className="mb-6">
-                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mb-4 shadow-lg">
-                    <Palette className="text-white h-7 w-7" />
+                  <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                    <Palette className="text-black h-7 w-7" />
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-white">AI Image Editor</h3>
                   <p className="text-gray-400 leading-relaxed">
@@ -150,7 +137,7 @@ export default function Home() {
                 
                 <Link href="/design-editor">
                   <Button 
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-emerald-500/25"
+                    className="w-full bg-white text-black hover:bg-gray-100 py-3 rounded-lg font-medium transition-all duration-300 shadow-lg"
                     data-testid="button-ai-image-editor"
                   >
                     Try Now
@@ -160,14 +147,10 @@ export default function Home() {
             </Card>
             
             {/* Expression Modifier - Coming Soon */}
-            <Card className="group relative bg-gradient-to-br from-gray-900/40 via-gray-900/30 to-gray-800/20 border-gray-700/30 overflow-hidden">
-              {/* Background Image/Preview */}
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-600/5 via-red-600/5 to-pink-600/5"></div>
-              <div className="absolute top-4 right-4 w-16 h-12 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-lg opacity-30"></div>
-              
+            <Card className="group relative bg-black border-gray-800 overflow-hidden">
               <CardContent className="relative p-8">
                 <div className="mb-6">
-                  <div className="w-14 h-14 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl flex items-center justify-center mb-4">
+                  <div className="w-14 h-14 bg-gray-700 rounded-xl flex items-center justify-center mb-4">
                     <Bot className="text-gray-400 h-7 w-7" />
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-gray-300">Expression Modifier</h3>
