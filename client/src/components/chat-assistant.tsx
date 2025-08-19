@@ -17,14 +17,15 @@ interface ChatAssistantProps {
   currentImage?: string;
   onApplyPrompt: (prompt: string) => void;
   language?: "es" | "en";
+  embedded?: boolean;
 }
 
 export interface ChatAssistantRef {
   open: () => void;
 }
 
-const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es" }, ref) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false }, ref) => {
+  const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastImageAnalyzed, setLastImageAnalyzed] = useState<string>("");
   const [storedImage, setStoredImage] = useState<string>("");
@@ -390,8 +391,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
 
   return (
     <>
-      {/* Floating button with tooltip */}
-      {!isOpen && (
+      {/* Floating button with tooltip - solo si no está embedded */}
+      {!embedded && !isOpen && (
         <div className="fixed bottom-6 right-6 z-50">
           {showTooltip && (
             <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-black text-white text-sm rounded-lg whitespace-nowrap">
@@ -414,22 +415,27 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
 
       {/* Chat panel */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 w-full md:w-96 h-[600px] bg-background border-l border-t rounded-tl-xl shadow-xl z-50 flex flex-col">
+        <div className={embedded 
+          ? "w-full bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl flex flex-col h-[500px]"
+          : "fixed bottom-0 right-0 w-full md:w-96 h-[600px] bg-background border-l border-t rounded-tl-xl shadow-xl z-50 flex flex-col"
+        }>
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-purple-600/10 to-pink-600/10">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-600" />
-              <h3 className="font-semibold">InkVision</h3>
+              <h3 className="font-semibold text-white">InkVision - Asistente IA</h3>
             </div>
-            <Button
-              onClick={() => setIsOpen(false)}
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              data-testid="button-close-chat"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            {!embedded && (
+              <Button
+                onClick={() => setIsOpen(false)}
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                data-testid="button-close-chat"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           {/* Messages area */}

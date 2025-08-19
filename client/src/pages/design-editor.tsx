@@ -287,7 +287,22 @@ function DesignEditor() {
           <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar - InkVision Chat (movido del flotante) */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-4">
+              <ChatAssistant 
+                ref={chatAssistantRef}
+                currentImage={referencePreview || undefined}
+                onApplyPrompt={(newPrompt) => {
+                  setPrompt(newPrompt);
+                }}
+                language={language}
+                embedded={true}
+              />
+            </div>
+          </div>
+
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Prompt Input */}
@@ -615,15 +630,7 @@ function DesignEditor() {
         </div>
       </main>
       
-      {/* InkVision Floating Chat Assistant */}
-      <ChatAssistant 
-        ref={chatAssistantRef}
-        currentImage={referencePreview || undefined}
-        onApplyPrompt={(newPrompt) => {
-          setPrompt(newPrompt);
-        }}
-        language={language}
-      />
+      {/* InkVision ahora está en el sidebar izquierdo */}
     </div>
   );
 }
