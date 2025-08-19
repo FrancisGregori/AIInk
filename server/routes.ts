@@ -328,6 +328,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get flux job status (alias for project)
+  app.get("/api/flux/jobs/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const projects = await storage.getFluxProjects();
+      const project = projects.find((p: any) => p.id === id);
+      
+      if (!project) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+      
+      // Convert project to job format for compatibility
+      const job = {
+        id: project.id,
+        status: 'completed', // Flux projects are stored when completed
+        processedImageUrl: project.imageUrl,
+        originalImageUrl: project.description || null, // Use description field for original URL
+        style: project.prompt,
+        createdAt: project.createdAt,
+        completedAt: project.updatedAt
+      };
+      
+      res.json(job);
+    } catch (error) {
+      console.error("Error fetching flux job:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Gemini Chat Routes
   app.post("/api/gemini/chat", async (req, res) => {
     try {

@@ -25,7 +25,15 @@ export function useJobRecovery(jobType: 'stencil' | 'design') {
           
           const response = await fetch(endpoint);
           if (response.ok) {
-            const updatedJob = await response.json();
+            const text = await response.text();
+            
+            // Verificar que la respuesta sea JSON válido
+            if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+              console.warn(`Endpoint ${endpoint} returned HTML instead of JSON, skipping...`);
+              return;
+            }
+            
+            const updatedJob = JSON.parse(text);
             
             // Update job in global context
             updateJob(job.id, {
