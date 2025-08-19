@@ -204,6 +204,16 @@ function DesignEditor() {
     createProjectMutation.mutate({ prompt, settings });
   };
 
+  // Handle image download
+  const downloadImage = (imageUrl: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Update dimensions based on aspect ratio or match input
   useEffect(() => {
     if (aspectRatio === "Match Input") {
@@ -517,11 +527,22 @@ function DesignEditor() {
                           />
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl max-h-[90vh] p-2">
-                          <img
-                            src={projects[0].imageUrl || ""}
-                            alt="Latest design full size"
-                            className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
-                          />
+                          <div className="relative">
+                            <img
+                              src={projects[0].imageUrl || ""}
+                              alt="Latest design full size"
+                              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                            />
+                            <Button
+                              className="absolute top-2 right-2"
+                              size="sm"
+                              onClick={() => downloadImage(projects[0].imageUrl || "", `design-${projects[0].id}.png`)}
+                              data-testid="button-download-modal"
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Descargar
+                            </Button>
+                          </div>
                         </DialogContent>
                       </Dialog>
                       
@@ -565,7 +586,12 @@ function DesignEditor() {
                       )}
                       
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <Button size="icon" variant="secondary">
+                        <Button 
+                          size="icon" 
+                          variant="secondary"
+                          onClick={() => downloadImage(projects[0].imageUrl || "", `design-${projects[0].id}.png`)}
+                          data-testid="button-download-latest"
+                        >
                           <Download className="h-4 w-4" />
                         </Button>
                         <Button size="icon" variant="secondary">
@@ -615,11 +641,22 @@ function DesignEditor() {
                             />
                           </DialogTrigger>
                           <DialogContent className="max-w-4xl max-h-[90vh] p-2">
-                            <img
-                              src={project.imageUrl || ""}
-                              alt={`${project.name} full size`}
-                              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
-                            />
+                            <div className="relative">
+                              <img
+                                src={project.imageUrl || ""}
+                                alt={`${project.name} full size`}
+                                className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                              />
+                              <Button
+                                className="absolute top-2 right-2"
+                                size="sm"
+                                onClick={() => downloadImage(project.imageUrl || "", `design-${project.id}.png`)}
+                                data-testid={`button-download-history-${project.id}`}
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                Descargar
+                              </Button>
+                            </div>
                           </DialogContent>
                         </Dialog>
                         <div className="flex-1 min-w-0">

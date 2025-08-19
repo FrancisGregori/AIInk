@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Copy, Image, Sparkles } from "lucide-react";
+import { MessageCircle, X, Send, Copy, Image, Sparkles, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -38,6 +38,16 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Handle image download
+  const downloadImage = (imageUrl: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   
   // Function to scroll to bottom - using scrollIntoView for reliability
   const scrollToBottom = () => {
@@ -606,11 +616,22 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                         />
                       </DialogTrigger>
                       <DialogContent className="max-w-4xl max-h-[90vh] p-2">
-                        <img
-                          src={msg.image}
-                          alt="Full size image"
-                          className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
-                        />
+                        <div className="relative">
+                          <img
+                            src={msg.image}
+                            alt="Full size image"
+                            className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                          />
+                          <Button
+                            className="absolute top-2 right-2"
+                            size="sm"
+                            onClick={() => downloadImage(msg.image!, `inkvision-${msg.id}.png`)}
+                            data-testid={`button-download-chat-${msg.id}`}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            {language === 'es' ? 'Descargar' : 'Download'}
+                          </Button>
+                        </div>
                       </DialogContent>
                     </Dialog>
                   )}
