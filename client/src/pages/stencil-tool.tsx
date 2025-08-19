@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import PreviewArea from "@/components/preview-area";
+import StyleSelector from "@/components/style-selector";
 import type { StencilJob, StencilStyle } from "@shared/schema";
 
 interface ProcessingOptions {
@@ -275,53 +276,11 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               </CardContent>
             </Card>
 
-            {/* Style Selection - Compact */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  Stencil Style
-                  <Info className="h-3 w-3 text-zinc-500" />
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  AI models trained on each artist's lines
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup value={selectedStyle} onValueChange={setSelectedStyle}>
-                  <div className="grid grid-cols-2 gap-2">
-                    {styles.map((style) => (
-                      <div
-                        key={style.id}
-                        className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-colors ${
-                          selectedStyle === style.id 
-                            ? "border-white bg-zinc-900" 
-                            : "border-zinc-700 hover:border-zinc-500"
-                        }`}
-                        onClick={() => setSelectedStyle(style.id)}
-                      >
-                        <RadioGroupItem value={style.id} id={style.id} className="h-3 w-3" />
-                        <div className="flex items-center gap-2 flex-1">
-                          <div className="w-8 h-8 bg-zinc-800 rounded flex items-center justify-center overflow-hidden">
-                            <span className="text-xs font-bold">
-                              {style.name.charAt(0)}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1">
-                              <Label htmlFor={style.id} className="text-xs font-medium truncate">
-                                {style.name}
-                              </Label>
-                              <CheckCircle2 className="h-3 w-3 text-blue-500 flex-shrink-0" />
-                            </div>
-                            <p className="text-xs text-zinc-500 truncate">{style.description}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </RadioGroup>
-              </CardContent>
-            </Card>
+            {/* Style Selection - Visual */}
+            <StyleSelector
+              selectedStyle={selectedStyle}
+              onStyleChange={setSelectedStyle}
+            />
 
             {/* Processing Settings - Compact */}
             <Card>
