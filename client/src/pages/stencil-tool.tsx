@@ -214,50 +214,51 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               />
             </div>
 
-            {/* Processing Settings - Compact */}
-            <Card>
+            {/* Stencil Settings - Exact from GitHub */}
+            <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Processing Options</CardTitle>
+                <CardTitle className="text-base">Stencil Settings</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
                 {/* PNG Outline Toggle */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="remove-bg" className="text-sm">Remove Background</Label>
-                    <p className="text-xs text-zinc-500">PNG with transparent background</p>
+                <div className="bg-zinc-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="remove-bg" className="text-sm font-medium">PNG Outline (No Background)</Label>
+                      <p className="text-xs text-zinc-400 mt-1">Lines only - for easy transfer</p>
+                    </div>
+                    <Switch
+                      id="remove-bg"
+                      checked={processingOptions.removeBackground}
+                      onCheckedChange={(checked) => 
+                        setProcessingOptions(prev => ({ ...prev, removeBackground: checked }))
+                      }
+                    />
                   </div>
-                  <Switch
-                    id="remove-bg"
-                    checked={processingOptions.removeBackground}
-                    onCheckedChange={(checked) => 
-                      setProcessingOptions(prev => ({ ...prev, removeBackground: checked }))
-                    }
-                  />
                 </div>
 
-                <Separator />
-
-                {/* Line Color Selection - Compact */}
-                <div>
-                  <Label className="text-sm mb-2 block">Stencil Color</Label>
-                  <div className="grid grid-cols-4 gap-1">
+                {/* Line Color Selection */}
+                <div className="bg-zinc-800 rounded-lg p-4">
+                  <Label className="text-sm font-medium block mb-1">Stencil Line Color</Label>
+                  <p className="text-xs text-zinc-400 mb-3">Pick the line color.</p>
+                  <div className="grid grid-cols-4 gap-2">
                     {["black", "red", "blue", "green"].map((color) => (
                       <button
                         key={color}
                         onClick={() => 
                           setProcessingOptions(prev => ({ ...prev, lineColor: color as any }))
                         }
-                        className={`p-2 rounded border transition-all ${
+                        className={`p-4 rounded-lg border-2 transition-all ${
                           processingOptions.lineColor === color
-                            ? "border-white"
-                            : "border-zinc-700 hover:border-zinc-500"
+                            ? "border-white bg-zinc-700"
+                            : "border-zinc-700 bg-zinc-800 hover:border-zinc-600"
                         }`}
                       >
                         <div 
-                          className={`w-6 h-6 rounded-full mx-auto`}
+                          className={`w-8 h-8 rounded-full mx-auto`}
                           style={{ 
-                            backgroundColor: color === "black" ? "#000" : color,
-                            border: color === "black" ? "1px solid #333" : "none"
+                            backgroundColor: color === "black" ? "transparent" : color,
+                            border: color === "black" ? "2px solid #fff" : "none"
                           }}
                         />
                       </button>
@@ -268,7 +269,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               
               <CardFooter className="flex flex-col gap-2 pt-3">
                 {isProcessing && (
-                  <Alert className="bg-zinc-900 border-zinc-700">
+                  <Alert className="bg-zinc-800 border-zinc-700">
                     <AlertDescription className="text-xs">
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -277,31 +278,33 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                     </AlertDescription>
                   </Alert>
                 )}
-                <div className="flex gap-2 w-full">
-                  <Button
-                    onClick={handleProcess}
-                    disabled={!selectedFile || isProcessing}
-                    className="flex-1"
-                    size="sm"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                        Generating Stencil...
-                      </>
-                    ) : (
-                      "Generate Stencil"
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleReset}
-                    variant="outline"
-                    size="sm"
-                    disabled={isProcessing}
-                  >
-                    Clear
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleProcess}
+                  disabled={!selectedFile || isProcessing}
+                  className="w-full bg-zinc-700 hover:bg-zinc-600 text-white"
+                  size="default"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Stencil...
+                    </>
+                  ) : (
+                    <>
+                      <SlidersHorizontal className="mr-2 h-4 w-4" />
+                      Create Stencil
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleReset}
+                  variant="ghost"
+                  size="sm"
+                  disabled={isProcessing}
+                  className="w-full text-zinc-400 hover:text-white"
+                >
+                  Reset
+                </Button>
               </CardFooter>
             </Card>
 
