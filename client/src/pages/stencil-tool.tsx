@@ -267,44 +267,33 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                 </div>
               </CardContent>
               
-              <CardFooter className="flex flex-col gap-2 pt-3">
-                {isProcessing && (
-                  <Alert className="bg-zinc-800 border-zinc-700">
-                    <AlertDescription className="text-xs">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>Processing... this may take up to 40 seconds</span>
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <Button
-                  onClick={handleProcess}
-                  disabled={!selectedFile || isProcessing}
-                  className="w-full bg-zinc-700 hover:bg-zinc-600 text-white"
-                  size="default"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Stencil...
-                    </>
-                  ) : (
-                    <>
-                      <SlidersHorizontal className="mr-2 h-4 w-4" />
-                      Create Stencil
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleReset}
-                  variant="ghost"
-                  size="sm"
-                  disabled={isProcessing}
-                  className="w-full text-zinc-400 hover:text-white"
-                >
-                  Reset
-                </Button>
+              <CardFooter className="pt-3">
+                <div className="flex gap-2 w-full">
+                  <Button
+                    onClick={handleProcess}
+                    disabled={!selectedFile || isProcessing}
+                    className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white"
+                    size="default"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Stencil...
+                      </>
+                    ) : (
+                      "Generate Stencil"
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleReset}
+                    variant="outline"
+                    size="default"
+                    disabled={isProcessing}
+                    className="bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-700"
+                  >
+                    Clear
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
 
