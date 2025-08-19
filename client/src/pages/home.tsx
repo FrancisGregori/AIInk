@@ -10,7 +10,7 @@ export default function Home() {
       <Navigation />
       
       {/* Hero Section */}
-      <section id="inicio" className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
+      <section id="inicio" className="relative min-h-screen flex items-center justify-center pt-32 overflow-hidden">
         {/* Subtle Pattern Overlay */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
