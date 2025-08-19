@@ -49,6 +49,10 @@ function StencilTool() {
     lineColor: "black"
   });
   const queryClient = useQueryClient();
+  
+  // Refs for scroll behavior
+  const styleSectionRef = useRef<HTMLDivElement>(null);
+  const previewSectionRef = useRef<HTMLDivElement>(null);
 
   // Fetch stencil styles
   const { data: styles = [] } = useQuery<StencilStyle[]>({
@@ -112,18 +116,21 @@ function StencilTool() {
     return () => clearInterval(interval);
   }, [currentJob, queryClient]);
 
-  // Handle file selection
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      setSelectedFile(file);
+  // Handle file selection with auto-scroll
+  const handleFileSelectWithScroll = (file: File | null) => {
+    setSelectedFile(file);
+    if (file) {
       setCurrentJob(null);
+      // Auto-scroll to style section when image is loaded
+      setTimeout(() => {
+        styleSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
   };
 
 
 
-  // Process image
+  // Process image with auto-scroll to preview
   const handleProcess = () => {
     if (!selectedFile || !selectedStyle) return;
 
@@ -135,6 +142,11 @@ function StencilTool() {
     formData.append("processingOptions", JSON.stringify(processingOptions));
 
     processImageMutation.mutate(formData);
+    
+    // Auto-scroll to preview section when processing starts
+    setTimeout(() => {
+      previewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   // Reset all
@@ -191,14 +203,16 @@ Press and hold the stencil image above and select "Copy", then paste it directly
             {/* Image Upload with Drag & Drop */}
             <ImageUploader
               selectedFile={selectedFile}
-              onFileSelect={setSelectedFile}
+              onFileSelect={handleFileSelectWithScroll}
             />
 
             {/* Style Selection - Visual */}
-            <StyleSelector
-              selectedStyle={selectedStyle}
-              onStyleChange={setSelectedStyle}
-            />
+            <div ref={styleSectionRef}>
+              <StyleSelector
+                selectedStyle={selectedStyle}
+                onStyleChange={setSelectedStyle}
+              />
+            </div>
 
             {/* Processing Settings - Compact */}
             <Card>
@@ -317,7 +331,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
           </div>
 
           {/* Middle Column - Preview (Adaptive) */}
-          <div className="xl:col-span-2 lg:col-span-2">
+          <div className="xl:col-span-2 lg:col-span-2" ref={previewSectionRef}>
             <PreviewArea 
               selectedFile={selectedFile}
               selectedStyle={selectedStyle}
