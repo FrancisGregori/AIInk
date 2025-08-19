@@ -55,8 +55,8 @@ function DesignEditor() {
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>("1:1");
   const [modelVariant, setModelVariant] = useState<string>("pro");
-  const [width, setWidth] = useState<number>(512);
-  const [height, setHeight] = useState<number>(512);
+  const [width, setWidth] = useState<number>(1024);
+  const [height, setHeight] = useState<number>(1024);
   const [language, setLanguage] = useState<"es" | "en">("es");
   const [chatMessages, setChatMessages] = useState<InkVisionMessage[]>([]);
   const [chatInput, setChatInput] = useState<string>("");
@@ -64,7 +64,7 @@ function DesignEditor() {
   const [compareMode, setCompareMode] = useState<boolean>(false);
   const [comparePosition, setComparePosition] = useState<number>(50);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
-  const [matchInput, setMatchInput] = useState<boolean>(false);
+  const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -308,32 +308,45 @@ function DesignEditor() {
       // Get dimensions from reference image
       const img = new Image();
       img.onload = () => {
-        // Scale dimensions to fit within reasonable bounds
-        const maxDim = 512;
+        // Scale dimensions to fit within Flux Kontext bounds and round to multiples of 32
+        const maxDim = 1408; // Max supported by Flux at 2.0MP
         let w = img.width;
         let h = img.height;
         
+        // Scale down if needed
         if (w > maxDim || h > maxDim) {
           const scale = maxDim / Math.max(w, h);
           w = Math.round(w * scale);
           h = Math.round(h * scale);
         }
         
+        // Round to nearest multiple of 32 (Flux requirement)
+        w = Math.round(w / 32) * 32;
+        h = Math.round(h / 32) * 32;
+        
+        // Ensure minimum size of 256
+        w = Math.max(256, w);
+        h = Math.max(256, h);
+        
         setWidth(w);
         setHeight(h);
       };
       img.src = referencePreview;
     } else {
-      // Use predefined aspect ratios
+      // Use predefined aspect ratios with optimal Flux resolutions (1.0MP standard)
       const ratios: { [key: string]: [number, number] } = {
-        "1:1": [512, 512],
-        "3:4": [384, 512],
-        "4:3": [512, 384],
-        "16:9": [512, 288],
-        "9:16": [288, 512],
+        "1:1": [1024, 1024],     // Square
+        "3:2": [1216, 832],      // Classic landscape
+        "2:3": [832, 1216],      // Classic portrait
+        "4:3": [1152, 896],      // Standard landscape
+        "3:4": [896, 1152],      // Standard portrait
+        "16:9": [1344, 768],     // Widescreen
+        "9:16": [768, 1344],     // Vertical/Mobile
+        "21:9": [1408, 608],     // Ultra-wide
+        "9:21": [608, 1408],     // Ultra-tall
       };
       
-      const [w, h] = ratios[aspectRatio] || [512, 512];
+      const [w, h] = ratios[aspectRatio] || [1024, 1024];
       setWidth(w);
       setHeight(h);
     }
@@ -590,8 +603,8 @@ function DesignEditor() {
                         disabled={matchInput}
                         className="mt-2"
                       >
-                        <div className="grid grid-cols-5 gap-2">
-                          {["1:1", "3:4", "4:3", "16:9", "9:16"].map((ratio) => (
+                        <div className="grid grid-cols-3 gap-2">
+                          {["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16", "21:9", "9:21"].map((ratio) => (
                             <div key={ratio} className="flex items-center space-x-1">
                               <RadioGroupItem value={ratio} id={ratio} />
                               <Label htmlFor={ratio} className={`text-xs ${matchInput ? 'opacity-50' : ''}`}>{ratio}</Label>
