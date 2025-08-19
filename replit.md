@@ -14,6 +14,9 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - NO hacer cambios ni agregar funcionalidades sin preguntar primero
 - SIEMPRE pedir autorización antes de modificar código
 
+**REPOSITORIO ORIGINAL:**
+- Design Editor original: https://github.com/darwintattoo/FluxKontextAI
+
 ## System Architecture
 
 ### Frontend Architecture
