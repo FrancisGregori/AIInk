@@ -117,10 +117,38 @@ export class ComfyDeployService {
       }
       
       // Get the output image URL from the response
-      let outputUrl = data.outputs?.output_image || 
-                      data.outputs?.image || 
-                      data.outputs?.image_url ||
-                      data.output_url;
+      let outputUrl;
+      
+      // Check if outputs is an array with results
+      if (Array.isArray(data.outputs) && data.outputs.length > 0) {
+        // Get the first output's data
+        const firstOutput = data.outputs[0];
+        if (firstOutput?.data) {
+          // Check for images array (ComfyDeploy structure)
+          if (firstOutput.data.images && Array.isArray(firstOutput.data.images) && firstOutput.data.images.length > 0) {
+            outputUrl = firstOutput.data.images[0].url;
+            console.log("Found image URL in outputs[0].data.images[0].url:", outputUrl);
+          } else {
+            // Try other possible field names
+            outputUrl = firstOutput.data.output_image || 
+                       firstOutput.data.image || 
+                       firstOutput.data.image_url ||
+                       firstOutput.data.url ||
+                       firstOutput.data.output;
+          }
+          
+          // Log what we found for debugging
+          console.log("Output data structure:", JSON.stringify(firstOutput.data, null, 2));
+        }
+      } else if (data.outputs && typeof data.outputs === 'object') {
+        // Fallback for object format
+        outputUrl = data.outputs.output_image || 
+                   data.outputs.image || 
+                   data.outputs.image_url;
+      }
+      
+      // Final fallback
+      outputUrl = outputUrl || data.output_url;
       
       return {
         status,
