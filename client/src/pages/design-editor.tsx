@@ -184,8 +184,6 @@ function DesignEditor() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setReferencePreview(reader.result as string);
-        // Automatically enable match input when image is loaded
-        setMatchInput(true);
         // Simulate image analysis
         analyzeImage(reader.result as string);
       };
@@ -599,33 +597,33 @@ function DesignEditor() {
                     <div>
                       <Label>{txt.aspectRatio}</Label>
                       
-                      {/* Match Input Option */}
-                      <div className="flex items-center justify-between mb-3 mt-2">
-                        <Label htmlFor="match-input" className="cursor-pointer text-sm">
-                          Match Input
-                          <span className="text-xs text-zinc-500 block">
-                            {language === "es" ? "Usar proporciones de imagen de entrada" : "Use input image proportions"}
-                          </span>
-                        </Label>
-                        <Switch 
-                          id="match-input"
-                          checked={matchInput}
-                          onCheckedChange={setMatchInput}
-                          disabled={!referencePreview}
-                        />
-                      </div>
-                      
                       <RadioGroup 
-                        value={aspectRatio} 
-                        onValueChange={setAspectRatio} 
-                        disabled={matchInput}
+                        value={matchInput ? "Match Input" : aspectRatio} 
+                        onValueChange={(value) => {
+                          if (value === "Match Input") {
+                            setMatchInput(true);
+                          } else {
+                            setMatchInput(false);
+                            setAspectRatio(value);
+                          }
+                        }}
                         className="mt-2"
                       >
                         <div className="grid grid-cols-3 gap-2">
-                          {["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16", "21:9", "9:21"].map((ratio) => (
+                          {/* Standard aspect ratios */}
+                          {["Match Input", "1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16", "21:9", "9:21"].map((ratio) => (
                             <div key={ratio} className="flex items-center space-x-1">
-                              <RadioGroupItem value={ratio} id={ratio} />
-                              <Label htmlFor={ratio} className={`text-xs ${matchInput ? 'opacity-50' : ''}`}>{ratio}</Label>
+                              <RadioGroupItem 
+                                value={ratio} 
+                                id={ratio} 
+                                disabled={ratio === "Match Input" && !referencePreview}
+                              />
+                              <Label 
+                                htmlFor={ratio} 
+                                className={`text-xs ${ratio === "Match Input" && !referencePreview ? 'opacity-50' : ''}`}
+                              >
+                                {ratio}
+                              </Label>
                             </div>
                           ))}
                         </div>
