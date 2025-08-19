@@ -271,50 +271,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Integration Benefits */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">¿Por qué integrar?</h2>
-            <p className="text-xl text-light-gray max-w-3xl mx-auto leading-relaxed">
-              Mantener las herramientas como módulos independientes te permite disfrutar de lo mejor de ambos mundos: 
-              funcionalidad especializada con experiencia unificada.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Shield className="text-black h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Estabilidad</h3>
-              <p className="text-light-gray leading-relaxed">
-                Cada herramienta mantiene su funcionalidad independiente sin riesgo de interferencias
-              </p>
-            </div>
-            
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Rocket className="text-black h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Performance</h3>
-              <p className="text-light-gray leading-relaxed">
-                Carga selectiva de recursos optimiza el rendimiento y reduce tiempos de espera
-              </p>
-            </div>
-            
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Settings className="text-black h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Mantenimiento</h3>
-              <p className="text-light-gray leading-relaxed">
-                Actualizaciones y mejoras pueden realizarse de forma independiente en cada módulo
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* Contact/Footer */}
       <section id="contacto" className="py-20 bg-dark-gray">
