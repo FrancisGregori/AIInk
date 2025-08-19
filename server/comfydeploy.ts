@@ -122,32 +122,35 @@ export class ComfyDeployService {
       
       // Check if outputs is an array with results
       if (Array.isArray(data.outputs) && data.outputs.length > 0) {
-        // Look specifically for output with output_id: 'output_images'
-        const imageOutput = data.outputs.find((output: any) => output.output_id === 'output_images');
-        
-        if (imageOutput?.data?.images?.[0]?.url) {
-          outputUrl = imageOutput.data.images[0].url;
-          console.log("Found image URL from output_images:", outputUrl);
-        } else {
-          // Fallback: look for any output with images
-          for (const output of data.outputs) {
-            if (output?.data?.images?.[0]?.url) {
-              outputUrl = output.data.images[0].url;
-              console.log("Found image URL in output:", outputUrl);
+        // Look for any output with images
+        for (const output of data.outputs) {
+          console.log('Checking output:', output);
+          
+          // Check if this output has image data
+          if (output.data && output.data.images && Array.isArray(output.data.images)) {
+            // Get the first image
+            const imageData = output.data.images[0];
+            console.log('Found image data:', JSON.stringify(imageData, null, 2));
+            
+            // The image data might be a URL string or an object with various properties
+            if (typeof imageData === 'string') {
+              outputUrl = imageData;
+            } else if (imageData && typeof imageData === 'object') {
+              // Try various common properties
+              outputUrl = imageData.url || imageData.image || imageData.path || imageData.filename;
+            }
+            
+            if (outputUrl) {
+              console.log('Found image URL:', outputUrl);
               break;
             }
           }
+          
+          // Also check direct url/image properties
+          if (!outputUrl && (output.url || output.image)) {
+            outputUrl = output.url || output.image;
+          }
         }
-        
-        // Log for debugging
-        console.log("All outputs checked, found URL:", outputUrl);
-        data.outputs.forEach((output: any, index: number) => {
-          console.log(`Output ${index}:`, {
-            output_id: output.output_id,
-            hasImages: !!output.data?.images,
-            imageUrl: output.data?.images?.[0]?.url
-          });
-        });
       } else if (data.outputs && typeof data.outputs === 'object') {
         // Fallback for object format
         outputUrl = data.outputs.output_image || 
