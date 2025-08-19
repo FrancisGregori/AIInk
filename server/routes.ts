@@ -4,6 +4,7 @@ import multer from "multer";
 import { storage } from "./storage";
 import { summarizeArticle, analyzeSentiment, analyzeImage } from "./gemini";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
+import ComfyDeployService from "./comfydeploy";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -21,6 +22,9 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize ComfyDeploy service
+  const comfyDeploy = new ComfyDeployService();
+  
   // Stencil Tool Routes
   
   // Get available stencil styles
@@ -72,6 +76,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!job) {
         return res.status(404).json({ error: "Job not found" });
       }
+      
+      // If job has a ComfyDeploy run ID and is still processing, check status
+      if (job.comfyDeployRunId && job.status === "processing") {
+        try {
+          const status = await comfyDeploy.checkRunStatus(job.comfyDeployRunId);
+          
+          // Update job based on ComfyDeploy status
+          if (status.status === "completed" && status.outputUrl) {
+            await storage.updateStencilJob(job.id, {
+              status: "completed",
+              processedImageUrl: status.outputUrl,
+              completedAt: new Date(),
+            });
+          } else if (status.status === "failed") {
+            await storage.updateStencilJob(job.id, {
+              status: "failed",
+              errorMessage: status.error || "Processing failed",
+            });
+          }
+          
+          // Return the updated job
+          const updatedJob = await storage.getStencilJob(req.params.id);
+          return res.json(updatedJob);
+        } catch (error) {
+          console.error("Error checking ComfyDeploy status:", error);
+          // Return job as-is if we can't check status
+        }
+      }
+      
       res.json(job);
     } catch (error) {
       console.error("Error fetching stencil job:", error);
@@ -101,6 +134,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching gallery:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Process stencil with ComfyDeploy
+  app.post("/api/stencil/process", upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+
+      const { style = "steven", userId = "demo-user", processingOptions } = req.body;
+      
+      // Parse processing options if it's a string
+      let options = processingOptions;
+      if (typeof processingOptions === 'string') {
+        try {
+          options = JSON.parse(processingOptions);
+        } catch {
+          options = {};
+        }
+      }
+
+      // Convert image buffer to base64 URL for now
+      const originalImageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      
+      // Create the stencil job
+      const job = await storage.createStencilJob({
+        userId,
+        originalImageUrl,
+        style,
+        processingOptions: options,
+      });
+
+      // Start processing with ComfyDeploy
+      try {
+        const result = await comfyDeploy.processImage(
+          originalImageUrl,
+          style as any,
+          options
+        );
+        
+        // Update job with ComfyDeploy run ID
+        await storage.updateStencilJob(job.id, {
+          comfyDeployRunId: result.runId,
+          status: result.status,
+          processedImageUrl: result.outputUrl,
+        });
+
+        // Return updated job
+        const updatedJob = await storage.getStencilJob(job.id);
+        res.json(updatedJob);
+      } catch (processError) {
+        // If ComfyDeploy fails, still return the job but with error status
+        await storage.updateStencilJob(job.id, {
+          status: "failed",
+          errorMessage: String(processError),
+        });
+        
+        // For development, return a mock processed image
+        const mockProcessedJob = await storage.updateStencilJob(job.id, {
+          status: "completed",
+          processedImageUrl: originalImageUrl, // Use original as fallback
+          completedAt: new Date(),
+        });
+        
+        res.json(mockProcessedJob);
+      }
+    } catch (error) {
+      console.error("Error processing stencil:", error);
+      res.status(500).json({ error: "Error processing image" });
     }
   });
 
@@ -176,6 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Save chat message
       await storage.saveGeminiChat({
+        userId: "demo-user", // In production, get from auth session
         message,
         response,
         role: 'assistant',

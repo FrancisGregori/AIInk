@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -76,13 +76,43 @@ function StencilTool() {
     },
     onSuccess: (data: StencilJob) => {
       setCurrentJob(data);
-      setIsProcessing(false);
+      // Only set processing to false if job is completed or failed
+      if (data.status === "completed" || data.status === "failed") {
+        setIsProcessing(false);
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/stencil/gallery"] });
     },
     onError: () => {
       setIsProcessing(false);
     },
   });
+  
+  // Poll for job status when processing
+  useEffect(() => {
+    if (!currentJob || currentJob.status !== "processing") {
+      return;
+    }
+    
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/stencil/jobs/${currentJob.id}`);
+        if (response.ok) {
+          const updatedJob = await response.json();
+          setCurrentJob(updatedJob);
+          
+          if (updatedJob.status === "completed" || updatedJob.status === "failed") {
+            setIsProcessing(false);
+            queryClient.invalidateQueries({ queryKey: ["/api/stencil/gallery"] });
+            clearInterval(interval);
+          }
+        }
+      } catch (error) {
+        console.error("Error polling job status:", error);
+      }
+    }, 2000); // Poll every 2 seconds
+    
+    return () => clearInterval(interval);
+  }, [currentJob, queryClient]);
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
