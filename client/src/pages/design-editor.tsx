@@ -302,20 +302,49 @@ function DesignEditor() {
     createProjectMutation.mutate({ prompt, settings });
   };
 
-  // Update dimensions based on aspect ratio
+  // Update dimensions based on aspect ratio or match input
   useEffect(() => {
-    const ratios: { [key: string]: [number, number] } = {
-      "1:1": [512, 512],
-      "3:4": [384, 512],
-      "4:3": [512, 384],
-      "16:9": [512, 288],
-      "9:16": [288, 512],
-    };
-    
-    const [w, h] = ratios[aspectRatio] || [512, 512];
-    setWidth(w);
-    setHeight(h);
-  }, [aspectRatio]);
+    if (matchInput && referencePreview) {
+      // Get dimensions from reference image
+      const img = new Image();
+      img.onload = () => {
+        // Scale dimensions to fit within reasonable bounds
+        const maxDim = 512;
+        let w = img.width;
+        let h = img.height;
+        
+        if (w > maxDim || h > maxDim) {
+          const scale = maxDim / Math.max(w, h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        
+        setWidth(w);
+        setHeight(h);
+      };
+      img.src = referencePreview;
+    } else {
+      // Use predefined aspect ratios
+      const ratios: { [key: string]: [number, number] } = {
+        "1:1": [512, 512],
+        "3:4": [384, 512],
+        "4:3": [512, 384],
+        "16:9": [512, 288],
+        "9:16": [288, 512],
+      };
+      
+      const [w, h] = ratios[aspectRatio] || [512, 512];
+      setWidth(w);
+      setHeight(h);
+    }
+  }, [aspectRatio, matchInput, referencePreview]);
+  
+  // Reset match input when reference image is removed
+  useEffect(() => {
+    if (!referencePreview && matchInput) {
+      setMatchInput(false);
+    }
+  }, [referencePreview, matchInput]);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -535,30 +564,37 @@ function DesignEditor() {
                       </RadioGroup>
                     </div>
 
-                    {/* Match Input Option */}
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="match-input" className="cursor-pointer">
-                        Match Input
-                        <span className="text-xs text-zinc-500 block">
-                          {language === "es" ? "Coincidir con imagen de entrada" : "Match input image"}
-                        </span>
-                      </Label>
-                      <Switch 
-                        id="match-input"
-                        checked={matchInput}
-                        onCheckedChange={setMatchInput}
-                      />
-                    </div>
-
                     {/* Aspect Ratio */}
                     <div>
                       <Label>{txt.aspectRatio}</Label>
-                      <RadioGroup value={aspectRatio} onValueChange={setAspectRatio} className="mt-2">
+                      
+                      {/* Match Input Option */}
+                      <div className="flex items-center justify-between mb-3 mt-2">
+                        <Label htmlFor="match-input" className="cursor-pointer text-sm">
+                          Match Input
+                          <span className="text-xs text-zinc-500 block">
+                            {language === "es" ? "Usar proporciones de imagen de entrada" : "Use input image proportions"}
+                          </span>
+                        </Label>
+                        <Switch 
+                          id="match-input"
+                          checked={matchInput}
+                          onCheckedChange={setMatchInput}
+                          disabled={!referencePreview}
+                        />
+                      </div>
+                      
+                      <RadioGroup 
+                        value={aspectRatio} 
+                        onValueChange={setAspectRatio} 
+                        disabled={matchInput}
+                        className="mt-2"
+                      >
                         <div className="grid grid-cols-5 gap-2">
                           {["1:1", "3:4", "4:3", "16:9", "9:16"].map((ratio) => (
                             <div key={ratio} className="flex items-center space-x-1">
                               <RadioGroupItem value={ratio} id={ratio} />
-                              <Label htmlFor={ratio} className="text-xs">{ratio}</Label>
+                              <Label htmlFor={ratio} className={`text-xs ${matchInput ? 'opacity-50' : ''}`}>{ratio}</Label>
                             </div>
                           ))}
                         </div>
