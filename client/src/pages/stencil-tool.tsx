@@ -272,7 +272,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                   <Button
                     onClick={handleProcess}
                     disabled={!selectedFile || isProcessing}
-                    className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white"
+                    className="flex-1 bg-white hover:bg-gray-100 text-black font-semibold"
                     size="default"
                   >
                     {isProcessing ? (
@@ -281,7 +281,10 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                         Creating Stencil...
                       </>
                     ) : (
-                      "Generate Stencil"
+                      <>
+                        <SlidersHorizontal className="mr-2 h-4 w-4" />
+                        Generate Stencil
+                      </>
                     )}
                   </Button>
                   <Button
