@@ -15,9 +15,10 @@ interface PreviewAreaProps {
   selectedStyle: string;
   jobId: string | null;
   externalImageUrl?: string | null;
+  currentJob?: StencilJob | null;
 }
 
-export default function PreviewArea({ selectedFile, selectedStyle, jobId, externalImageUrl }: PreviewAreaProps) {
+export default function PreviewArea({ selectedFile, selectedStyle, jobId, externalImageUrl, currentJob }: PreviewAreaProps) {
   const [showOriginal, setShowOriginal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [comparisonMode, setComparisonMode] = useState<"side-by-side" | "slider">("slider");
@@ -36,12 +37,15 @@ export default function PreviewArea({ selectedFile, selectedStyle, jobId, extern
     }
   }, [selectedFile, externalImageUrl]);
 
-  // Poll for job updates
-  const { data: job, isLoading } = useQuery<StencilJob>({
+  // Poll for job updates SOLO si no tenemos currentJob directo
+  const { data: serverJob, isLoading } = useQuery<StencilJob>({
     queryKey: [`/api/stencil/jobs/${jobId}`],
-    enabled: !!jobId,
-    refetchInterval: jobId ? 2000 : false, // Poll every 2 seconds if we have a job
+    enabled: !!jobId && !currentJob,
+    refetchInterval: jobId && !currentJob ? 2000 : false, // Poll only if no currentJob
   });
+
+  // Usar currentJob directo o el del servidor
+  const job = currentJob || serverJob;
 
   const getStatusColor = (status?: string) => {
     switch (status) {
