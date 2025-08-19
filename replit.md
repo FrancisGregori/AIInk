@@ -2,7 +2,7 @@
 
 ## Overview
 
-TattoostencilPro is a professional AI-powered design platform that provides two main creative tools: Stencil Tool for tattoo stencil generation and Flux Kontext for AI-assisted design editing. The application recreates the exact functionality from TattoostencilPro with professional stencil processing capabilities using multiple AI models (Steven, Makishi, Darwin, Adrian). Built as a full-stack web application with React frontend and Express.js backend, featuring real-time job processing, user credit management, and comprehensive gallery display.
+TattoostencilPro is a professional AI-powered design platform that provides two main creative tools: Stencil Tool for tattoo stencil generation and Flux Kontext Pro for AI-assisted design generation. The application recreates the exact functionality from TattoostencilPro with professional stencil processing capabilities using multiple AI models (Steven Hernandez, Andres Makishi, Darwin Enriquez, Adrian Rod). Built as a full-stack web application with React frontend and Express.js backend, featuring real-time job processing, user credit management, and comprehensive gallery display.
 
 ## User Preferences
 
