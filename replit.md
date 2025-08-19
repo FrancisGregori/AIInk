@@ -64,6 +64,8 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - ✅ Soporte para FLUX.1 Kontext Pro y Max models
 - ✅ Sistema de reintentos para manejar interrupciones
 - ✅ Validación con Zod schema y manejo de errores completo
+- ✅ Imágenes generadas aparecen tanto en InkVision chat como en editor principal
+- ✅ Modal de zoom implementado - imágenes clickeables para ver en tamaño completo
 
 ## External Dependencies
 
