@@ -744,6 +744,25 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                 </div>
               </div>
             ))}
+            
+            {/* Indicador de typing cuando el asistente está escribiendo */}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-lg px-4 py-3 max-w-[85%]">
+                  <div className="flex items-center gap-1">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                    <span className="text-xs text-zinc-500 ml-2">
+                      {language === 'es' ? 'InkVision está escribiendo...' : 'InkVision is typing...'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
 
