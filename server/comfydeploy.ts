@@ -11,7 +11,7 @@ const LORA_MODELS: Record<string, string> = {
 export class ComfyDeployService {
   private apiKey: string;
   private deploymentId: string = "7df83d8e-f274-4d6a-8947-833705e86d9e"; // Single deployment for all styles
-  private baseUrl = "https://api.comfydeploy.com/v1";
+  private baseUrl = "https://api.comfydeploy.com/api";
 
   constructor() {
     this.apiKey = process.env.COMFY_DEPLOY_API_KEY || "";
