@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { MessageCircle, X, Send, Copy, Image, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +34,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -436,6 +438,37 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           };
           
           setMessages(prev => [...prev, generatedMessage]);
+
+          // También crear un nuevo proyecto para que aparezca en el editor principal
+          try {
+            const projectResponse = await fetch('/api/flux/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: content.slice(0, 50) + " - InkVision",
+                description: content,
+                prompt: content,
+                imageUrl: result.imageUrl,
+                settings: {
+                  aspectRatio: 'match_input_image',
+                  modelVariant: 'pro',
+                  referenceImage: storedImage
+                },
+                userId: "demo-user",
+                source: "inkvision"
+              }),
+            });
+
+            if (projectResponse.ok) {
+              // Refrescar la lista de proyectos para que aparezca en el editor
+              queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+              console.log('Project created from InkVision successfully');
+            }
+          } catch (projectError) {
+            console.error('Error creating project from InkVision:', projectError);
+          }
           
         } else {
           throw new Error(result.details || 'Unknown error');
