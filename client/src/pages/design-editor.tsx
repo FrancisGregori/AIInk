@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
-import ChatAssistant, { ChatAssistantRef } from "@/components/chat-assistant";
+
 import { 
   Sparkles, 
   Download, 
@@ -62,7 +62,6 @@ function DesignEditor() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
-  const chatAssistantRef = useRef<ChatAssistantRef>(null);
   const queryClient = useQueryClient();
 
   // Translations
@@ -863,19 +862,7 @@ function DesignEditor() {
         </div>
       </main>
       
-      {/* Floating Chat Assistant Component */}
-      <ChatAssistant 
-        ref={chatAssistantRef}
-        currentImage={referencePreview || undefined}
-        onApplyPrompt={(newPrompt) => {
-          setPrompt(newPrompt);
-          // Optionally auto-generate when prompt is applied
-          if (newPrompt && referencePreview) {
-            // You can trigger generation here if needed
-          }
-        }}
-        language={language}
-      />
+      {/* ChatAssistant flotante eliminado - solo usamos el chat integrado */}
     </div>
   );
 }
