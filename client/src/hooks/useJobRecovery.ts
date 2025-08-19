@@ -52,6 +52,14 @@ export function useJobRecovery(jobType: 'stencil' | 'design') {
               clearInterval(interval);
               setRecoveredJobs(prev => [...prev, job.id]);
             }
+          } else if (response.status === 404) {
+            // Job no longer exists on server, mark as failed and stop polling
+            console.warn(`Job ${job.id} not found on server, removing from active jobs`);
+            updateJob(job.id, {
+              status: 'failed',
+              errorMessage: 'Job not found on server'
+            });
+            clearInterval(interval);
           }
         } catch (error) {
           console.error(`Error checking job ${job.id}:`, error);

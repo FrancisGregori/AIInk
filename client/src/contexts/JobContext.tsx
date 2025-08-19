@@ -51,9 +51,18 @@ export function JobProvider({ children }: { children: ReactNode }) {
 
   const updateJob = (jobId: string, updates: Partial<Job>) => {
     setActiveJobs(prev => 
-      prev.map(job => 
-        job.id === jobId ? { ...job, ...updates } : job
-      )
+      prev.map(job => {
+        const updatedJob = job.id === jobId ? { ...job, ...updates } : job;
+        
+        // If job failed due to not being found on server, remove it after a short delay
+        if (updatedJob.status === 'failed' && updatedJob.errorMessage === 'Job not found on server') {
+          setTimeout(() => {
+            removeJob(jobId);
+          }, 2000);
+        }
+        
+        return updatedJob;
+      })
     );
   };
 
