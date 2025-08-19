@@ -33,14 +33,14 @@ export default function Home() {
                   Explorar Stencil Tool
                 </Button>
               </Link>
-              <Link href="/flux-kontext">
+              <Link href="/design-editor">
                 <Button 
                   variant="outline" 
                   className="border-medium-gray text-white px-8 py-4 rounded-lg font-medium hover:bg-dark-gray transition-colors"
-                  data-testid="button-try-flux"
+                  data-testid="button-try-design"
                 >
                   <Palette className="mr-2 h-5 w-5" />
-                  Probar Flux Kontext
+                  Probar Design Editor
                 </Button>
               </Link>
             </div>
@@ -366,7 +366,7 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/stencil">
+              <Link href="/stencil-tool">
                 <Button 
                   className="bg-white text-black px-8 py-4 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                   data-testid="button-try-stencil-footer"
@@ -374,13 +374,13 @@ export default function Home() {
                   Probar Stencil Tool
                 </Button>
               </Link>
-              <Link href="/flux">
+              <Link href="/design-editor">
                 <Button 
                   variant="outline"
                   className="border-medium-gray text-white px-8 py-4 rounded-lg font-medium hover:bg-black transition-colors"
-                  data-testid="button-try-flux-footer"
+                  data-testid="button-try-design-footer"
                 >
-                  Probar Flux Kontext
+                  Probar Design Editor
                 </Button>
               </Link>
             </div>
