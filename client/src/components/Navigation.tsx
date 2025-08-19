@@ -23,9 +23,13 @@ export default function Navigation() {
           <Link href="/">
             <div className="flex items-center cursor-pointer group" data-testid="link-home-nav">
               <img 
-                src="@assets/1Asset 3zzz_1755637024508.png" 
+                src="/attached_assets/1Asset 3zzz_1755637024508.png" 
                 alt="TattooStencilPro" 
                 className="h-8 w-auto group-hover:scale-105 transition-transform"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement!.innerHTML = '<span class="text-xl font-bold text-white">TattooStencilPro</span>';
+                }}
               />
             </div>
           </Link>
