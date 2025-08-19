@@ -566,19 +566,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Replicate output received:", output);
       
-      // Manejar diferentes formatos de output de FLUX Kontext Max
+      // Manejar diferentes formatos de output de FLUX Kontext Max - Exacto del repositorio original
       let imageUrl: string;
+      let optimizedImageBase64: string = "";
+      let thumbnailBase64: string = "";
       
       if (typeof output === 'string') {
         imageUrl = output;
       } else if (Array.isArray(output) && output.length > 0) {
         imageUrl = output[0];
+      } else if (output && typeof (output as any)[Symbol.asyncIterator] === 'function') {
+        // Es un stream iterable - Exacto como en tu repositorio
+        console.log("Processing async iterable stream from Replicate...");
+        
+        const chunks: Buffer[] = [];
+        try {
+          for await (const chunk of output as any) {
+            chunks.push(Buffer.from(chunk));
+          }
+          
+          const imageBuffer = Buffer.concat(chunks);
+          console.log("Original image buffer size:", imageBuffer.length);
+          
+          // Guardar imagen exactamente como la genera Replicate - SIN COMPRESIÓN
+          optimizedImageBase64 = imageBuffer.toString('base64');
+          thumbnailBase64 = optimizedImageBase64;
+          imageUrl = `data:image/png;base64,${optimizedImageBase64}`;
+          
+          console.log("Image saved without any compression or processing");
+          
+        } catch (streamError) {
+          console.error("Error reading async stream:", streamError);
+          throw new Error("Failed to read image stream");
+        }
+      } else if (output && 'getReader' in output) {
+        // Es un ReadableStream estándar - Exacto de tu repositorio
+        console.log("Processing ReadableStream from Replicate...");
+        
+        const chunks: Buffer[] = [];
+        const reader = (output as any).getReader();
+        
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(Buffer.from(value));
+          }
+          
+          const imageBuffer = Buffer.concat(chunks);
+          console.log("Image buffer size:", imageBuffer.length);
+          
+          // Convertir a base64 data URL
+          const base64 = imageBuffer.toString('base64');
+          imageUrl = `data:image/png;base64,${base64}`;
+          console.log("Created data URL, length:", imageUrl.length);
+        } catch (streamError) {
+          console.error("Error reading stream:", streamError);
+          throw new Error("Failed to read image stream");
+        } finally {
+          reader.releaseLock();
+        }
       } else {
-        console.error("Unexpected output format from Replicate:", output);
-        return res.status(500).json({ error: "Unexpected response format from AI service" });
+        console.error("Unexpected output format from FLUX Kontext Max:", output);
+        return res.status(500).json({ 
+          error: "No image URL was generated - unexpected output format" 
+        });
+      }
+      
+      if (!imageUrl || typeof imageUrl !== 'string') {
+        console.error("Invalid image URL:", imageUrl);
+        return res.status(500).json({ 
+          error: "No valid image URL was generated" 
+        });
       }
 
-      // Devolver la URL de la imagen generada
+      // Devolver la URL de la imagen generada - Igual que tu repositorio
       res.json({
         imageUrl,
         prompt,
