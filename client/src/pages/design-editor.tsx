@@ -65,26 +65,101 @@ function DesignEditor() {
   const { addJob, updateJob, getJob } = useJobs();
   const { activeJobsOfType } = useJobRecovery('design');
 
-  // Recuperar trabajo en progreso al cargar la página
+  // Estado para trabajo actual y persistencia
+  const [currentJob, setCurrentJob] = useState<any>(null);
+  const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
+
+  // Recuperar trabajo en progreso al cargar la página - CARGA INSTANTÁNEA
   useEffect(() => {
+    // Primero cargar desde localStorage para respuesta instantánea
+    const storageKey = 'tattoostencilpro_design_jobs';
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const jobs = JSON.parse(stored);
+        const activeJob = jobs.find((job: any) => job.status === 'processing' && job.type === 'design');
+        if (activeJob) {
+          console.log('Design job recovery: Found active job in localStorage', activeJob.id);
+          setCurrentJob(activeJob);
+          setIsGenerating(true);
+          
+          // Restaurar imagen si existe
+          if (activeJob.originalImageUrl) {
+            setRecoveredImageUrl(activeJob.originalImageUrl);
+            setReferencePreview(activeJob.originalImageUrl);
+            const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
+            setReferenceImage(fakeFile);
+          }
+          
+          // Restaurar prompt si existe
+          if (activeJob.style) {
+            setPrompt(activeJob.style);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing localStorage:', error);
+      }
+    }
+    
+    // Después verificar con activeJobsOfType para sincronización
     const activeDesignJobs = activeJobsOfType.filter(job => job.status === 'processing');
-    if (activeDesignJobs.length > 0) {
+    if (activeDesignJobs.length > 0 && !currentJob) {
       const latestJob = activeDesignJobs[0];
-      // Restaurar estado del último trabajo
-      if (latestJob.originalImageUrl && !referencePreview) {
+      setCurrentJob(latestJob);
+      setIsGenerating(true);
+      
+      if (latestJob.originalImageUrl && !recoveredImageUrl) {
+        setRecoveredImageUrl(latestJob.originalImageUrl);
         setReferencePreview(latestJob.originalImageUrl);
-        // Simular archivo cargado
         const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
         setReferenceImage(fakeFile);
       }
       if (latestJob.style && !prompt) {
         setPrompt(latestJob.style);
       }
-      if (!isGenerating) {
-        setIsGenerating(true);
-      }
     }
-  }, [activeJobsOfType, referencePreview, prompt, isGenerating]);
+  }, [activeJobsOfType]);
+
+  // Polling para verificar estado del trabajo en progreso
+  useEffect(() => {
+    if (!currentJob || currentJob.status !== 'processing') return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        // Verificar si el proyecto se completó
+        const response = await fetch(`/api/flux/projects`);
+        if (response.ok) {
+          const projects = await response.json();
+          const completedProject = projects.find((p: any) => p.id === currentJob.id);
+          
+          if (completedProject && completedProject.status === 'completed' && completedProject.imageUrl) {
+            // Trabajo completado - actualizar estado
+            setIsGenerating(false);
+            updateJob(currentJob.id, {
+              status: 'completed',
+              processedImageUrl: completedProject.imageUrl,
+              completedAt: new Date().toISOString()
+            });
+            setCurrentJob({
+              ...currentJob,
+              status: 'completed',
+              processedImageUrl: completedProject.imageUrl
+            });
+            
+            // Mostrar toast de éxito
+            toast({
+              title: "Diseño completado",
+              description: "Tu imagen ha sido generada exitosamente",
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error polling job status:', error);
+      }
+    }, 3000); // Verificar cada 3 segundos
+
+    return () => clearInterval(pollInterval);
+  }, [currentJob, updateJob, toast]);
 
   // Translations
   const t = {
@@ -633,8 +708,103 @@ function DesignEditor() {
 
           {/* Right Sidebar - Results */}
           <div className="lg:col-span-1 space-y-4">
+            {/* Estado del trabajo actual - Mostrar siempre si hay trabajo en progreso */}
+            {currentJob && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    {currentJob.status === 'processing' ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Procesando diseño...
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="h-4 w-4" />
+                        Diseño completado
+                      </>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {/* Imagen original o resultado */}
+                    <div className="relative group">
+                      {currentJob.status === 'completed' && currentJob.processedImageUrl ? (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <img
+                              src={currentJob.processedImageUrl}
+                              alt="Processed design"
+                              className="w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            />
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl bg-black border-zinc-800">
+                            <img
+                              src={currentJob.processedImageUrl}
+                              alt="Processed design - Full view"
+                              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      ) : recoveredImageUrl ? (
+                        <div className="relative">
+                          <img
+                            src={recoveredImageUrl}
+                            alt="Processing..."
+                            className="w-full rounded-lg opacity-75"
+                          />
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                            <div className="text-center">
+                              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                              <p className="text-xs text-zinc-300">Generando...</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-32 bg-zinc-900 rounded-lg flex items-center justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Información del trabajo */}
+                    {currentJob.style && (
+                      <div>
+                        <Label className="text-xs text-zinc-500">Prompt</Label>
+                        <p className="text-xs text-zinc-300 break-words">{currentJob.style}</p>
+                      </div>
+                    )}
+                    
+                    {/* Botones de acción */}
+                    {currentJob.status === 'completed' && currentJob.processedImageUrl && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => downloadImage(currentJob.processedImageUrl, `design-${currentJob.id}.png`)}
+                          className="flex-1"
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          Descargar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUseAsReference(currentJob.processedImageUrl)}
+                          className="flex-1"
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Editar
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
             {/* Latest Design */}
-            {projects.length > 0 && (
+            {projects.length > 0 && !currentJob && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm">Último diseño</CardTitle>
