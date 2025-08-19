@@ -23,7 +23,7 @@ import {
   Copy,
   Eye,
   Columns,
-  SlidersHorizontal,
+  Sparkles,
   ChevronLeft,
   ChevronRight,
   X
@@ -282,7 +282,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                       </>
                     ) : (
                       <>
-                        <SlidersHorizontal className="mr-2 h-4 w-4" />
+                        <Sparkles className="mr-2 h-4 w-4" />
                         Generate Stencil
                       </>
                     )}
