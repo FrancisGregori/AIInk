@@ -415,7 +415,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           <Button
             onClick={() => setIsOpen(true)}
             size="lg"
-            className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all duration-200 bg-zinc-800 hover:bg-zinc-700 border-2 border-zinc-600"
             data-testid="button-open-chat"
           >
             <MessageCircle className="h-6 w-6" />
@@ -430,9 +430,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           : "fixed bottom-0 right-0 w-full md:w-96 h-[600px] bg-background border-l border-t rounded-tl-xl shadow-xl z-50 flex flex-col"
         }>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-purple-600/10 to-pink-600/10">
+          <div className="flex items-center justify-between p-4 border-b bg-zinc-900">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-600" />
+              <Sparkles className="h-5 w-5 text-white" />
               <h3 className="font-semibold text-white">InkVision - Asistente IA</h3>
             </div>
             {!embedded && (
@@ -487,7 +487,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                         onClick={() => applyPrompt(msg.content)}
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 rounded-lg bg-purple-600 hover:bg-purple-700 border border-purple-500 text-xs text-white"
+                        className="h-7 px-2 rounded-lg bg-white hover:bg-zinc-200 border border-zinc-300 text-xs text-black"
                         data-testid={`button-apply-message-${msg.id}`}
                       >
                         Aplicar
