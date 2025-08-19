@@ -21,13 +21,12 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/">
-            <div className="flex items-center space-x-3 cursor-pointer group" data-testid="link-home-nav">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Bot className="text-black h-5 w-5" />
-              </div>
-              <span className="text-xl font-bold text-white">
-                TattooStencilPro
-              </span>
+            <div className="flex items-center cursor-pointer group" data-testid="link-home-nav">
+              <img 
+                src="@assets/1Asset 3zzz_1755637024508.png" 
+                alt="TattooStencilPro" 
+                className="h-8 w-auto group-hover:scale-105 transition-transform"
+              />
             </div>
           </Link>
           

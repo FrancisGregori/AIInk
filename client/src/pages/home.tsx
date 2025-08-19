@@ -304,14 +304,15 @@ export default function Home() {
           </div>
           
           <div className="border-t border-medium-gray pt-8 text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <Bot className="text-black h-5 w-5" />
-              </div>
-              <span className="text-xl font-semibold">Darwin AI</span>
+            <div className="flex items-center justify-center mb-4">
+              <img 
+                src="@assets/1Asset 3zzz_1755637024508.png" 
+                alt="TattooStencilPro" 
+                className="h-8 w-auto"
+              />
             </div>
             <p className="text-light-gray">
-              © 2024 Darwin AI Tools. Herramientas profesionales de inteligencia artificial.
+              © 2024 TattooStencilPro. Herramientas profesionales de inteligencia artificial para tatuadores.
             </p>
           </div>
         </div>
