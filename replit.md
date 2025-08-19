@@ -9,6 +9,11 @@ TattoostencilPro is a professional AI-powered design platform that provides two 
 Preferred communication style: Simple, everyday language.
 Project landing page: https://tattoostencilpro.app (for project promotion)
 
+**CRITICAL RULES:**
+- NO confundir Stencil Tool con Design Editor - son completamente separados
+- NO hacer cambios ni agregar funcionalidades sin preguntar primero
+- SIEMPRE pedir autorización antes de modificar código
+
 ## System Architecture
 
 ### Frontend Architecture
