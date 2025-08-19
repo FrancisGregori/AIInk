@@ -17,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import ChatAssistant, { ChatAssistantRef } from "@/components/chat-assistant";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Sparkles, 
   Download, 
@@ -33,7 +34,8 @@ import {
   Palette,
   ChevronLeft,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  Edit
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import type { FluxProject } from "@shared/schema";
@@ -56,6 +58,7 @@ function DesignEditor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatAssistantRef = useRef<ChatAssistantRef>(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Translations
   const t = {
@@ -212,6 +215,81 @@ function DesignEditor() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Helper function to convert image URL to base64 (copied from FluxKontextAI)
+  const fetchImageAsBase64 = async (imageUrl: string): Promise<string> => {
+    try {
+      console.log('fetchImageAsBase64 called with:', imageUrl);
+      
+      // If it's already a base64 string, return it
+      if (imageUrl.startsWith('data:')) {
+        console.log('Already base64, returning as is');
+        return imageUrl;
+      }
+      
+      // Fetch the image from the API
+      console.log('Fetching image from:', imageUrl);
+      const response = await fetch(imageUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      console.log('Blob size:', blob.size);
+      
+      // Convert blob to base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          console.log('Converted to base64, length:', result.length);
+          resolve(result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error fetching image as base64:', error);
+      throw error;
+    }
+  };
+
+  // Handle use as reference (copied from FluxKontextAI)
+  const handleUseAsReference = async (imageUrl: string) => {
+    try {
+      toast({
+        title: language === 'es' ? "Cargando..." : "Loading...",
+        description: language === 'es' ? "Convirtiendo imagen a base64" : "Converting image to base64",
+      });
+      
+      const base64Image = await fetchImageAsBase64(imageUrl);
+      console.log('Base64 conversion complete, setting as reference');
+      console.log('Base64 length:', base64Image.length);
+      
+      // Set as reference image
+      setReferencePreview(base64Image);
+      
+      // Set default prompt for editing
+      setPrompt("Front view looking directly at camera, keep the same composition and elements");
+      
+      // Set aspect ratio to match input
+      setAspectRatio("Match Input");
+      setMatchInput(true);
+      
+      toast({
+        title: language === 'es' ? "Imagen cargada" : "Image loaded as reference",
+        description: language === 'es' ? "Ya puedes editar esta imagen con nuevas instrucciones" : "You can now edit this image with a new prompt",
+      });
+    } catch (error) {
+      console.error('Error in use as reference:', error);
+      toast({
+        title: language === 'es' ? "Error" : "Error",
+        description: language === 'es' ? "No se pudo cargar la imagen" : "Could not load the image",
+        variant: "destructive",
+      });
+    }
   };
 
   // Update dimensions based on aspect ratio or match input
@@ -533,15 +611,26 @@ function DesignEditor() {
                               alt="Latest design full size"
                               className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
                             />
-                            <Button
-                              className="absolute top-2 right-2"
-                              size="sm"
-                              onClick={() => downloadImage(projects[0].imageUrl || "", `design-${projects[0].id}.png`)}
-                              data-testid="button-download-modal"
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Descargar
-                            </Button>
+                            <div className="absolute top-2 right-2 flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="bg-amber-500/30 backdrop-blur-sm text-white hover:bg-amber-500/50"
+                                onClick={() => handleUseAsReference(projects[0].imageUrl || "")}
+                                data-testid="button-use-as-reference-modal"
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                {language === 'es' ? 'Usar como referencia' : 'Use as reference'}
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => downloadImage(projects[0].imageUrl || "", `design-${projects[0].id}.png`)}
+                                data-testid="button-download-modal"
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                {language === 'es' ? 'Descargar' : 'Download'}
+                              </Button>
+                            </div>
                           </div>
                         </DialogContent>
                       </Dialog>
@@ -593,6 +682,15 @@ function DesignEditor() {
                           data-testid="button-download-latest"
                         >
                           <Download className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="secondary"
+                          className="bg-amber-500/30 backdrop-blur-sm text-white hover:bg-amber-500/50"
+                          onClick={() => handleUseAsReference(projects[0].imageUrl || "")}
+                          data-testid="button-use-as-reference-latest"
+                        >
+                          <Edit className="h-4 w-4" />
                         </Button>
                         <Button size="icon" variant="secondary">
                           <RefreshCw className="h-4 w-4" />
@@ -647,15 +745,26 @@ function DesignEditor() {
                                 alt={`${project.name} full size`}
                                 className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
                               />
-                              <Button
-                                className="absolute top-2 right-2"
-                                size="sm"
-                                onClick={() => downloadImage(project.imageUrl || "", `design-${project.id}.png`)}
-                                data-testid={`button-download-history-${project.id}`}
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Descargar
-                              </Button>
+                              <div className="absolute top-2 right-2 flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  className="bg-amber-500/30 backdrop-blur-sm text-white hover:bg-amber-500/50"
+                                  onClick={() => handleUseAsReference(project.imageUrl || "")}
+                                  data-testid={`button-use-as-reference-history-${project.id}`}
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  {language === 'es' ? 'Usar como referencia' : 'Use as reference'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => downloadImage(project.imageUrl || "", `design-${project.id}.png`)}
+                                  data-testid={`button-download-history-${project.id}`}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  {language === 'es' ? 'Descargar' : 'Download'}
+                                </Button>
+                              </div>
                             </div>
                           </DialogContent>
                         </Dialog>
