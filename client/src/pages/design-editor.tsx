@@ -53,7 +53,7 @@ function DesignEditor() {
   const [prompt, setPrompt] = useState<string>("");
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<string>("1:1");
+  const [aspectRatio, setAspectRatio] = useState<string>("Match Input");
   const [modelVariant, setModelVariant] = useState<string>("pro");
   const [width, setWidth] = useState<number>(1024);
   const [height, setHeight] = useState<number>(1024);
@@ -64,7 +64,7 @@ function DesignEditor() {
   const [compareMode, setCompareMode] = useState<boolean>(false);
   const [comparePosition, setComparePosition] = useState<number>(50);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
-  const [matchInput, setMatchInput] = useState<boolean>(false); // Start as false until image is loaded
+  const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true for Match Input
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -184,6 +184,9 @@ function DesignEditor() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setReferencePreview(reader.result as string);
+        // Automatically select Match Input when image is loaded
+        setAspectRatio("Match Input");
+        setMatchInput(true);
         // Simulate image analysis
         analyzeImage(reader.result as string);
       };
@@ -304,34 +307,40 @@ function DesignEditor() {
 
   // Update dimensions based on aspect ratio or match input
   useEffect(() => {
-    if (matchInput && referencePreview) {
-      // Get dimensions from reference image
-      const img = new Image();
-      img.onload = () => {
-        // Scale dimensions to fit within Flux Kontext bounds and round to multiples of 32
-        const maxDim = 1408; // Max supported by Flux at 2.0MP
-        let w = img.width;
-        let h = img.height;
-        
-        // Scale down if needed
-        if (w > maxDim || h > maxDim) {
-          const scale = maxDim / Math.max(w, h);
-          w = Math.round(w * scale);
-          h = Math.round(h * scale);
-        }
-        
-        // Round to nearest multiple of 32 (Flux requirement)
-        w = Math.round(w / 32) * 32;
-        h = Math.round(h / 32) * 32;
-        
-        // Ensure minimum size of 256
-        w = Math.max(256, w);
-        h = Math.max(256, h);
-        
-        setWidth(w);
-        setHeight(h);
-      };
-      img.src = referencePreview;
+    if (aspectRatio === "Match Input") {
+      if (referencePreview) {
+        // Get dimensions from reference image
+        const img = new Image();
+        img.onload = () => {
+          // Scale dimensions to fit within Flux Kontext bounds and round to multiples of 32
+          const maxDim = 1408; // Max supported by Flux at 2.0MP
+          let w = img.width;
+          let h = img.height;
+          
+          // Scale down if needed
+          if (w > maxDim || h > maxDim) {
+            const scale = maxDim / Math.max(w, h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
+          
+          // Round to nearest multiple of 32 (Flux requirement)
+          w = Math.round(w / 32) * 32;
+          h = Math.round(h / 32) * 32;
+          
+          // Ensure minimum size of 256
+          w = Math.max(256, w);
+          h = Math.max(256, h);
+          
+          setWidth(w);
+          setHeight(h);
+        };
+        img.src = referencePreview;
+      } else {
+        // No image loaded, use default 1:1
+        setWidth(1024);
+        setHeight(1024);
+      }
     } else {
       // Use predefined aspect ratios with optimal Flux resolutions (1.0MP standard)
       const ratios: { [key: string]: [number, number] } = {
@@ -350,7 +359,7 @@ function DesignEditor() {
       setWidth(w);
       setHeight(h);
     }
-  }, [aspectRatio, matchInput, referencePreview]);
+  }, [aspectRatio, referencePreview]);
   
   // Reset match input when reference image is removed
   useEffect(() => {
@@ -598,14 +607,10 @@ function DesignEditor() {
                       <Label>{txt.aspectRatio}</Label>
                       
                       <RadioGroup 
-                        value={matchInput ? "Match Input" : aspectRatio} 
+                        value={aspectRatio} 
                         onValueChange={(value) => {
-                          if (value === "Match Input") {
-                            setMatchInput(true);
-                          } else {
-                            setMatchInput(false);
-                            setAspectRatio(value);
-                          }
+                          setAspectRatio(value);
+                          setMatchInput(value === "Match Input");
                         }}
                         className="mt-2"
                       >
@@ -615,14 +620,15 @@ function DesignEditor() {
                             <div key={ratio} className="flex items-center space-x-1">
                               <RadioGroupItem 
                                 value={ratio} 
-                                id={ratio} 
-                                disabled={ratio === "Match Input" && !referencePreview}
+                                id={ratio.replace(/[:\s]/g, '-')} 
                               />
                               <Label 
-                                htmlFor={ratio} 
-                                className={`text-xs ${ratio === "Match Input" && !referencePreview ? 'opacity-50' : ''}`}
+                                htmlFor={ratio.replace(/[:\s]/g, '-')} 
+                                className={`text-xs ${ratio === "Match Input" && !referencePreview ? 'text-zinc-500' : ''}`}
+                                title={ratio === "Match Input" ? (language === "es" ? "Usar proporciones de imagen de entrada (si hay imagen)" : "Use input image proportions (if image loaded)") : undefined}
                               >
                                 {ratio}
+                                {ratio === "Match Input" && !referencePreview && " (sin imagen)"}
                               </Label>
                             </div>
                           ))}
