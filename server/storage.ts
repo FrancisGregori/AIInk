@@ -84,7 +84,7 @@ export class MemStorage implements IStorage {
         id: "steven",
         name: "Steven",
         description: "Estilo profesional con líneas definidas y sombreado detallado",
-        comfyDeployWorkflowId: "workflow-steven",
+        comfyDeployWorkflowId: "steven-stencil-workflow", // TODO: Replace with actual workflow ID
         loraModel: "steven-lora-v1",
         isActive: true,
         displayOrder: 1,
@@ -94,7 +94,7 @@ export class MemStorage implements IStorage {
         id: "makishi",
         name: "Makishi",
         description: "Estilo artístico japonés con trazos fluidos y elegantes",
-        comfyDeployWorkflowId: "workflow-makishi",
+        comfyDeployWorkflowId: "makishi-stencil-workflow", // TODO: Replace with actual workflow ID
         loraModel: "makishi-lora-v1",
         isActive: true,
         displayOrder: 2,
@@ -104,7 +104,7 @@ export class MemStorage implements IStorage {
         id: "darwin",
         name: "Darwin",
         description: "Estilo realista con alto contraste y detalles precisos",
-        comfyDeployWorkflowId: "workflow-darwin",
+        comfyDeployWorkflowId: "darwin-stencil-workflow", // TODO: Replace with actual workflow ID
         loraModel: "darwin-lora-v1",
         isActive: true,
         displayOrder: 3,
@@ -114,7 +114,7 @@ export class MemStorage implements IStorage {
         id: "adrian",
         name: "Adrian",
         description: "Estilo moderno con geometría y patrones abstractos",
-        comfyDeployWorkflowId: "workflow-adrian",
+        comfyDeployWorkflowId: "adrian-stencil-workflow", // TODO: Replace with actual workflow ID
         loraModel: "adrian-lora-v1",
         isActive: true,
         displayOrder: 4,

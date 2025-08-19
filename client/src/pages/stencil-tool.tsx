@@ -89,7 +89,7 @@ function StencilTool() {
   
   // Poll for job status when processing
   useEffect(() => {
-    if (!currentJob || currentJob.status !== "processing") {
+    if (!currentJob || (currentJob.status !== "processing" && currentJob.status !== "pending")) {
       return;
     }
     
@@ -109,7 +109,7 @@ function StencilTool() {
       } catch (error) {
         console.error("Error polling job status:", error);
       }
-    }, 2000); // Poll every 2 seconds
+    }, 3000); // Poll every 3 seconds (up to 40 seconds wait)
     
     return () => clearInterval(interval);
   }, [currentJob, queryClient]);
@@ -376,30 +376,42 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                 </div>
               </CardContent>
               
-              <CardFooter className="flex gap-2 pt-3">
-                <Button
-                  onClick={handleProcess}
-                  disabled={!selectedFile || isProcessing}
-                  className="flex-1"
-                  size="sm"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    "Process"
-                  )}
-                </Button>
-                <Button
-                  onClick={handleReset}
-                  variant="outline"
-                  size="sm"
-                  disabled={isProcessing}
-                >
-                  Reset
-                </Button>
+              <CardFooter className="flex flex-col gap-2 pt-3">
+                {isProcessing && (
+                  <Alert className="bg-zinc-900 border-zinc-700">
+                    <AlertDescription className="text-xs">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>Procesando... puede tardar hasta 40 segundos</span>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <div className="flex gap-2 w-full">
+                  <Button
+                    onClick={handleProcess}
+                    disabled={!selectedFile || isProcessing}
+                    className="flex-1"
+                    size="sm"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Process"
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleReset}
+                    variant="outline"
+                    size="sm"
+                    disabled={isProcessing}
+                  >
+                    Reset
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
 
