@@ -388,6 +388,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               selectedFile={selectedFile}
               selectedStyle={selectedStyle}
               jobId={currentJob?.id || null}
+              externalImageUrl={recoveredImageUrl}
             />
             
             {/* Download Section */}

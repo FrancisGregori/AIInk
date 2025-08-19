@@ -14,24 +14,27 @@ interface PreviewAreaProps {
   selectedFile: File | null;
   selectedStyle: string;
   jobId: string | null;
+  externalImageUrl?: string | null;
 }
 
-export default function PreviewArea({ selectedFile, selectedStyle, jobId }: PreviewAreaProps) {
+export default function PreviewArea({ selectedFile, selectedStyle, jobId, externalImageUrl }: PreviewAreaProps) {
   const [showOriginal, setShowOriginal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [comparisonMode, setComparisonMode] = useState<"side-by-side" | "slider">("slider");
   const [showZoomModal, setShowZoomModal] = useState(false);
 
-  // Generate preview URL for selected file
+  // Generate preview URL for selected file or use external URL
   useEffect(() => {
-    if (selectedFile) {
+    if (externalImageUrl) {
+      setPreviewUrl(externalImageUrl);
+    } else if (selectedFile) {
       const url = URL.createObjectURL(selectedFile);
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
     } else {
       setPreviewUrl(null);
     }
-  }, [selectedFile]);
+  }, [selectedFile, externalImageUrl]);
 
   // Poll for job updates
   const { data: job, isLoading } = useQuery<StencilJob>({
