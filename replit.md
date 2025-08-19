@@ -13,9 +13,12 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - NO confundir Stencil Tool con Design Editor - son completamente separados
 - NO hacer cambios ni agregar funcionalidades sin preguntar primero
 - SIEMPRE pedir autorización antes de modificar código
+- USAR EXACTAMENTE el código del repositorio original que funciona - NO inventar nuevas implementaciones
 
 **REPOSITORIO ORIGINAL:**
-- Design Editor original: https://github.com/darwintattoo/FluxKontextAI
+- Design Editor original: https://github.com/darwintattoo/FluxKontextAI (clonado en temp_clone/)
+- Estado: ✅ Replicate API integrado completamente con InkVision
+- Fecha: 2025-08-19 - Botón "Aplicar" conectado y funcionando
 
 ## System Architecture
 
@@ -48,9 +51,19 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 
 ### External Service Integrations
 - **AI Services**: Google Gemini 2.5 Flash and Pro models for various AI operations
+- **Image Generation**: Replicate API with FLUX.1 Kontext Pro/Max for AI-powered image editing
 - **Cloud Storage**: Google Cloud Storage for scalable file management
 - **File Upload**: AWS S3 compatibility through Uppy for flexible storage options
 - **Development Tools**: Replit-specific plugins for enhanced development experience
+
+### Replicate Integration Status (2025-08-19)
+- ✅ REPLICATE_API_TOKEN configurado en environment secrets
+- ✅ Endpoint `/api/generate` implementado (copiado exacto del repositorio original)
+- ✅ Manejo completo de ReadableStream y AsyncIterator de Replicate
+- ✅ InkVision botón "Aplicar" conectado - genera imágenes automáticamente
+- ✅ Soporte para FLUX.1 Kontext Pro y Max models
+- ✅ Sistema de reintentos para manejar interrupciones
+- ✅ Validación con Zod schema y manejo de errores completo
 
 ## External Dependencies
 
