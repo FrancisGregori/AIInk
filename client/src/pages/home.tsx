@@ -24,7 +24,7 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-              <Link href="/stencil">
+              <Link href="/stencil-tool">
                 <Button 
                   className="bg-white text-black px-8 py-4 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                   data-testid="button-explore-stencil"
@@ -33,7 +33,7 @@ export default function Home() {
                   Explorar Stencil Tool
                 </Button>
               </Link>
-              <Link href="/flux">
+              <Link href="/flux-kontext">
                 <Button 
                   variant="outline" 
                   className="border-medium-gray text-white px-8 py-4 rounded-lg font-medium hover:bg-dark-gray transition-colors"
@@ -88,7 +88,7 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <Link href="/stencil">
+                <Link href="/stencil-tool">
                   <Button 
                     className="w-full bg-white text-black py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                     data-testid="button-use-stencil"
@@ -128,7 +128,7 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <Link href="/flux">
+                <Link href="/flux-kontext">
                   <Button 
                     variant="outline"
                     className="w-full border-medium-gray text-white py-3 rounded-lg font-medium hover:bg-dark-gray transition-colors"
@@ -186,7 +186,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <Link href="/stencil">
+              <Link href="/stencil-tool">
                 <Button 
                   className="bg-white text-black px-8 py-4 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                   data-testid="button-open-stencil"
@@ -297,7 +297,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <Link href="/flux">
+              <Link href="/flux-kontext">
                 <Button 
                   variant="outline"
                   className="border-medium-gray text-white px-8 py-4 rounded-lg font-medium hover:bg-dark-gray transition-colors"
