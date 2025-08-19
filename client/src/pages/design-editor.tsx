@@ -32,7 +32,10 @@ import {
   Palette,
   ChevronLeft,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  MessageSquare,
+  Send,
+  Bot
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import type { FluxProject } from "@shared/schema";
@@ -51,7 +54,14 @@ function DesignEditor() {
   const [comparePosition, setComparePosition] = useState<number>(50);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
   const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true for Match Input
+  
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'assistant', content: string, timestamp: Date}>>([]);
+  const [chatInput, setChatInput] = useState<string>("");
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const chatAssistantRef = useRef<ChatAssistantRef>(null);
   const queryClient = useQueryClient();
 
@@ -173,9 +183,174 @@ function DesignEditor() {
         // Automatically select Match Input when image is loaded
         setAspectRatio("Match Input");
         setMatchInput(true);
-
+        
+        // Auto-analyze with InkVision
+        analyzeImageWithInkVision(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Analyze image with InkVision
+  const analyzeImageWithInkVision = async (imageData: string) => {
+    setIsTyping(true);
+    
+    try {
+      const response = await fetch("/api/chat/stream", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [{
+            role: "user",
+            content: language === "es" 
+              ? "Analiza esta imagen y describe qué ves. ¿Qué elementos podrían funcionar bien para un diseño de tatuaje?"
+              : "Analyze this image and describe what you see. What elements could work well for a tattoo design?"
+          }],
+          imageBase64: imageData,
+          language: language
+        }),
+      });
+
+      if (response.ok) {
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let assistantResponse = "";
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.content) {
+                    assistantResponse += data.content;
+                  }
+                } catch (e) {
+                  // Skip invalid JSON
+                }
+              }
+            }
+          }
+        }
+
+        if (assistantResponse) {
+          setChatMessages(prev => [...prev, {
+            role: "assistant",
+            content: assistantResponse,
+            timestamp: new Date()
+          }]);
+        }
+      }
+    } catch (error) {
+      console.error("Error analyzing image:", error);
+      setChatMessages(prev => [...prev, {
+        role: "assistant",
+        content: language === "es" 
+          ? "❌ Error al analizar la imagen. Verifica la configuración."
+          : "❌ Error analyzing image. Please check configuration.",
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsTyping(false);
+      // Auto-scroll to bottom
+      setTimeout(() => {
+        if (chatScrollRef.current) {
+          chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+        }
+      }, 100);
+    }
+  };
+
+  // Handle chat submission
+  const handleChatSubmit = async () => {
+    if (!chatInput.trim() || isTyping) return;
+
+    // Add user message
+    const userMessage = {
+      role: "user" as const,
+      content: chatInput,
+      timestamp: new Date()
+    };
+    
+    setChatMessages(prev => [...prev, userMessage]);
+    const currentInput = chatInput;
+    setChatInput("");
+    setIsTyping(true);
+
+    try {
+      const response = await fetch("/api/chat/stream", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...chatMessages, userMessage].slice(-5), // Last 5 messages for context
+          imageBase64: referencePreview || undefined,
+          language: language
+        }),
+      });
+
+      if (response.ok) {
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let assistantResponse = "";
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.content) {
+                    assistantResponse += data.content;
+                  }
+                } catch (e) {
+                  // Skip invalid JSON
+                }
+              }
+            }
+          }
+        }
+
+        if (assistantResponse) {
+          setChatMessages(prev => [...prev, {
+            role: "assistant",
+            content: assistantResponse,
+            timestamp: new Date()
+          }]);
+        }
+      }
+    } catch (error) {
+      console.error("Error in chat:", error);
+      setChatMessages(prev => [...prev, {
+        role: "assistant",
+        content: language === "es" 
+          ? "❌ Error al conectar con el asistente. Verifica la configuración."
+          : "❌ Error connecting to assistant. Please check configuration.",
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsTyping(false);
+      // Auto-scroll to bottom
+      setTimeout(() => {
+        if (chatScrollRef.current) {
+          chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+        }
+      }, 100);
     }
   };
 
@@ -287,7 +462,80 @@ function DesignEditor() {
           <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar - InkVision Chat */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  InkVision - Asistente IA
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea ref={chatScrollRef} className="h-96 pr-4">
+                  <div className="space-y-4">
+                    {chatMessages.length === 0 && (
+                      <div className="text-center text-zinc-500 py-8">
+                        <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">
+                          {language === "es" ? "Pregunta sobre diseños o sube una imagen..." : "Ask about designs or upload an image..."}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {chatMessages.map((msg, idx) => (
+                      <div key={idx} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : ""}`}>
+                        {msg.role === "assistant" && <Bot className="h-5 w-5 mt-1 text-zinc-400" />}
+                        <div className={`flex-1 rounded-lg p-3 ${
+                          msg.role === "user" 
+                            ? "bg-zinc-800 ml-8" 
+                            : "bg-zinc-900 mr-8"
+                        }`}>
+                          <p className="text-sm">{msg.content}</p>
+                        </div>
+                        {msg.role === "user" && <MessageSquare className="h-5 w-5 mt-1 text-zinc-400" />}
+                      </div>
+                    ))}
+                    
+                    {isTyping && (
+                      <div className="flex gap-2">
+                        <Bot className="h-5 w-5 mt-1 text-zinc-400" />
+                        <div className="bg-zinc-900 mr-8 rounded-lg p-3">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                            <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+                
+                <Separator className="my-3" />
+                
+                <div className="flex gap-2">
+                  <Input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleChatSubmit()}
+                    placeholder={language === "es" ? "Escribe tu mensaje aquí..." : "Type your message here..."}
+                    className="flex-1"
+                    disabled={isTyping}
+                  />
+                  <Button 
+                    size="icon" 
+                    onClick={handleChatSubmit}
+                    disabled={!chatInput.trim() || isTyping}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Prompt Input */}
@@ -615,7 +863,7 @@ function DesignEditor() {
         </div>
       </main>
       
-      {/* Chat Assistant Component */}
+      {/* Floating Chat Assistant Component */}
       <ChatAssistant 
         ref={chatAssistantRef}
         currentImage={referencePreview || undefined}
