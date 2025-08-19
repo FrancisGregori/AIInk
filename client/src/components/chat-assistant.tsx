@@ -380,6 +380,16 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     });
   };
 
+  const applyPrompt = (content: string) => {
+    onApplyPrompt(content);
+    toast({
+      title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
+      description: language === 'es' 
+        ? "El prompt se ha aplicado y se está generando"
+        : "The prompt has been applied and is generating"
+    });
+  };
+
 
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -463,15 +473,26 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                     {msg.content}
                   </p>
                   {msg.role === 'assistant' && msg.content && !msg.isAnalyzing && (
-                    <Button
-                      onClick={() => copyMessage(msg.content)}
-                      variant="ghost"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background shadow-md"
-                      data-testid={`button-copy-message-${msg.id}`}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
+                    <div className="absolute -top-2 -right-2 flex gap-1">
+                      <Button
+                        onClick={() => copyMessage(msg.content)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-xs"
+                        data-testid={`button-copy-message-${msg.id}`}
+                      >
+                        Copiar
+                      </Button>
+                      <Button
+                        onClick={() => applyPrompt(msg.content)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 rounded-lg bg-purple-600 hover:bg-purple-700 border border-purple-500 text-xs text-white"
+                        data-testid={`button-apply-message-${msg.id}`}
+                      >
+                        Aplicar
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
