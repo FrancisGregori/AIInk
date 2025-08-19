@@ -7,16 +7,18 @@ import { GoogleGenAI } from "@google/genai";
 //   - do not change this unless explicitly requested by the user
 
 // This API key is from Gemini Developer API Key, not vertex AI API Key
-// Get API key helper
+// Get API key helper - read directly from env
 const getGeminiKey = (): string => {
-  const key = process.env.GEMINI_API_KEY;
+  const key = process.env.GEMINI_API_KEY || "";
+  console.log("GEMINI_API_KEY status:", key ? `Found (${key.substring(0, 10)}...)` : "Not found");
   if (!key) {
     throw new Error("GEMINI_API_KEY environment variable is not set");
   }
   return key;
 };
 
-const ai = new GoogleGenAI({ apiKey: getGeminiKey() });
+// Initialize AI with API key from environment
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export async function summarizeArticle(text: string): Promise<string> {
     const prompt = `You are a helpful AI assistant for Darwin AI Tools, a platform that provides professional AI-powered design tools including Stencil Tool and Flux Kontext editor.
