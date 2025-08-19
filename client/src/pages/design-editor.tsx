@@ -624,11 +624,10 @@ function DesignEditor() {
                               />
                               <Label 
                                 htmlFor={ratio.replace(/[:\s]/g, '-')} 
-                                className={`text-xs ${ratio === "Match Input" && !referencePreview ? 'text-zinc-500' : ''}`}
-                                title={ratio === "Match Input" ? (language === "es" ? "Usar proporciones de imagen de entrada (si hay imagen)" : "Use input image proportions (if image loaded)") : undefined}
+                                className="text-xs"
+                                title={ratio === "Match Input" ? (language === "es" ? "Usar dimensiones de la imagen de referencia" : "Use reference image dimensions") : undefined}
                               >
                                 {ratio}
-                                {ratio === "Match Input" && !referencePreview && " (sin imagen)"}
                               </Label>
                             </div>
                           ))}
