@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import ChatAssistant, { ChatAssistantRef } from "@/components/chat-assistant";
 import { 
@@ -506,11 +507,23 @@ function DesignEditor() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="relative group">
-                      <img
-                        src={projects[0].imageUrl || ""}
-                        alt="Latest design"
-                        className="w-full rounded-lg"
-                      />
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <img
+                            src={projects[0].imageUrl || ""}
+                            alt="Latest design"
+                            className="w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            data-testid="img-latest-design"
+                          />
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+                          <img
+                            src={projects[0].imageUrl || ""}
+                            alt="Latest design full size"
+                            className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                          />
+                        </DialogContent>
+                      </Dialog>
                       
                       {/* Image Comparison Slider */}
                       {compareMode && referencePreview && (
@@ -591,12 +604,24 @@ function DesignEditor() {
                 <ScrollArea className="h-64">
                   <div className="space-y-2">
                     {projects.slice(1, 6).map((project) => (
-                      <div key={project.id} className="flex gap-2 p-2 hover:bg-zinc-900 rounded cursor-pointer">
-                        <img
-                          src={project.imageUrl || ""}
-                          alt={project.name}
-                          className="w-12 h-12 rounded object-cover"
-                        />
+                      <div key={project.id} className="flex gap-2 p-2 hover:bg-zinc-900 rounded">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <img
+                              src={project.imageUrl || ""}
+                              alt={project.name}
+                              className="w-12 h-12 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              data-testid={`img-history-${project.id}`}
+                            />
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+                            <img
+                              src={project.imageUrl || ""}
+                              alt={`${project.name} full size`}
+                              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                            />
+                          </DialogContent>
+                        </Dialog>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs truncate">{project.name}</p>
                           <p className="text-xs text-zinc-600">{new Date(project.createdAt || "").toLocaleDateString()}</p>

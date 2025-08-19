@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { MessageCircle, X, Send, Copy, Image, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {
@@ -595,11 +596,23 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   }`}
                 >
                   {msg.image && (
-                    <img 
-                      src={msg.image} 
-                      alt="Uploaded" 
-                      className="max-w-full h-auto rounded mb-2 max-h-40 object-contain"
-                    />
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <img 
+                          src={msg.image} 
+                          alt="Uploaded" 
+                          className="max-w-full h-auto rounded mb-2 max-h-40 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                          data-testid={`img-chat-${msg.id}`}
+                        />
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+                        <img
+                          src={msg.image}
+                          alt="Full size image"
+                          className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                        />
+                      </DialogContent>
+                    </Dialog>
                   )}
                   <p className={`text-sm whitespace-pre-wrap ${msg.isAnalyzing ? 'animate-pulse' : ''}`}>
                     {msg.content}
