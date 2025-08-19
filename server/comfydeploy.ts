@@ -122,25 +122,30 @@ export class ComfyDeployService {
       
       // Check if outputs is an array with results
       if (Array.isArray(data.outputs) && data.outputs.length > 0) {
-        // Get the first output's data
-        const firstOutput = data.outputs[0];
-        if (firstOutput?.data) {
-          // Check for images array (ComfyDeploy structure)
-          if (firstOutput.data.images && Array.isArray(firstOutput.data.images) && firstOutput.data.images.length > 0) {
-            outputUrl = firstOutput.data.images[0].url;
-            console.log("Found image URL in outputs[0].data.images[0].url:", outputUrl);
-          } else {
-            // Try other possible field names
-            outputUrl = firstOutput.data.output_image || 
-                       firstOutput.data.image || 
-                       firstOutput.data.image_url ||
-                       firstOutput.data.url ||
-                       firstOutput.data.output;
+        // Look for the output with output_id: 'output_images' or any output with images
+        for (const output of data.outputs) {
+          if (output?.data) {
+            // Check for images array (ComfyDeploy structure)
+            if (output.data.images && Array.isArray(output.data.images) && output.data.images.length > 0) {
+              outputUrl = output.data.images[0].url;
+              console.log("Found image URL in output:", outputUrl);
+              break; // Stop once we find the first image
+            }
+            
+            // Try other possible field names if no images array
+            if (!outputUrl) {
+              outputUrl = output.data.output_image || 
+                         output.data.image || 
+                         output.data.image_url ||
+                         output.data.url ||
+                         output.data.output;
+              if (outputUrl) break;
+            }
           }
-          
-          // Log what we found for debugging
-          console.log("Output data structure:", JSON.stringify(firstOutput.data, null, 2));
         }
+        
+        // Log the outputs for debugging
+        console.log("All outputs checked, found URL:", outputUrl);
       } else if (data.outputs && typeof data.outputs === 'object') {
         // Fallback for object format
         outputUrl = data.outputs.output_image || 
