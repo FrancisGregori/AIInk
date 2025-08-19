@@ -63,7 +63,28 @@ function DesignEditor() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { addJob, updateJob, getJob } = useJobs();
-  const { activeJobsOfType, recoveredJobs } = useJobRecovery('design');
+  const { activeJobsOfType } = useJobRecovery('design');
+
+  // Recuperar trabajo en progreso al cargar la página
+  useEffect(() => {
+    const activeDesignJobs = activeJobsOfType.filter(job => job.status === 'processing');
+    if (activeDesignJobs.length > 0) {
+      const latestJob = activeDesignJobs[0];
+      // Restaurar estado del último trabajo
+      if (latestJob.originalImageUrl && !referencePreview) {
+        setReferencePreview(latestJob.originalImageUrl);
+        // Simular archivo cargado
+        const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
+        setReferenceImage(fakeFile);
+      }
+      if (latestJob.style && !prompt) {
+        setPrompt(latestJob.style);
+      }
+      if (!isGenerating) {
+        setIsGenerating(true);
+      }
+    }
+  }, [activeJobsOfType, referencePreview, prompt, isGenerating]);
 
   // Translations
   const t = {
@@ -392,24 +413,7 @@ function DesignEditor() {
           <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
         </div>
 
-        {/* Active Jobs Recovery Section */}
-        {activeJobsOfType.length > 0 && (
-          <Alert className="mb-6 bg-blue-950/50 border-blue-800 text-blue-100">
-            <Clock className="h-4 w-4" />
-            <AlertDescription>
-              <div className="flex items-center justify-between">
-                <span>
-                  {activeJobsOfType.length} trabajo{activeJobsOfType.length > 1 ? 's' : ''} de diseño en progreso encontrado{activeJobsOfType.length > 1 ? 's' : ''}. 
-                  Se están actualizando automáticamente.
-                </span>
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span className="text-xs">Sincronizando...</span>
-                </div>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
+
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar - InkVision Chat (movido del flotante) */}

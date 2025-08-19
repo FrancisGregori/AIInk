@@ -52,7 +52,31 @@ function StencilTool() {
   });
   const queryClient = useQueryClient();
   const { addJob, updateJob, getJob } = useJobs();
-  const { activeJobsOfType, recoveredJobs } = useJobRecovery('stencil');
+  const { activeJobsOfType } = useJobRecovery('stencil');
+
+  // Recuperar trabajo en progreso al cargar la página
+  useEffect(() => {
+    const activeStencilJobs = activeJobsOfType.filter(job => job.status === 'processing');
+    if (activeStencilJobs.length > 0 && !currentJob) {
+      const latestJob = activeStencilJobs[0];
+      // Cargar el trabajo más reciente
+      fetch(`/api/stencil/jobs/${latestJob.id}`)
+        .then(res => res.json())
+        .then(job => {
+          setCurrentJob(job);
+          setSelectedStyle(job.style);
+          if (job.status === 'processing') {
+            setIsProcessing(true);
+          }
+          // Simular que el usuario tenía una imagen cargada
+          if (job.originalImageUrl) {
+            const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
+            setSelectedFile(fakeFile);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [activeJobsOfType, currentJob]);
   
   // Refs for scroll behavior
   const styleSectionRef = useRef<HTMLDivElement>(null);
@@ -223,24 +247,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
           <p className="text-zinc-400 text-sm">Transform images into professional tattoo stencils</p>
         </div>
 
-        {/* Active Jobs Recovery Section */}
-        {activeJobsOfType.length > 0 && (
-          <Alert className="mb-6 bg-blue-950/50 border-blue-800 text-blue-100">
-            <Clock className="h-4 w-4" />
-            <AlertDescription>
-              <div className="flex items-center justify-between">
-                <span>
-                  {activeJobsOfType.length} trabajo{activeJobsOfType.length > 1 ? 's' : ''} en progreso encontrado{activeJobsOfType.length > 1 ? 's' : ''}. 
-                  Se están actualizando automáticamente.
-                </span>
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span className="text-xs">Sincronizando...</span>
-                </div>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
+
 
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           {/* Left Column - Upload & Settings */}

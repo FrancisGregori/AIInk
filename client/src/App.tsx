@@ -27,7 +27,6 @@ function App() {
       <JobProvider>
         <TooltipProvider>
           <Toaster />
-          <JobNotification />
           <Router />
         </TooltipProvider>
       </JobProvider>
