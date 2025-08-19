@@ -14,10 +14,10 @@ export class ComfyDeployService {
   private baseUrl = "https://api.comfydeploy.com/api";
 
   constructor() {
-    this.apiKey = process.env.COMFY_DEPLOY_API_KEY || "";
+    this.apiKey = process.env.COMFYDEPLOY_API_KEY || "";
     
     if (!this.apiKey) {
-      console.warn("ComfyDeploy API key not found. Processing will fail.");
+      console.warn("COMFYDEPLOY_API_KEY not found. Processing will fail.");
     }
   }
 
