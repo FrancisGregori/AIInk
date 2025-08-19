@@ -105,6 +105,158 @@ export async function analyzeImage(jpegImagePath: string): Promise<string> {
     }
 }
 
+// InkVision: Análisis inteligente de imágenes para tatuajes
+export async function analyzeImageForTattoo(imageBase64: string, language: "es" | "en" = "es"): Promise<{
+    analysis: string;
+    suggestions: string[];
+    styles: string[];
+}> {
+    try {
+        const systemPrompt = language === "es" 
+            ? `Eres InkVision, un asistente IA experto en diseño de tatuajes integrado en TattoostencilPro. 
+               Analiza la imagen para crear diseños de tatuajes profesionales. Identifica:
+               1. Elementos visuales principales que funcionarían en un tatuaje
+               2. Estilos de tatuaje recomendados (blackwork, realista, geométrico, tradicional, etc.)
+               3. Ubicaciones corporales ideales
+               4. Modificaciones sugeridas para optimizar como tatuaje
+               5. Técnicas de stencil apropiadas`
+            : `You are InkVision, an expert tattoo design AI assistant integrated in TattoostencilPro.
+               Analyze the image to create professional tattoo designs. Identify:
+               1. Main visual elements that would work in a tattoo
+               2. Recommended tattoo styles (blackwork, realistic, geometric, traditional, etc.)
+               3. Ideal body placements
+               4. Suggested modifications to optimize as tattoo
+               5. Appropriate stencil techniques`;
+
+        const contents = [
+            {
+                inlineData: {
+                    data: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
+                    mimeType: "image/jpeg",
+                },
+            },
+            systemPrompt
+        ];
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            contents: contents,
+        });
+
+        const text = response.text || "";
+        
+        // Extraer sugerencias específicas
+        const suggestions = language === "es" 
+            ? [
+                "Convertir a estilo blackwork",
+                "Aplicar técnica de sombreado puntillista",
+                "Añadir elementos geométricos",
+                "Crear versión minimalista",
+                "Adaptar para manga completa"
+              ]
+            : [
+                "Convert to blackwork style",
+                "Apply dotwork shading technique",
+                "Add geometric elements",
+                "Create minimalist version",
+                "Adapt for full sleeve"
+              ];
+
+        const styles = language === "es"
+            ? ["Blackwork", "Realista", "Geométrico", "Neo-tradicional", "Minimalista"]
+            : ["Blackwork", "Realistic", "Geometric", "Neo-traditional", "Minimalist"];
+
+        return {
+            analysis: text,
+            suggestions: suggestions.slice(0, 3),
+            styles: styles.slice(0, 4)
+        };
+    } catch (error) {
+        console.error("Error in InkVision analysis:", error);
+        return {
+            analysis: language === "es" 
+                ? "No pude analizar la imagen. Por favor intenta con otra."
+                : "Could not analyze the image. Please try another one.",
+            suggestions: [],
+            styles: []
+        };
+    }
+}
+
+// InkVision: Chat inteligente para diseño de tatuajes
+export async function inkVisionChat(
+    message: string, 
+    context: string = "",
+    language: "es" | "en" = "es"
+): Promise<{
+    response: string;
+    suggestions: string[];
+}> {
+    try {
+        const systemPrompt = language === "es"
+            ? `Eres InkVision, el asistente IA experto en tatuajes de TattoostencilPro.
+               Tienes conocimiento profundo sobre:
+               - Estilos de tatuajes (blackwork, realista, geométrico, tradicional, neo-tradicional, etc.)
+               - Técnicas de stencil y transferencia
+               - Ubicaciones corporales y su adaptación
+               - Los 4 artistas del sistema: Steven (blackwork), Makishi (japonés), Darwin (realista), Adrian (geométrico)
+               - Flux Kontext para edición avanzada
+               
+               Contexto actual: ${context}
+               
+               Responde de forma profesional, creativa y útil para artistas del tatuaje.`
+            : `You are InkVision, TattoostencilPro's expert tattoo AI assistant.
+               You have deep knowledge about:
+               - Tattoo styles (blackwork, realistic, geometric, traditional, neo-traditional, etc.)
+               - Stencil and transfer techniques
+               - Body placements and adaptation
+               - The 4 system artists: Steven (blackwork), Makishi (Japanese), Darwin (realistic), Adrian (geometric)
+               - Flux Kontext for advanced editing
+               
+               Current context: ${context}
+               
+               Respond professionally, creatively and helpfully for tattoo artists.`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            contents: [
+                { text: systemPrompt },
+                { text: `Usuario: ${message}` }
+            ],
+        });
+
+        const responseText = response.text || "";
+
+        // Generar sugerencias contextuales
+        const suggestions = language === "es"
+            ? [
+                "Aplicar este estilo al diseño",
+                "Ver ejemplos similares",
+                "Modificar composición",
+                "Cambiar densidad de líneas"
+              ]
+            : [
+                "Apply this style to design",
+                "View similar examples",
+                "Modify composition",
+                "Change line density"
+              ];
+
+        return {
+            response: responseText,
+            suggestions: suggestions.slice(0, 3)
+        };
+    } catch (error) {
+        console.error("Error in InkVision chat:", error);
+        return {
+            response: language === "es" 
+                ? "Disculpa, no pude procesar tu mensaje. ¿Podrías reformularlo?"
+                : "Sorry, I couldn't process your message. Could you rephrase it?",
+            suggestions: []
+        };
+    }
+}
+
 export async function generateDesignSuggestions(prompt: string): Promise<string> {
     try {
         const designPrompt = `You are a creative AI assistant specializing in design for Darwin AI Tools platform. 
