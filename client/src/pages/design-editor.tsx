@@ -309,9 +309,12 @@ function DesignEditor() {
     try {
       // Create temporary job entry for instant feedback
       const tempJobId = `temp_${Date.now()}`;
-      const tempJob = {
+      const tempJob: StencilJob = {
         id: tempJobId,
-        status: 'processing' as const,
+        status: 'processing',
+        imageUrl: referencePreview,
+        processedImageUrl: null,
+        errorMessage: null,
         type: 'design' as const,
         originalImageUrl: referencePreview,
         style: prompt.slice(0, 30),
@@ -372,8 +375,18 @@ function DesignEditor() {
         completedAt: new Date().toISOString()
       });
       
-      // Clear current job after successful generation
-      setCurrentJob(null);
+      // Update current job with completed status and image
+      setCurrentJob({
+        ...tempJob,
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        processedImageUrl: data.imageUrl // Add the generated image URL
+      });
+      
+      // Clear the job after 3 seconds to reset the preview
+      setTimeout(() => {
+        setCurrentJob(null);
+      }, 3000);
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
@@ -387,13 +400,21 @@ function DesignEditor() {
       console.error('Error generating design:', error);
       
       // Update job as failed
-      const tempJobId = `temp_${Date.now()}`;
-      updateJob(tempJobId, {
-        status: 'failed',
-        completedAt: new Date().toISOString()
-      });
-      
-      setCurrentJob(null);
+      if (currentJob) {
+        const failedJob = {
+          ...currentJob,
+          status: 'failed' as const,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          completedAt: new Date().toISOString()
+        };
+        updateJob(currentJob.id, failedJob);
+        setCurrentJob(failedJob);
+        
+        // Clear after showing error for 3 seconds
+        setTimeout(() => {
+          setCurrentJob(null);
+        }, 3000);
+      }
       
       toast({
         title: "Error",
