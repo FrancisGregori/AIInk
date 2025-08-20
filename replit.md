@@ -61,6 +61,14 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - ✅ Configuración final: autoplay silencioso, loop continuo, sin controles visibles
 - ✅ Experiencia inmersiva confirmada por usuario - funciona perfecto
 
+### Interface Redesign (2025-08-20 Tarde)
+- ✅ InkVision reubicado al panel principal (donde estaba "Imagen para editar")
+- ✅ Chat con carga directa de imágenes (drag & drop + botón clip)
+- ✅ Interfaz unificada: chat, imagen y edición en un solo lugar
+- ✅ Placeholder actualizado: "Describe cambios o arrastra imagen"
+- ✅ Sistema visual de drag & drop con overlay profesional
+- ✅ Flujo más intuitivo confirmado por usuario - funciona perfecto
+
 ## System Architecture
 
 ### Frontend Architecture
