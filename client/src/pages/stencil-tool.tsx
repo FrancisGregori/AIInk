@@ -278,7 +278,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
     <div className="min-h-screen bg-black text-white">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-6 max-w-7xl">
+      <main className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Header */}
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold mb-1">Stencil Tool</h1>
