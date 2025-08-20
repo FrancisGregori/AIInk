@@ -372,12 +372,8 @@ function DesignEditor() {
         completedAt: new Date().toISOString()
       });
       
-      // Update current job
-      setCurrentJob({
-        ...tempJob,
-        status: 'completed',
-        completedAt: new Date().toISOString()
-      });
+      // Clear current job after successful generation
+      setCurrentJob(null);
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
