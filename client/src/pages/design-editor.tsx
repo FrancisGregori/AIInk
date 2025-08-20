@@ -286,26 +286,16 @@ function DesignEditor() {
 
   // Handle design generation
   const handleGenerate = async () => {
-    // Prevent multiple simultaneous executions
-    if (isGenerating) {
-      console.log('Generation already in progress, ignoring click');
-      return;
-    }
-    
-    // Check if we have either a prompt or a reference image with a default prompt
-    const hasPrompt = prompt.trim().length > 0;
-    const hasImage = referencePreview !== null;
-    
-    if (!hasPrompt && !hasImage) {
+    if (!prompt.trim()) {
       toast({
         title: "Error",
-        description: language === 'es' ? "Por favor ingresa una descripción del diseño o carga una imagen" : "Please enter a design description or load an image",
+        description: language === 'es' ? "Por favor ingresa una descripción del diseño" : "Please enter a design description",
         variant: "destructive",
       });
       return;
     }
     
-    if (!hasImage) {
+    if (!referencePreview) {
       toast({
         title: "Error", 
         description: language === 'es' ? "Por favor carga una imagen para editar" : "Please load an image to edit",
@@ -313,9 +303,6 @@ function DesignEditor() {
       });
       return;
     }
-    
-    // Use prompt if available, otherwise use a default prompt for image editing
-    const finalPrompt = hasPrompt ? prompt : "Edit and enhance this image while maintaining its main subject and composition";
     
     setIsGenerating(true);
     
@@ -327,7 +314,7 @@ function DesignEditor() {
         status: 'processing' as const,
         type: 'design' as const,
         originalImageUrl: referencePreview,
-        style: finalPrompt.slice(0, 30),
+        style: prompt.slice(0, 30),
         startedAt: new Date().toISOString()
       };
       
@@ -341,9 +328,9 @@ function DesignEditor() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: finalPrompt,
-          inputImageUrl: referencePreview,
-          model: modelVariant // Usar directamente 'pro' o 'max'
+          prompt: prompt,
+          imageData: referencePreview,
+          model: modelVariant === 'pro' ? 'black-forest-labs/flux-kontext-pro' : 'black-forest-labs/flux-kontext-max'
         }),
       });
 
@@ -354,24 +341,45 @@ function DesignEditor() {
       const data = await response.json();
       console.log('Generated image data:', data);
       
-      if (data.success && data.imageUrl) {
-        // Update job status with the generated image
-        updateJob(tempJobId, {
-          status: 'completed',
-          processedImageUrl: data.imageUrl,
-          completedAt: new Date().toISOString()
-        });
-        
-        // Update current job
-        setCurrentJob({
-          ...tempJob,
-          status: 'completed',
-          processedImageUrl: data.imageUrl,
-          completedAt: new Date().toISOString()
-        });
-      } else {
-        throw new Error('No image was generated');
+      // Update chat assistant with the generated image
+      if (chatAssistantRef.current && data.imageUrl) {
+        chatAssistantRef.current.addImageMessage(data.imageUrl);
       }
+      
+      // Create project entry for history
+      const projectData = {
+        name: prompt.slice(0, 50),
+        description: prompt,
+        prompt: prompt,
+        settings: {
+          aspectRatio,
+          modelVariant,
+          width,
+          height,
+          referenceImage: referencePreview,
+          matchInput,
+        },
+        userId: "demo-user",
+        imageUrl: data.imageUrl
+      };
+      
+      const projectResponse = await apiRequest("POST", "/api/flux/create", projectData);
+      const project = await projectResponse.json();
+      
+      // Update job status
+      updateJob(tempJobId, {
+        status: 'completed',
+        imageUrl: data.imageUrl,
+        completedAt: new Date().toISOString()
+      });
+      
+      // Update current job
+      setCurrentJob({
+        ...tempJob,
+        status: 'completed',
+        imageUrl: data.imageUrl,
+        completedAt: new Date().toISOString()
+      });
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
@@ -384,13 +392,12 @@ function DesignEditor() {
     } catch (error) {
       console.error('Error generating design:', error);
       
-      // Update job as failed if it was created
-      if (currentJob) {
-        updateJob(currentJob.id, {
-          status: 'failed',
-          completedAt: new Date().toISOString()
-        });
-      }
+      // Update job as failed
+      updateJob(tempJobId, {
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completedAt: new Date().toISOString()
+      });
       
       setCurrentJob(null);
       
@@ -615,12 +622,12 @@ function DesignEditor() {
                   currentImage={referencePreview || undefined}
                   onApplyPrompt={(newPrompt) => {
                     setPrompt(newPrompt);
-                    // Auto-generar inmediatamente después de aplicar el prompt
+                    // Auto-generate después de aplicar el prompt
                     setTimeout(() => {
-                      if (referencePreview && !isGenerating) {
+                      if (referencePreview) {
                         handleGenerate();
                       }
-                    }, 300);
+                    }, 100);
                   }}
                   language={language}
                   embedded={true}
@@ -652,7 +659,7 @@ function DesignEditor() {
               <CardFooter>
                 <Button
                   onClick={handleGenerate}
-                  disabled={isGenerating || (!prompt.trim() && !referencePreview)}
+                  disabled={!prompt.trim() || isGenerating}
                   className="w-full"
                   size="lg"
                 >

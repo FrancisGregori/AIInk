@@ -514,7 +514,25 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         }
       }
       
-      // No auto-apply prompts - user must click "Aplicar" button manually
+      // Check if the response contains a technical prompt
+      const lastAssistantMessage = messages[messages.length - 1];
+      if (lastAssistantMessage && 
+          lastAssistantMessage.role === 'assistant' &&
+          (lastAssistantMessage.content.includes('maintaining') || 
+           lastAssistantMessage.content.includes('Change') ||
+           lastAssistantMessage.content.includes('Add') ||
+           lastAssistantMessage.content.includes('Remove'))) {
+        // Auto-apply the prompt if it looks like a technical prompt
+        setTimeout(() => {
+          onApplyPrompt(lastAssistantMessage.content);
+          toast({
+            title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
+            description: language === 'es' 
+              ? "El prompt se ha aplicado al campo de edición"
+              : "The prompt has been applied to the edit field"
+          });
+        }, 500);
+      }
     } catch (error) {
       console.error('Chat error:', error);
       
@@ -544,15 +562,116 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   };
 
   const applyPrompt = async (content: string) => {
-    // Only apply the prompt to the parent component, don't generate automatically
+    // Apply the prompt to the parent component first
     onApplyPrompt(content);
     
-    toast({
-      title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
-      description: language === 'es' 
-        ? "El prompt se ha aplicado al campo de edición. Usa 'Generar diseño' para crear la imagen."
-        : "The prompt has been applied to the edit field. Use 'Generate design' to create the image."
-    });
+    // Also trigger image generation if we have an image
+    if (storedImage) {
+      try {
+        // Show loading toast
+        toast({
+          title: language === 'es' ? "Generando imagen..." : "Generating image...",
+          description: language === 'es' 
+            ? "El prompt se está procesando con Flux Kontext"
+            : "The prompt is being processed with Flux Kontext"
+        });
+
+        // Call Replicate API with the current image and prompt
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt: content,
+            inputImageUrl: storedImage, // Send current image as base64
+            model: 'pro', // Use professional model
+            aspectRatio: 'match_input_image'
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.success && result.imageUrl) {
+          // Success toast
+          toast({
+            title: language === 'es' ? "¡Imagen generada!" : "Image generated!",
+            description: language === 'es' 
+              ? "La edición se completó exitosamente"
+              : "The edit completed successfully"
+          });
+          
+          // Add a new message showing the generated image
+          const generatedMessage: Message = {
+            id: `generated-${Date.now()}`,
+            role: 'assistant',
+            content: language === 'es' 
+              ? '✨ Aquí está tu imagen editada:'
+              : '✨ Here\'s your edited image:',
+            image: result.imageUrl,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, generatedMessage]);
+
+          // También crear un nuevo proyecto para que aparezca en el editor principal
+          try {
+            const projectResponse = await fetch('/api/flux/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: content.slice(0, 50) + " - InkVision",
+                description: content,
+                prompt: content,
+                imageUrl: result.imageUrl,
+                settings: {
+                  aspectRatio: 'match_input_image',
+                  modelVariant: 'pro',
+                  referenceImage: storedImage
+                },
+                userId: "demo-user",
+                source: "inkvision"
+              }),
+            });
+
+            if (projectResponse.ok) {
+              // Refrescar la lista de proyectos para que aparezca en el editor
+              queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+              console.log('Project created from InkVision successfully');
+            }
+          } catch (projectError) {
+            console.error('Error creating project from InkVision:', projectError);
+          }
+          
+        } else {
+          throw new Error(result.details || 'Unknown error');
+        }
+        
+      } catch (error: any) {
+        console.error('Error generating image:', error);
+        toast({
+          title: language === 'es' ? "Error al generar" : "Generation error",
+          description: language === 'es' 
+            ? "No se pudo generar la imagen. Verifica la configuración."
+            : "Could not generate image. Check configuration.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // No image, just apply the prompt
+      toast({
+        title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
+        description: language === 'es' 
+          ? "El prompt se ha aplicado al campo de edición"
+          : "The prompt has been applied to the edit field"
+      });
+    }
   };
 
   // Function to determine if a message contains a prompt that should have action buttons
@@ -765,17 +884,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             )}
             
             <div className="flex gap-2">
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="self-start"
-                  data-testid="button-upload-image"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-              </div>
               <div className="flex flex-col gap-2 flex-1">
                 <Textarea
                   ref={textareaRef}
@@ -791,6 +899,15 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                 />
               </div>
               <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="self-start"
+                  data-testid="button-upload-image"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
                 <Button
                   onClick={sendMessage}
                   disabled={!inputMessage.trim() || isLoading}
