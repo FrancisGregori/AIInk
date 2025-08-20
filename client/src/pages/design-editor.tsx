@@ -342,7 +342,7 @@ function DesignEditor() {
         },
         body: JSON.stringify({
           prompt: finalPrompt,
-          imageData: referencePreview,
+          inputImageUrl: referencePreview,
           model: modelVariant // Usar directamente 'pro' o 'max'
         }),
       });
@@ -354,20 +354,24 @@ function DesignEditor() {
       const data = await response.json();
       console.log('Generated image data:', data);
       
-      // The /api/generate endpoint already creates a project, no need to create another one
-      
-      // Update job status
-      updateJob(tempJobId, {
-        status: 'completed',
-        completedAt: new Date().toISOString()
-      });
-      
-      // Update current job
-      setCurrentJob({
-        ...tempJob,
-        status: 'completed',
-        completedAt: new Date().toISOString()
-      });
+      if (data.success && data.imageUrl) {
+        // Update job status with the generated image
+        updateJob(tempJobId, {
+          status: 'completed',
+          processedImageUrl: data.imageUrl,
+          completedAt: new Date().toISOString()
+        });
+        
+        // Update current job
+        setCurrentJob({
+          ...tempJob,
+          status: 'completed',
+          processedImageUrl: data.imageUrl,
+          completedAt: new Date().toISOString()
+        });
+      } else {
+        throw new Error('No image was generated');
+      }
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
@@ -611,12 +615,6 @@ function DesignEditor() {
                   currentImage={referencePreview || undefined}
                   onApplyPrompt={(newPrompt) => {
                     setPrompt(newPrompt);
-                    // Auto-generate después de aplicar el prompt
-                    setTimeout(() => {
-                      if (referencePreview) {
-                        handleGenerate();
-                      }
-                    }, 100);
                   }}
                   language={language}
                   embedded={true}
