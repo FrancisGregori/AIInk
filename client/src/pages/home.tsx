@@ -220,7 +220,7 @@ export default function Home() {
                       <Bot className="text-black h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-light-gray">Gemini Assistant active</p>
+                      <p className="text-sm text-light-gray">AI Assistant active</p>
                     </div>
                   </div>
                 </div>
@@ -230,8 +230,8 @@ export default function Home() {
             <div className="order-1 lg:order-2">
               <h2 className="text-2xl md:text-3xl font-bold mb-6">Design Editor</h2>
               <p className="text-base md:text-lg text-light-gray mb-8 leading-relaxed">
-                AI-powered design editor with integrated Gemini assistant. 
-                Create, edit and perfect your designs with intelligent help.
+                Edit your designs while preserving style, pose, and lighting. 
+                Powered by the most advanced AI model with intelligent prompt assistance.
               </p>
               
               <div className="space-y-6 mb-8">
@@ -240,8 +240,8 @@ export default function Home() {
                     <Bot className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">AI Assistant</h4>
-                    <p className="text-light-gray">Gemini guides you through every step of the process</p>
+                    <h4 className="font-semibold mb-1">Smart Prompt Assistant</h4>
+                    <p className="text-light-gray">AI chat helps you create the perfect prompt for any edit</p>
                   </div>
                 </div>
                 
@@ -250,8 +250,8 @@ export default function Home() {
                     <Edit className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Advanced Editor</h4>
-                    <p className="text-light-gray">Professional design tools</p>
+                    <h4 className="font-semibold mb-1">Style Preservation</h4>
+                    <p className="text-light-gray">Maintains pose, lighting, material and artistic style</p>
                   </div>
                 </div>
                 
@@ -260,8 +260,8 @@ export default function Home() {
                     <Zap className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Smart Processing</h4>
-                    <p className="text-light-gray">Design-specialized AI model</p>
+                    <h4 className="font-semibold mb-1">Advanced Context Model</h4>
+                    <p className="text-light-gray">Latest AI technology for background changes and edits</p>
                   </div>
                 </div>
               </div>
