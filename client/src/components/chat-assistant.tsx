@@ -480,6 +480,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         });
 
         // Call Replicate API with the current image and prompt
+        console.log('Chat Assistant currentJob:', currentJob?.id);
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: {
