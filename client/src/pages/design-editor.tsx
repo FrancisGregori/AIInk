@@ -286,16 +286,20 @@ function DesignEditor() {
 
   // Handle design generation
   const handleGenerate = async () => {
-    if (!prompt.trim()) {
+    // Check if we have either a prompt or a reference image with a default prompt
+    const hasPrompt = prompt.trim().length > 0;
+    const hasImage = referencePreview !== null;
+    
+    if (!hasPrompt && !hasImage) {
       toast({
         title: "Error",
-        description: language === 'es' ? "Por favor ingresa una descripción del diseño" : "Please enter a design description",
+        description: language === 'es' ? "Por favor ingresa una descripción del diseño o carga una imagen" : "Please enter a design description or load an image",
         variant: "destructive",
       });
       return;
     }
     
-    if (!referencePreview) {
+    if (!hasImage) {
       toast({
         title: "Error", 
         description: language === 'es' ? "Por favor carga una imagen para editar" : "Please load an image to edit",
@@ -303,6 +307,9 @@ function DesignEditor() {
       });
       return;
     }
+    
+    // Use prompt if available, otherwise use a default prompt for image editing
+    const finalPrompt = hasPrompt ? prompt : "Edit and enhance this image while maintaining its main subject and composition";
     
     setIsGenerating(true);
     
@@ -314,7 +321,7 @@ function DesignEditor() {
         status: 'processing' as const,
         type: 'design' as const,
         originalImageUrl: referencePreview,
-        style: prompt.slice(0, 30),
+        style: finalPrompt.slice(0, 30),
         startedAt: new Date().toISOString()
       };
       
@@ -328,7 +335,7 @@ function DesignEditor() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: prompt,
+          prompt: finalPrompt,
           imageData: referencePreview,
           model: modelVariant // Usar directamente 'pro' o 'max'
         }),
@@ -349,9 +356,9 @@ function DesignEditor() {
       
       // Create project entry for history
       const projectData = {
-        name: prompt.slice(0, 50),
-        description: prompt,
-        prompt: prompt,
+        name: finalPrompt.slice(0, 50),
+        description: finalPrompt,
+        prompt: finalPrompt,
         settings: {
           aspectRatio,
           modelVariant,
