@@ -670,16 +670,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Si se proporciona projectId, actualizar el proyecto existente
+      console.log('Checking projectId for update:', projectId);
       if (projectId) {
+        console.log(`Attempting to update project ${projectId} with imageUrl length:`, imageUrl.length);
         try {
           const updatedProject = await storage.updateFluxProject(projectId, {
             imageUrl,
             updatedAt: new Date()
           });
-          console.log(`Project ${projectId} updated with generated image`);
+          console.log(`Project ${projectId} updated with generated image successfully`);
+          console.log('Updated project imageUrl preview:', updatedProject?.imageUrl?.slice(0, 50));
         } catch (updateError) {
           console.error(`Error updating project ${projectId}:`, updateError);
         }
+      } else {
+        console.log('No projectId provided, skipping project update');
       }
 
       // Devolver la URL de la imagen generada - Igual que tu repositorio
