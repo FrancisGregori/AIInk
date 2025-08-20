@@ -42,7 +42,41 @@ export function JobProvider({ children }: { children: ReactNode }) {
 
   // Guardar jobs en localStorage cuando cambian
   useEffect(() => {
-    localStorage.setItem('tattoo-stencil-jobs', JSON.stringify(activeJobs));
+    try {
+      // Limpiar jobs completados antiguos para evitar llenar el localStorage
+      const cleanedJobs = activeJobs.filter(job => {
+        if (job.status === 'completed' && job.completedAt) {
+          const completedDate = new Date(job.completedAt);
+          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          return completedDate > oneDayAgo; // Mantener solo trabajos completados en las últimas 24h
+        }
+        return true; // Mantener trabajos en progreso y fallidos
+      });
+
+      // Si hay demasiados jobs, mantener solo los más recientes
+      const maxJobs = 20;
+      const finalJobs = cleanedJobs.length > maxJobs 
+        ? cleanedJobs.slice(-maxJobs)
+        : cleanedJobs;
+
+      localStorage.setItem('tattoo-stencil-jobs', JSON.stringify(finalJobs));
+      
+      // Si los jobs fueron limpiados, actualizar el estado
+      if (finalJobs.length !== activeJobs.length) {
+        setActiveJobs(finalJobs);
+      }
+    } catch (error) {
+      console.error('Error saving jobs to localStorage:', error);
+      // Si falla, limpiar localStorage y mantener solo jobs en progreso
+      try {
+        const essentialJobs = activeJobs.filter(job => job.status === 'processing');
+        localStorage.setItem('tattoo-stencil-jobs', JSON.stringify(essentialJobs));
+        setActiveJobs(essentialJobs);
+      } catch (fallbackError) {
+        console.error('Failed to save essential jobs, clearing localStorage:', fallbackError);
+        localStorage.removeItem('tattoo-stencil-jobs');
+      }
+    }
   }, [activeJobs]);
 
   const addJob = (job: Job) => {
