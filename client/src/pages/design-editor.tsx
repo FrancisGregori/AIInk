@@ -615,8 +615,8 @@ function DesignEditor() {
 
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Panel - Estilos Populares (movido desde centro) */}
-          <div className="lg:col-span-1">
+          {/* Left Panel - Estilos Populares (con order-2 en móvil para aparecer después) */}
+          <div className="lg:col-span-1 order-2 lg:order-1">
             <div className="sticky top-4">
               <Card>
                 <CardHeader>
@@ -644,8 +644,8 @@ function DesignEditor() {
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Main Content (con order-1 en móvil para aparecer primero) */}
+          <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
             {/* InkVision Chat (movido arriba, donde estaba "Descripción del diseño") */}
             <Card>
               <CardContent className="p-0">
@@ -788,8 +788,8 @@ function DesignEditor() {
             </Card>
           </div>
 
-          {/* Right Sidebar - Results */}
-          <div className="lg:col-span-1 space-y-4">
+          {/* Right Sidebar - Results (con order-3 para aparecer último) */}
+          <div className="lg:col-span-1 space-y-4 order-3 lg:order-3">
             {/* Estado del trabajo actual - Mostrar siempre si hay trabajo en progreso */}
             {currentJob && (
               <Card>
