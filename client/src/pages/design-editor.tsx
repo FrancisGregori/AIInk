@@ -330,7 +330,7 @@ function DesignEditor() {
         body: JSON.stringify({
           prompt: prompt,
           imageData: referencePreview,
-          model: modelVariant === 'pro' ? 'black-forest-labs/flux-kontext-pro' : 'black-forest-labs/flux-kontext-max'
+          model: modelVariant // Just send 'pro' or 'max'
         }),
       });
 
@@ -369,7 +369,6 @@ function DesignEditor() {
       // Update job status
       updateJob(tempJobId, {
         status: 'completed',
-        imageUrl: data.imageUrl,
         completedAt: new Date().toISOString()
       });
       
@@ -377,7 +376,6 @@ function DesignEditor() {
       setCurrentJob({
         ...tempJob,
         status: 'completed',
-        imageUrl: data.imageUrl,
         completedAt: new Date().toISOString()
       });
       
@@ -393,9 +391,9 @@ function DesignEditor() {
       console.error('Error generating design:', error);
       
       // Update job as failed
+      const tempJobId = `temp_${Date.now()}`;
       updateJob(tempJobId, {
         status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
         completedAt: new Date().toISOString()
       });
       

@@ -25,6 +25,7 @@ interface ChatAssistantProps {
 
 export interface ChatAssistantRef {
   open: () => void;
+  addImageMessage: (imageUrl: string) => void;
 }
 
 const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload }, ref) => {
@@ -224,10 +225,20 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     }
   };
   
-  // Expose open method via ref
+  // Expose methods via ref
   useImperativeHandle(ref, () => ({
     open: () => {
       setIsOpen(true);
+    },
+    addImageMessage: (imageUrl: string) => {
+      const imageMessage: Message = {
+        id: `generated-${Date.now()}`,
+        role: 'assistant',
+        content: language === 'es' ? '¡Diseño generado! Tu nueva imagen está lista.' : 'Design generated! Your new image is ready.',
+        timestamp: new Date(),
+        image: imageUrl
+      };
+      setMessages(prev => [...prev, imageMessage]);
     }
   }));
   
