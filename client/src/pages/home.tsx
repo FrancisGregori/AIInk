@@ -25,16 +25,16 @@ export default function Home() {
             {/* Main Title */}
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
               <span className="text-white">
-                CREA DISEÑOS PROFESIONALES
+                CREATE PROFESSIONAL DESIGNS
               </span>
               <span className="block text-xl md:text-2xl lg:text-3xl text-gray-400 font-normal mt-2">
-                EN SEGUNDOS
+                IN SECONDS
               </span>
             </h1>
             
             {/* Subtitle */}
             <p className="text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
-              Herramientas IA profesionales para tatuadores. Transforma tus ideas en arte profesional.
+              Professional AI tools for tattoo artists. Transform your ideas into professional art.
             </p>
             
             {/* CTA Button */}
