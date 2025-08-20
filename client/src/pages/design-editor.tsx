@@ -132,6 +132,9 @@ function DesignEditor() {
           const projects = await response.json();
           const completedProject = projects.find((p: any) => p.id === currentJob.id);
           
+          console.log('Polling for job:', currentJob.id);
+          console.log('Found project:', completedProject?.id, 'imageUrl:', completedProject?.imageUrl?.slice(0, 50));
+          
           if (completedProject && completedProject.imageUrl && !completedProject.imageUrl.includes('placeholder')) {
             // Trabajo completado - actualizar estado
             setIsGenerating(false);
