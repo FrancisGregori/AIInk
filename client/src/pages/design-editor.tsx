@@ -298,7 +298,7 @@ function DesignEditor() {
     if (!referencePreview) {
       toast({
         title: "Error", 
-        description: language === 'es' ? "Por favor carga una imagen para editar" : "Please load an image to edit",
+        description: language === 'es' ? "Por favor carga una imagen para editar. Puedes cargarla en InkVision o usar el botón de cargar archivo." : "Please load an image to edit. You can upload it in InkVision or use the file upload button.",
         variant: "destructive",
       });
       return;
@@ -335,6 +335,13 @@ function DesignEditor() {
       });
       
       // Call the same API that InkVision uses
+      console.log('Sending to generate API:', {
+        hasPrompt: !!prompt,
+        hasImage: !!referencePreview,
+        imageLength: referencePreview?.length || 0,
+        model: modelVariant
+      });
+      
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -806,22 +813,16 @@ function DesignEditor() {
                     {/* Imagen original o resultado */}
                     <div className="relative group">
                       {currentJob.status === 'completed' && currentJob.processedImageUrl ? (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <img
-                              src={currentJob.processedImageUrl}
-                              alt="Processed design"
-                              className="w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            />
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl bg-black border-zinc-800">
-                            <img
-                              src={currentJob.processedImageUrl}
-                              alt="Processed design - Full view"
-                              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-                            />
-                          </DialogContent>
-                        </Dialog>
+                        <img
+                          src={currentJob.processedImageUrl}
+                          alt="Processed design"
+                          className="w-full rounded-lg"
+                          onClick={() => {
+                            // Abrir imagen en nueva pestaña en lugar de modal
+                            window.open(currentJob.processedImageUrl, '_blank');
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
                       ) : recoveredImageUrl ? (
                         <div className="relative">
                           <img
