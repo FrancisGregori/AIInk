@@ -62,7 +62,6 @@ export default function Home() {
                   muted
                   loop
                   playsInline
-                  controls
                   preload="auto"
                   data-testid="video-demo"
                 >
