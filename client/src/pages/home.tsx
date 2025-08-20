@@ -260,8 +260,8 @@ export default function Home() {
                     <Zap className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Advanced Context Model</h4>
-                    <p className="text-light-gray">Latest AI technology for background changes and edits</p>
+                    <h4 className="font-semibold mb-1">Lightning Fast Generation</h4>
+                    <p className="text-light-gray">Get professional results in seconds, not minutes</p>
                   </div>
                 </div>
               </div>
