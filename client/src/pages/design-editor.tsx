@@ -286,6 +286,12 @@ function DesignEditor() {
 
   // Handle design generation
   const handleGenerate = async () => {
+    // Prevent multiple simultaneous executions
+    if (isGenerating) {
+      console.log('Generation already in progress, ignoring click');
+      return;
+    }
+    
     // Check if we have either a prompt or a reference image with a default prompt
     const hasPrompt = prompt.trim().length > 0;
     const hasImage = referencePreview !== null;
@@ -348,31 +354,7 @@ function DesignEditor() {
       const data = await response.json();
       console.log('Generated image data:', data);
       
-      // Update chat assistant with the generated image
-      if (chatAssistantRef.current && data.imageUrl) {
-        // The generated image will appear in the chat when the project is created
-        console.log('Generated image ready:', data.imageUrl);
-      }
-      
-      // Create project entry for history
-      const projectData = {
-        name: finalPrompt.slice(0, 50),
-        description: finalPrompt,
-        prompt: finalPrompt,
-        settings: {
-          aspectRatio,
-          modelVariant,
-          width,
-          height,
-          referenceImage: referencePreview,
-          matchInput,
-        },
-        userId: "demo-user",
-        imageUrl: data.imageUrl
-      };
-      
-      const projectResponse = await apiRequest("POST", "/api/flux/create", projectData);
-      const project = await projectResponse.json();
+      // The /api/generate endpoint already creates a project, no need to create another one
       
       // Update job status
       updateJob(tempJobId, {
@@ -666,7 +648,7 @@ function DesignEditor() {
               <CardFooter>
                 <Button
                   onClick={handleGenerate}
-                  disabled={!prompt.trim() || isGenerating}
+                  disabled={isGenerating || (!prompt.trim() && !referencePreview)}
                   className="w-full"
                   size="lg"
                 >
