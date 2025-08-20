@@ -41,7 +41,7 @@ import {
   Clock
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
-import type { FluxProject } from "@shared/schema";
+import type { FluxProject, StencilJob } from "@shared/schema";
 
 function DesignEditor() {
   const [prompt, setPrompt] = useState<string>("");
@@ -652,7 +652,41 @@ function DesignEditor() {
               </CardContent>
             </Card>
 
-
+            {/* Description Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{txt.prompt}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder={txt.promptPlaceholder}
+                  className="min-h-32"
+                />
+              </CardContent>
+              
+              <CardFooter>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!prompt.trim() || isGenerating}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {txt.generating}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {txt.generate}
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
 
             {/* Generation Settings */}
             <Card>
@@ -834,135 +868,7 @@ function DesignEditor() {
               </Card>
             )}
             
-            {/* Latest Design */}
-            {projects.length > 0 && !currentJob && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Último diseño</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="relative group">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <img
-                            src={projects[0].imageUrl || ""}
-                            alt="Latest design"
-                            className="w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            data-testid="img-latest-design"
-                          />
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] p-2">
-                          <div className="relative">
-                            <img
-                              src={projects[0].imageUrl || ""}
-                              alt="Latest design full size"
-                              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
-                            />
-                            <div className="absolute top-2 right-2 flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                className="bg-amber-500/30 backdrop-blur-sm text-white hover:bg-amber-500/50"
-                                onClick={() => handleUseAsReference(projects[0].imageUrl || "")}
-                                data-testid="button-use-as-reference-modal"
-                              >
-                                <Edit className="h-4 w-4 mr-1" />
-                                {language === 'es' ? 'Editar imagen' : 'Edit image'}
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => downloadImage(projects[0].imageUrl || "", `design-${projects[0].id}.png`)}
-                                data-testid="button-download-modal"
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                {language === 'es' ? 'Descargar' : 'Download'}
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      
-                      {/* Image Comparison Slider */}
-                      {compareMode && referencePreview && (
-                        <div className="absolute inset-0 overflow-hidden rounded-lg">
-                          <img
-                            src={referencePreview}
-                            alt="Original"
-                            className="absolute inset-0 w-full h-full object-cover"
-                            style={{ clipPath: `inset(0 ${100 - comparePosition}% 0 0)` }}
-                          />
-                          <div
-                            className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize"
-                            style={{ left: `${comparePosition}%` }}
-                            onMouseDown={(e) => {
-                              const startX = e.clientX;
-                              const startPos = comparePosition;
-                              
-                              const handleMouseMove = (e: MouseEvent) => {
-                                const delta = e.clientX - startX;
-                                const newPos = Math.max(0, Math.min(100, startPos + (delta / 2)));
-                                setComparePosition(newPos);
-                              };
-                              
-                              const handleMouseUp = () => {
-                                document.removeEventListener("mousemove", handleMouseMove);
-                                document.removeEventListener("mouseup", handleMouseUp);
-                              };
-                              
-                              document.addEventListener("mousemove", handleMouseMove);
-                              document.addEventListener("mouseup", handleMouseUp);
-                            }}
-                          >
-                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-1">
-                              <ChevronLeft className="h-3 w-3 text-black inline" />
-                              <ChevronRight className="h-3 w-3 text-black inline" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <Button 
-                          size="icon" 
-                          variant="secondary"
-                          onClick={() => downloadImage(projects[0].imageUrl || "", `design-${projects[0].id}.png`)}
-                          data-testid="button-download-latest"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="icon" 
-                          variant="secondary"
-                          className="bg-amber-500/30 backdrop-blur-sm text-white hover:bg-amber-500/50"
-                          onClick={() => handleUseAsReference(projects[0].imageUrl || "")}
-                          data-testid="button-use-as-reference-latest"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="secondary">
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                        {referencePreview && (
-                          <Button 
-                            size="icon" 
-                            variant="secondary"
-                            onClick={() => setCompareMode(!compareMode)}
-                          >
-                            <Maximize2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <p className="text-xs text-zinc-500 line-clamp-2">{projects[0].prompt}</p>
-                      <p className="text-xs text-zinc-600">{new Date(projects[0].createdAt || "").toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* Removed Latest Design section per user request */}
 
             {/* History */}
             <Card>
