@@ -318,11 +318,21 @@ function DesignEditor() {
         type: 'design' as const,
         originalImageUrl: referencePreview,
         style: prompt.slice(0, 30),
-        startedAt: new Date().toISOString()
+        startedAt: new Date()
       };
       
       setCurrentJob(tempJob);
-      addJob(tempJob);
+      // Convert StencilJob to Job format for addJob
+      addJob({
+        id: tempJobId,
+        status: 'processing',
+        type: 'design',
+        originalImageUrl: referencePreview,
+        processedImageUrl: null,
+        style: prompt.slice(0, 30),
+        startedAt: new Date().toISOString(),
+        errorMessage: null
+      });
       
       // Call the same API that InkVision uses
       const response = await fetch('/api/generate', {
