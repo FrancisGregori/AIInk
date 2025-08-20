@@ -507,9 +507,6 @@ function DesignEditor() {
           <div className="lg:col-span-2 space-y-6">
             {/* InkVision Chat (movido arriba, donde estaba "Descripción del diseño") */}
             <Card>
-              <CardHeader>
-                <CardTitle>{txt.inkVision}</CardTitle>
-              </CardHeader>
               <CardContent className="p-0">
                 <ChatAssistant 
                   ref={chatAssistantRef}
