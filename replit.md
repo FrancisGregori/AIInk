@@ -83,6 +83,13 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - ✅ Sincronización perfecta entre chat y editor principal
 - ✅ Usuario confirma: "se ve muy bien"
 
+### Mobile Layout & Spacing Fixes (2025-08-20 Noche)
+- ✅ InkVision reordenado para aparecer primero en móvil (order-1)
+- ✅ Estilos Populares movido después de InkVision en móvil (order-2)
+- ✅ Espaciado superior aumentado a py-20 en ambas herramientas
+- ✅ Títulos ahora completamente visibles sin cortes
+- ✅ Usuario confirma: "quedó muy bien"
+
 ## System Architecture
 
 ### Frontend Architecture
