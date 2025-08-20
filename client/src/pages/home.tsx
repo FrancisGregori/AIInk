@@ -230,8 +230,8 @@ export default function Home() {
             <div className="order-1 lg:order-2">
               <h2 className="text-2xl md:text-3xl font-bold mb-6">Design Editor</h2>
               <p className="text-base md:text-lg text-light-gray mb-8 leading-relaxed">
-                Edit your designs while preserving style, pose, and lighting. 
-                Powered by the most advanced AI model with intelligent prompt assistance.
+                Keep your subject, transform everything else. Change backgrounds, poses, 
+                lighting and styles with the most advanced context-aware AI model.
               </p>
               
               <div className="space-y-6 mb-8">
@@ -250,8 +250,8 @@ export default function Home() {
                     <Edit className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Style Preservation</h4>
-                    <p className="text-light-gray">Maintains pose, lighting, material and artistic style</p>
+                    <h4 className="font-semibold mb-1">Subject Preservation</h4>
+                    <p className="text-light-gray">Keeps your character while editing everything around them</p>
                   </div>
                 </div>
                 
