@@ -615,6 +615,12 @@ function DesignEditor() {
                   currentImage={referencePreview || undefined}
                   onApplyPrompt={(newPrompt) => {
                     setPrompt(newPrompt);
+                    // Auto-generar inmediatamente después de aplicar el prompt
+                    setTimeout(() => {
+                      if (referencePreview && !isGenerating) {
+                        handleGenerate();
+                      }
+                    }, 300);
                   }}
                   language={language}
                   embedded={true}
