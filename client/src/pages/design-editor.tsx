@@ -285,21 +285,130 @@ function DesignEditor() {
 
 
   // Handle design generation
-  const handleGenerate = () => {
-    if (!prompt.trim()) return;
+  const handleGenerate = async () => {
+    if (!prompt.trim()) {
+      toast({
+        title: "Error",
+        description: language === 'es' ? "Por favor ingresa una descripción del diseño" : "Please enter a design description",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!referencePreview) {
+      toast({
+        title: "Error", 
+        description: language === 'es' ? "Por favor carga una imagen para editar" : "Please load an image to edit",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsGenerating(true);
     
-    const settings = {
-      aspectRatio,
-      modelVariant,
-      width,
-      height,
-      referenceImage: referencePreview,
-      matchInput,
-    };
-    
-    createProjectMutation.mutate({ prompt, settings });
+    try {
+      // Create temporary job entry for instant feedback
+      const tempJobId = `temp_${Date.now()}`;
+      const tempJob = {
+        id: tempJobId,
+        status: 'processing' as const,
+        type: 'design' as const,
+        originalImageUrl: referencePreview,
+        style: prompt.slice(0, 30),
+        startedAt: new Date().toISOString()
+      };
+      
+      setCurrentJob(tempJob);
+      addJob(tempJob);
+      
+      // Call the same API that InkVision uses
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          imageData: referencePreview,
+          model: modelVariant === 'pro' ? 'black-forest-labs/flux-kontext-pro' : 'black-forest-labs/flux-kontext-max'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Generated image data:', data);
+      
+      // Update chat assistant with the generated image
+      if (chatAssistantRef.current && data.imageUrl) {
+        chatAssistantRef.current.addImageMessage(data.imageUrl);
+      }
+      
+      // Create project entry for history
+      const projectData = {
+        name: prompt.slice(0, 50),
+        description: prompt,
+        prompt: prompt,
+        settings: {
+          aspectRatio,
+          modelVariant,
+          width,
+          height,
+          referenceImage: referencePreview,
+          matchInput,
+        },
+        userId: "demo-user",
+        imageUrl: data.imageUrl
+      };
+      
+      const projectResponse = await apiRequest("POST", "/api/flux/create", projectData);
+      const project = await projectResponse.json();
+      
+      // Update job status
+      updateJob(tempJobId, {
+        status: 'completed',
+        imageUrl: data.imageUrl,
+        completedAt: new Date().toISOString()
+      });
+      
+      // Update current job
+      setCurrentJob({
+        ...tempJob,
+        status: 'completed',
+        imageUrl: data.imageUrl,
+        completedAt: new Date().toISOString()
+      });
+      
+      // Invalidate projects query to refresh history
+      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      
+      toast({
+        title: language === 'es' ? "¡Diseño generado!" : "Design generated!",
+        description: language === 'es' ? "Tu nuevo diseño está listo" : "Your new design is ready",
+      });
+      
+    } catch (error) {
+      console.error('Error generating design:', error);
+      
+      // Update job as failed
+      updateJob(tempJobId, {
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        completedAt: new Date().toISOString()
+      });
+      
+      setCurrentJob(null);
+      
+      toast({
+        title: "Error",
+        description: language === 'es' ? "Error al generar el diseño. Inténtalo de nuevo." : "Error generating design. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Handle image download
