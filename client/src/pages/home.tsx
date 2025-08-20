@@ -54,17 +54,29 @@ export default function Home() {
           {/* Video/Media Section */}
           <div className="relative max-w-5xl mx-auto">
             <div className="relative bg-gray-900 rounded-2xl border border-gray-700 overflow-hidden shadow-2xl">
-              {/* Video Placeholder - Replace with actual video */}
-              <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 opacity-80 hover:opacity-100 transition-opacity cursor-pointer">
-                    <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
-                    </svg>
+              {/* Professional Video Player */}
+              <div className="aspect-video relative">
+                <video 
+                  className="w-full h-full object-cover"
+                  controls
+                  preload="metadata"
+                  poster="/api/video-thumbnail" // Optional: thumbnail image
+                  data-testid="video-demo"
+                >
+                  <source src="/videos/demo.mp4" type="video/mp4" />
+                  <source src="/videos/demo.webm" type="video/webm" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 opacity-80">
+                        <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                        </svg>
+                      </div>
+                      <p className="text-gray-300 text-lg font-medium">Tu navegador no soporta video HTML5</p>
+                      <p className="text-gray-500 text-sm mt-2">Actualiza tu navegador para ver el demo</p>
+                    </div>
                   </div>
-                  <p className="text-gray-300 text-lg font-medium">Ver demo de las herramientas</p>
-                  <p className="text-gray-500 text-sm mt-2">Video demostrativo próximamente</p>
-                </div>
+                </video>
               </div>
               
               {/* Sample thumbnails around video */}
