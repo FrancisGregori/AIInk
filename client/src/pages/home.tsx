@@ -45,7 +45,7 @@ export default function Home() {
                   className="bg-white text-black px-8 py-3 text-base font-medium rounded-lg hover:bg-gray-100 transition-all duration-300 shadow-lg"
                   data-testid="button-start-creating"
                 >
-                  Comenzar gratis
+                  Start Free
                 </Button>
               </Link>
             </div>
@@ -74,8 +74,8 @@ export default function Home() {
                           <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
                         </svg>
                       </div>
-                      <p className="text-gray-300 text-lg font-medium">Tu navegador no soporta video HTML5</p>
-                      <p className="text-gray-500 text-sm mt-2">Actualiza tu navegador para ver el demo</p>
+                      <p className="text-gray-300 text-lg font-medium">Your browser doesn't support HTML5 video</p>
+                      <p className="text-gray-500 text-sm mt-2">Update your browser to see the demo</p>
                     </div>
                   </div>
                 </video>
@@ -119,8 +119,8 @@ export default function Home() {
             <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-6">Stencil Tool</h2>
               <p className="text-base md:text-lg text-light-gray mb-8 leading-relaxed">
-                Transforma cualquier imagen en un stencil profesional con nuestros algoritmos de IA. 
-                Perfecto para artistas, diseñadores y profesionales del tatuaje.
+                Transform any image into a professional stencil with our AI algorithms. 
+                Perfect for artists, designers and tattoo professionals.
               </p>
               
               <div className="space-y-6 mb-8">
@@ -129,8 +129,8 @@ export default function Home() {
                     <Upload className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Carga Simple</h4>
-                    <p className="text-light-gray">Arrastra y suelta tu imagen para comenzar</p>
+                    <h4 className="font-semibold mb-1">Simple Upload</h4>
+                    <p className="text-light-gray">Drag and drop your image to start</p>
                   </div>
                 </div>
                 
@@ -139,8 +139,8 @@ export default function Home() {
                     <Cog className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Modelos Avanzados</h4>
-                    <p className="text-light-gray">Elige entre diferentes algoritmos de procesamiento</p>
+                    <h4 className="font-semibold mb-1">Advanced Models</h4>
+                    <p className="text-light-gray">Choose from different processing algorithms</p>
                   </div>
                 </div>
                 
@@ -149,8 +149,8 @@ export default function Home() {
                     <Download className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Descarga HD</h4>
-                    <p className="text-light-gray">Obtén resultados en alta resolución</p>
+                    <h4 className="font-semibold mb-1">HD Download</h4>
+                    <p className="text-light-gray">Get high resolution results</p>
                   </div>
                 </div>
               </div>
@@ -160,7 +160,7 @@ export default function Home() {
                   className="bg-white text-black px-8 py-4 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                   data-testid="button-open-stencil"
                 >
-                  Abrir Stencil Tool
+                  Open Stencil Tool
                 </Button>
               </Link>
             </div>
@@ -178,14 +178,14 @@ export default function Home() {
                   <div className="h-48 bg-black border-2 border-dashed border-medium-gray rounded-lg flex items-center justify-center">
                     <div className="text-center">
                       <Upload className="h-8 w-8 text-light-gray mb-2 mx-auto" />
-                      <p className="text-light-gray">Arrastra tu imagen aquí</p>
+                      <p className="text-light-gray">Drop your image here</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-3 gap-2">
-                    <button className="bg-medium-gray p-3 rounded text-sm">Modelo 1</button>
-                    <button className="bg-white text-black p-3 rounded text-sm">Modelo 2</button>
-                    <button className="bg-medium-gray p-3 rounded text-sm">Modelo 3</button>
+                    <button className="bg-medium-gray p-3 rounded text-sm">Model 1</button>
+                    <button className="bg-white text-black p-3 rounded text-sm">Model 2</button>
+                    <button className="bg-medium-gray p-3 rounded text-sm">Model 3</button>
                   </div>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function Home() {
                   <div className="h-40 bg-black rounded-lg flex items-center justify-center">
                     <div className="text-center">
                       <Palette className="h-8 w-8 text-light-gray mb-2 mx-auto" />
-                      <p className="text-light-gray">Editor de Diseños</p>
+                      <p className="text-light-gray">Design Editor</p>
                     </div>
                   </div>
                   
@@ -220,7 +220,7 @@ export default function Home() {
                       <Bot className="text-black h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-light-gray">Asistente Gemini activo</p>
+                      <p className="text-sm text-light-gray">Gemini Assistant active</p>
                     </div>
                   </div>
                 </div>
@@ -230,8 +230,8 @@ export default function Home() {
             <div className="order-1 lg:order-2">
               <h2 className="text-2xl md:text-3xl font-bold mb-6">Design Editor</h2>
               <p className="text-base md:text-lg text-light-gray mb-8 leading-relaxed">
-                Editor de diseños potenciado por IA con asistente Gemini integrado. 
-                Crea, edita y perfecciona tus diseños con ayuda inteligente.
+                AI-powered design editor with integrated Gemini assistant. 
+                Create, edit and perfect your designs with intelligent help.
               </p>
               
               <div className="space-y-6 mb-8">
@@ -240,8 +240,8 @@ export default function Home() {
                     <Bot className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Asistente IA</h4>
-                    <p className="text-light-gray">Gemini te guía en cada paso del proceso</p>
+                    <h4 className="font-semibold mb-1">AI Assistant</h4>
+                    <p className="text-light-gray">Gemini guides you through every step of the process</p>
                   </div>
                 </div>
                 
@@ -250,8 +250,8 @@ export default function Home() {
                     <Edit className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Editor Avanzado</h4>
-                    <p className="text-light-gray">Herramientas profesionales de diseño</p>
+                    <h4 className="font-semibold mb-1">Advanced Editor</h4>
+                    <p className="text-light-gray">Professional design tools</p>
                   </div>
                 </div>
                 
@@ -260,8 +260,8 @@ export default function Home() {
                     <Zap className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Procesamiento Inteligente</h4>
-                    <p className="text-light-gray">Modelo de IA especializado en diseño</p>
+                    <h4 className="font-semibold mb-1">Smart Processing</h4>
+                    <p className="text-light-gray">Design-specialized AI model</p>
                   </div>
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function Home() {
                   className="border-medium-gray text-white px-8 py-4 rounded-lg font-medium hover:bg-dark-gray transition-colors"
                   data-testid="button-open-flux"
                 >
-                  Abrir Design Editor
+                  Open Design Editor
                 </Button>
               </Link>
             </div>
@@ -286,9 +286,9 @@ export default function Home() {
       <section id="contacto" className="py-20 bg-dark-gray">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-6">¿Listo para comenzar?</h2>
+            <h2 className="text-4xl font-bold mb-6">Ready to get started?</h2>
             <p className="text-xl text-light-gray max-w-2xl mx-auto mb-8">
-              Explora nuestras herramientas de IA y transforma tu flujo de trabajo creativo hoy mismo.
+              Explore our AI tools and transform your creative workflow today.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -297,7 +297,7 @@ export default function Home() {
                   className="bg-white text-black px-8 py-4 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                   data-testid="button-try-stencil-footer"
                 >
-                  Probar Stencil Tool
+                  Try Stencil Tool
                 </Button>
               </Link>
               <Link href="/design-editor">
@@ -306,7 +306,7 @@ export default function Home() {
                   className="border-medium-gray text-white px-8 py-4 rounded-lg font-medium hover:bg-black transition-colors"
                   data-testid="button-try-design-footer"
                 >
-                  Probar Design Editor
+                  Try Design Editor
                 </Button>
               </Link>
             </div>
@@ -321,7 +321,7 @@ export default function Home() {
               />
             </div>
             <p className="text-light-gray">
-              © 2024 TattooStencilPro. Herramientas profesionales de inteligencia artificial para tatuadores.
+              © 2024 TattooStencilPro. Professional AI tools for tattoo artists.
             </p>
           </div>
         </div>

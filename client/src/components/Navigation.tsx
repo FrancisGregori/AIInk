@@ -115,7 +115,7 @@ export default function Navigation() {
                     className="block px-3 py-2 text-light-gray hover:text-white transition-colors"
                     data-testid="button-mobile-nav-inicio"
                   >
-                    Inicio
+                    Home
                   </button>
                   <button 
                     onClick={() => scrollToSection("stencil")} 
@@ -136,14 +136,14 @@ export default function Navigation() {
                     className="block px-3 py-2 text-light-gray hover:text-white transition-colors"
                     data-testid="button-mobile-nav-contacto"
                   >
-                    Contacto
+                    Contact
                   </button>
                 </>
               ) : (
                 <>
                   <Link href="/">
                     <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-home">
-                      Inicio
+                      Home
                     </span>
                   </Link>
                   <Link href="/stencil-tool">
