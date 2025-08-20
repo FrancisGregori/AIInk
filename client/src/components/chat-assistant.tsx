@@ -417,25 +417,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         }
       }
       
-      // Check if the response contains a technical prompt
-      const lastAssistantMessage = messages[messages.length - 1];
-      if (lastAssistantMessage && 
-          lastAssistantMessage.role === 'assistant' &&
-          (lastAssistantMessage.content.includes('maintaining') || 
-           lastAssistantMessage.content.includes('Change') ||
-           lastAssistantMessage.content.includes('Add') ||
-           lastAssistantMessage.content.includes('Remove'))) {
-        // Auto-apply the prompt if it looks like a technical prompt
-        setTimeout(() => {
-          onApplyPrompt(lastAssistantMessage.content);
-          toast({
-            title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
-            description: language === 'es' 
-              ? "El prompt se ha aplicado al campo de edición"
-              : "The prompt has been applied to the edit field"
-          });
-        }, 500);
-      }
+      // Auto-prompt application disabled to prevent creating duplicate projects
+      // The user should manually use the "Apply" button when they want to generate images
     } catch (error) {
       console.error('Chat error:', error);
       
