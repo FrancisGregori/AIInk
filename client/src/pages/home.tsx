@@ -119,8 +119,8 @@ export default function Home() {
             <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-6">Stencil Tool</h2>
               <p className="text-base md:text-lg text-light-gray mb-8 leading-relaxed">
-                Transform any image into a professional stencil with our AI algorithms. 
-                Perfect for artists, designers and tattoo professionals.
+                Convert any image into a professional tattoo stencil with AI. 
+                Get clean lines with a realistic, hand-drawn finish ready for transfer.
               </p>
               
               <div className="space-y-6 mb-8">
@@ -129,8 +129,8 @@ export default function Home() {
                     <Upload className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Simple Upload</h4>
-                    <p className="text-light-gray">Drag and drop your image to start</p>
+                    <h4 className="font-semibold mb-1">Lines-Only Export</h4>
+                    <p className="text-light-gray">PNG with transparent background for clean workflow</p>
                   </div>
                 </div>
                 
@@ -139,8 +139,8 @@ export default function Home() {
                     <Cog className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Advanced Models</h4>
-                    <p className="text-light-gray">Choose from different processing algorithms</p>
+                    <h4 className="font-semibold mb-1">Customizable Output</h4>
+                    <p className="text-light-gray">Choose line thickness, color and processing style</p>
                   </div>
                 </div>
                 
@@ -149,8 +149,8 @@ export default function Home() {
                     <Download className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">HD Download</h4>
-                    <p className="text-light-gray">Get high resolution results</p>
+                    <h4 className="font-semibold mb-1">Up to 6K Resolution</h4>
+                    <p className="text-light-gray">Export ready for Procreate and transfer paper</p>
                   </div>
                 </div>
               </div>
