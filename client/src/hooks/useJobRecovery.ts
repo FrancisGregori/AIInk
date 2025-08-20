@@ -25,18 +25,9 @@ export function useJobRecovery(jobType: 'stencil' | 'design') {
           
           const response = await fetch(endpoint);
           if (response.ok) {
-            const text = await response.text();
-            
-            // Verificar que la respuesta sea JSON válido
-            if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
-              console.warn(`Endpoint ${endpoint} returned HTML instead of JSON, skipping...`);
-              return;
-            }
-            
-            const updatedJob = JSON.parse(text);
+            const updatedJob = await response.json();
             
             // Update job in global context
-            console.log(`Updating job ${job.id} with status: ${updatedJob.status}`);
             updateJob(job.id, {
               status: updatedJob.status,
               processedImageUrl: updatedJob.processedImageUrl || undefined,
@@ -50,18 +41,9 @@ export function useJobRecovery(jobType: 'stencil' | 'design') {
 
             // If job is completed or failed, stop polling
             if (updatedJob.status === 'completed' || updatedJob.status === 'failed') {
-              console.log(`Job ${job.id} completed, stopping polling`);
               clearInterval(interval);
               setRecoveredJobs(prev => [...prev, job.id]);
             }
-          } else if (response.status === 404) {
-            // Job no longer exists on server, mark as failed and stop polling
-            console.warn(`Job ${job.id} not found on server, removing from active jobs`);
-            updateJob(job.id, {
-              status: 'failed',
-              errorMessage: 'Job not found on server'
-            });
-            clearInterval(interval);
           }
         } catch (error) {
           console.error(`Error checking job ${job.id}:`, error);

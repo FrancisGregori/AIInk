@@ -328,35 +328,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get flux job status (alias for project)
-  app.get("/api/flux/jobs/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const projects = await storage.getFluxProjects();
-      const project = projects.find((p: any) => p.id === id);
-      
-      if (!project) {
-        return res.status(404).json({ error: "Job not found" });
-      }
-      
-      // Convert project to job format for compatibility
-      const job = {
-        id: project.id,
-        status: 'completed', // Flux projects are stored when completed
-        processedImageUrl: project.imageUrl,
-        originalImageUrl: project.description || null, // Use description field for original URL
-        style: project.prompt,
-        createdAt: project.createdAt,
-        completedAt: project.updatedAt
-      };
-      
-      res.json(job);
-    } catch (error) {
-      console.error("Error fetching flux job:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
   // Gemini Chat Routes
   app.post("/api/gemini/chat", async (req, res) => {
     try {
@@ -498,7 +469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Replicate FLUX Kontext endpoint - Exact implementation from your original
   app.post("/api/generate", async (req, res) => {
     try {
-      const { prompt, inputImageUrl, width, height, aspectRatio, model, projectId } = req.body;
+      const { prompt, inputImageUrl, width, height, aspectRatio, model } = generateImageSchema.parse(req.body);
       
       const replicateToken = process.env.REPLICATE_API_TOKEN;
       
@@ -669,30 +640,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Si se proporciona projectId, actualizar el proyecto existente
-      console.log('Checking projectId for update:', projectId);
-      if (projectId) {
-        console.log(`Attempting to update project ${projectId} with imageUrl length:`, imageUrl.length);
-        try {
-          const updatedProject = await storage.updateFluxProject(projectId, {
-            imageUrl,
-            updatedAt: new Date()
-          });
-          console.log(`Project ${projectId} updated with generated image successfully`);
-          console.log('Updated project imageUrl preview:', updatedProject?.imageUrl?.slice(0, 50));
-        } catch (updateError) {
-          console.error(`Error updating project ${projectId}:`, updateError);
-        }
-      } else {
-        console.log('No projectId provided, skipping project update');
-      }
-
       // Devolver la URL de la imagen generada - Igual que tu repositorio
       res.json({
         imageUrl,
         prompt,
         model: modelName,
-        projectId: projectId || null,
         success: true
       });
       

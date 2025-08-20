@@ -45,21 +45,6 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - ✅ Función loadFromGallery verifica estado de procesamiento antes de ejecutar
 - ✅ Protección completa contra interrupciones accidentales de trabajos
 
-### Cross-Page Job Persistence (2025-08-19 Noche)
-- ✅ Design Editor implementa misma persistencia que Stencil Tool
-- ✅ Carga instantánea desde localStorage al cambiar páginas
-- ✅ Trabajo en progreso se recupera automáticamente al volver
-- ✅ Estado visual "Procesando diseño..." durante generación
-- ✅ Polling automático para detectar completado del trabajo
-- ✅ Interfaz visual coherente entre ambas herramientas
-
-### InkVision Chat Improvements (2025-08-19 Noche)
-- ✅ Indicador de typing (3 puntos animados) durante procesamiento
-- ✅ Mensaje "InkVision está escribiendo..." en español
-- ✅ Botón "Aplicar" automáticamente inicia generación si hay imagen
-- ✅ Feedback visual inmediato cuando se aplica prompt desde chat
-- ✅ Integración fluida entre chat y generador principal
-
 ## System Architecture
 
 ### Frontend Architecture

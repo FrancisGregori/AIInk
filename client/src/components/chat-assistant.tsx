@@ -20,14 +20,13 @@ interface ChatAssistantProps {
   onApplyPrompt: (prompt: string) => void;
   language?: "es" | "en";
   embedded?: boolean;
-  currentJob?: any; // Current active job for updating
 }
 
 export interface ChatAssistantRef {
   open: () => void;
 }
 
-const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, currentJob }, ref) => {
+const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false }, ref) => {
   const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastImageAnalyzed, setLastImageAnalyzed] = useState<string>("");
@@ -417,8 +416,25 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         }
       }
       
-      // Auto-prompt application disabled to prevent creating duplicate projects
-      // The user should manually use the "Apply" button when they want to generate images
+      // Check if the response contains a technical prompt
+      const lastAssistantMessage = messages[messages.length - 1];
+      if (lastAssistantMessage && 
+          lastAssistantMessage.role === 'assistant' &&
+          (lastAssistantMessage.content.includes('maintaining') || 
+           lastAssistantMessage.content.includes('Change') ||
+           lastAssistantMessage.content.includes('Add') ||
+           lastAssistantMessage.content.includes('Remove'))) {
+        // Auto-apply the prompt if it looks like a technical prompt
+        setTimeout(() => {
+          onApplyPrompt(lastAssistantMessage.content);
+          toast({
+            title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
+            description: language === 'es' 
+              ? "El prompt se ha aplicado al campo de edición"
+              : "The prompt has been applied to the edit field"
+          });
+        }, 500);
+      }
     } catch (error) {
       console.error('Chat error:', error);
       
@@ -463,7 +479,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         });
 
         // Call Replicate API with the current image and prompt
-        console.log('Chat Assistant currentJob:', currentJob?.id);
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: {
@@ -473,8 +488,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             prompt: content,
             inputImageUrl: storedImage, // Send current image as base64
             model: 'pro', // Use professional model
-            aspectRatio: 'match_input_image',
-            projectId: currentJob?.id // Update existing project if available
+            aspectRatio: 'match_input_image'
           }),
         });
 
@@ -506,42 +520,35 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           
           setMessages(prev => [...prev, generatedMessage]);
 
-          // Si hay un currentJob, solo actualizar proyectos. Si no, crear uno nuevo.
-          if (currentJob?.id) {
-            // Refrescar la lista de proyectos para que aparezca la imagen actualizada
-            queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
-            console.log('Project updated from InkVision successfully');
-          } else {
-            // Crear un nuevo proyecto solo si no hay currentJob
-            try {
-              const projectResponse = await fetch('/api/flux/create', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
+          // También crear un nuevo proyecto para que aparezca en el editor principal
+          try {
+            const projectResponse = await fetch('/api/flux/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: content.slice(0, 50) + " - InkVision",
+                description: content,
+                prompt: content,
+                imageUrl: result.imageUrl,
+                settings: {
+                  aspectRatio: 'match_input_image',
+                  modelVariant: 'pro',
+                  referenceImage: storedImage
                 },
-                body: JSON.stringify({
-                  name: content.slice(0, 50) + " - InkVision",
-                  description: content,
-                  prompt: content,
-                  imageUrl: result.imageUrl,
-                  settings: {
-                    aspectRatio: 'match_input_image',
-                    modelVariant: 'pro',
-                    referenceImage: storedImage
-                  },
-                  userId: "demo-user",
-                  source: "inkvision"
-                }),
-              });
+                userId: "demo-user",
+                source: "inkvision"
+              }),
+            });
 
-              if (projectResponse.ok) {
-                // Refrescar la lista de proyectos para que aparezca en el editor
-                queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
-                console.log('Project created from InkVision successfully');
-              }
-            } catch (projectError) {
-              console.error('Error creating project from InkVision:', projectError);
+            if (projectResponse.ok) {
+              // Refrescar la lista de proyectos para que aparezca en el editor
+              queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+              console.log('Project created from InkVision successfully');
             }
+          } catch (projectError) {
+            console.error('Error creating project from InkVision:', projectError);
           }
           
         } else {
