@@ -63,7 +63,7 @@ function DesignEditor() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { addJob, updateJob, getJob } = useJobs();
-  const { activeJobsOfType } = useJobRecovery('design');
+  // const { activeJobsOfType } = useJobRecovery('design'); // Disabled to avoid duplicate polling
 
   // Estado para trabajo actual y persistencia
   const [currentJob, setCurrentJob] = useState<any>(null);
@@ -101,24 +101,8 @@ function DesignEditor() {
       }
     }
     
-    // Después verificar con activeJobsOfType para sincronización
-    const activeDesignJobs = activeJobsOfType.filter(job => job.status === 'processing');
-    if (activeDesignJobs.length > 0 && !currentJob) {
-      const latestJob = activeDesignJobs[0];
-      setCurrentJob(latestJob);
-      setIsGenerating(true);
-      
-      if (latestJob.originalImageUrl && !recoveredImageUrl) {
-        setRecoveredImageUrl(latestJob.originalImageUrl);
-        setReferencePreview(latestJob.originalImageUrl);
-        const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
-        setReferenceImage(fakeFile);
-      }
-      if (latestJob.style && !prompt) {
-        setPrompt(latestJob.style);
-      }
-    }
-  }, [activeJobsOfType]);
+    // Sistema de persistencia mejorado - solo localStorage es necesario
+  }, []);
 
   // Verificar si el trabajo actual se completó usando React Query
   useEffect(() => {
