@@ -884,6 +884,17 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             )}
             
             <div className="flex gap-2">
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="self-start"
+                  data-testid="button-upload-image"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+              </div>
               <div className="flex flex-col gap-2 flex-1">
                 <Textarea
                   ref={textareaRef}
@@ -899,15 +910,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="self-start"
-                  data-testid="button-upload-image"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
                 <Button
                   onClick={sendMessage}
                   disabled={!inputMessage.trim() || isLoading}

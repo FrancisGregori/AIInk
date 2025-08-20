@@ -343,7 +343,8 @@ function DesignEditor() {
       
       // Update chat assistant with the generated image
       if (chatAssistantRef.current && data.imageUrl) {
-        chatAssistantRef.current.addImageMessage(data.imageUrl);
+        // The generated image will appear in the chat when the project is created
+        console.log('Generated image ready:', data.imageUrl);
       }
       
       // Create project entry for history
@@ -369,7 +370,6 @@ function DesignEditor() {
       // Update job status
       updateJob(tempJobId, {
         status: 'completed',
-        imageUrl: data.imageUrl,
         completedAt: new Date().toISOString()
       });
       
@@ -377,7 +377,6 @@ function DesignEditor() {
       setCurrentJob({
         ...tempJob,
         status: 'completed',
-        imageUrl: data.imageUrl,
         completedAt: new Date().toISOString()
       });
       
@@ -392,10 +391,10 @@ function DesignEditor() {
     } catch (error) {
       console.error('Error generating design:', error);
       
-      // Update job as failed
-      updateJob(tempJobId, {
+      // Update job as failed  
+      const jobId = tempJob.id;
+      updateJob(jobId, {
         status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
         completedAt: new Date().toISOString()
       });
       
