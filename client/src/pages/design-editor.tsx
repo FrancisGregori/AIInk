@@ -474,37 +474,67 @@ function DesignEditor() {
 
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Panel - InkVision Chat (donde estaba "Imagen para editar") */}
+          {/* Left Panel - Estilos Populares (movido desde centro) */}
           <div className="lg:col-span-1">
             <div className="sticky top-4">
-              <ChatAssistant 
-                ref={chatAssistantRef}
-                currentImage={referencePreview || undefined}
-                onApplyPrompt={(newPrompt) => {
-                  setPrompt(newPrompt);
-                  // Auto-generate después de aplicar el prompt
-                  setTimeout(() => {
-                    if (referencePreview) {
-                      handleGenerate();
-                    }
-                  }, 100);
-                }}
-                language={language}
-                embedded={true}
-                onImageUpload={(imageUrl, file) => {
-                  // Manejar carga de imagen desde el chat
-                  setReferenceImage(file);
-                  setReferencePreview(imageUrl);
-                  setAspectRatio("Match Input");
-                  setMatchInput(true);
-                }}
-              />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5" />
+                    {txt.styles}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {promptSuggestions.map((sugg, idx) => (
+                    <Button
+                      key={idx}
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start text-left h-auto p-3"
+                      onClick={() => setPrompt(sugg[language])}
+                    >
+                      <div className="text-xs">
+                        {sugg[language]}
+                      </div>
+                    </Button>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
           </div>
 
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Prompt Input - Sin sección de imagen */}
+            {/* InkVision Chat (movido arriba, donde estaba "Descripción del diseño") */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{txt.inkVision}</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ChatAssistant 
+                  ref={chatAssistantRef}
+                  currentImage={referencePreview || undefined}
+                  onApplyPrompt={(newPrompt) => {
+                    setPrompt(newPrompt);
+                    // Auto-generate después de aplicar el prompt
+                    setTimeout(() => {
+                      if (referencePreview) {
+                        handleGenerate();
+                      }
+                    }, 100);
+                  }}
+                  language={language}
+                  embedded={true}
+                  onImageUpload={(imageUrl, file) => {
+                    // Manejar carga de imagen desde el chat
+                    setReferenceImage(file);
+                    setReferencePreview(imageUrl);
+                    setAspectRatio("Match Input");
+                    setMatchInput(true);
+                  }}
+                />
+              </CardContent>
+            </Card>
 
             {/* Description Section */}
             <Card>
@@ -518,23 +548,6 @@ function DesignEditor() {
                   placeholder={txt.promptPlaceholder}
                   className="min-h-32"
                 />
-                
-                {/* Quick Suggestions */}
-                <div>
-                  <Label className="text-xs text-zinc-500 mb-2">{txt.suggestions}</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {promptSuggestions.map((sugg, idx) => (
-                      <Badge
-                        key={idx}
-                        variant="secondary"
-                        className="cursor-pointer hover:bg-zinc-700"
-                        onClick={() => setPrompt(sugg[language])}
-                      >
-                        {sugg[language]}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
               </CardContent>
               
               <CardFooter>
