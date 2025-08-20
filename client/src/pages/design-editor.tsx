@@ -474,7 +474,7 @@ function DesignEditor() {
 
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar - InkVision Chat (movido del flotante) */}
+          {/* Left Panel - InkVision Chat (donde estaba "Imagen para editar") */}
           <div className="lg:col-span-1">
             <div className="sticky top-4">
               <ChatAssistant 
@@ -491,67 +491,20 @@ function DesignEditor() {
                 }}
                 language={language}
                 embedded={true}
+                onImageUpload={(imageUrl, file) => {
+                  // Manejar carga de imagen desde el chat
+                  setReferenceImage(file);
+                  setReferencePreview(imageUrl);
+                  setAspectRatio("Match Input");
+                  setMatchInput(true);
+                }}
               />
             </div>
           </div>
 
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Prompt Input */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{txt.referenceImage}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Reference Image */}
-                <div>
-                  <Label>{txt.referenceImage}</Label>
-                  <div
-                    className="mt-2 border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center hover:border-zinc-500 transition-colors cursor-pointer"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {referencePreview ? (
-                      <div className="space-y-2">
-                        <img
-                          src={referencePreview}
-                          alt="Reference"
-                          className="max-h-32 mx-auto rounded"
-                        />
-                        <p className="text-xs text-zinc-500">{referenceImage?.name}</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setReferenceImage(null);
-                            setReferencePreview(null);
-                            setMatchInput(false);
-                            if (fileInputRef.current) {
-                              fileInputRef.current.value = '';
-                            }
-                          }}
-                          className="text-xs"
-                        >
-                          {language === "es" ? "Eliminar imagen" : "Remove image"}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Upload className="h-8 w-8 mx-auto text-zinc-500" />
-                        <p className="text-sm text-zinc-500">{language === 'es' ? 'Sube una imagen para editar' : 'Upload an image to edit'}</p>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            {/* Prompt Input - Sin sección de imagen */}
 
             {/* Description Section */}
             <Card>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit } from "lucide-react";
+import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -20,13 +20,14 @@ interface ChatAssistantProps {
   onApplyPrompt: (prompt: string) => void;
   language?: "es" | "en";
   embedded?: boolean;
+  onImageUpload?: (imageUrl: string, file: File) => void;
 }
 
 export interface ChatAssistantRef {
   open: () => void;
 }
 
-const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false }, ref) => {
+const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload }, ref) => {
   const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastImageAnalyzed, setLastImageAnalyzed] = useState<string>("");
@@ -38,6 +39,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Handle image download
   const downloadImage = (imageUrl: string, filename: string) => {
@@ -114,6 +117,101 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       toast({
         title: language === 'es' ? "Error" : "Error",
         description: language === 'es' ? "No se pudo cargar la imagen" : "Could not load the image",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageUrl = reader.result as string;
+        setStoredImage(imageUrl);
+        
+        // Call the parent callback if provided
+        if (onImageUpload) {
+          onImageUpload(imageUrl, file);
+        }
+        
+        // Add image message to chat
+        const imageMessage: Message = {
+          id: `image-${Date.now()}`,
+          role: 'user',
+          content: language === 'es' ? 'Imagen cargada para editar' : 'Image loaded for editing',
+          timestamp: new Date(),
+          image: imageUrl
+        };
+        
+        setMessages(prev => [...prev, imageMessage]);
+        
+        toast({
+          title: language === 'es' ? "Imagen cargada" : "Image uploaded",
+          description: language === 'es' ? "La imagen está lista para editar" : "Image is ready for editing",
+        });
+      };
+      reader.readAsDataURL(file);
+    } else if (file) {
+      toast({
+        title: language === 'es' ? "Archivo no válido" : "Invalid file",
+        description: language === 'es' ? "Por favor selecciona una imagen" : "Please select an image file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle drag and drop
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith("image/"));
+    
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const imageUrl = reader.result as string;
+        setStoredImage(imageUrl);
+        
+        // Call the parent callback if provided
+        if (onImageUpload) {
+          onImageUpload(imageUrl, imageFile);
+        }
+        
+        // Add image message to chat
+        const imageMessage: Message = {
+          id: `image-${Date.now()}`,
+          role: 'user',
+          content: language === 'es' ? 'Imagen cargada para editar' : 'Image loaded for editing',
+          timestamp: new Date(),
+          image: imageUrl
+        };
+        
+        setMessages(prev => [...prev, imageMessage]);
+        
+        toast({
+          title: language === 'es' ? "Imagen cargada" : "Image uploaded",
+          description: language === 'es' ? "La imagen está lista para editar" : "Image is ready for editing",
+        });
+      };
+      reader.readAsDataURL(imageFile);
+    } else if (files.length > 0) {
+      toast({
+        title: language === 'es' ? "Archivo no válido" : "Invalid file",
+        description: language === 'es' ? "Por favor arrastra una imagen" : "Please drag an image file",
         variant: "destructive",
       });
     }
@@ -766,34 +864,73 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input area */}
-          <div className="border-t p-4">
+          {/* Input area con drag & drop */}
+          <div 
+            className={`border-t p-4 ${isDragOver ? 'bg-zinc-800/50 border-zinc-400' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {/* Drag overlay */}
+            {isDragOver && (
+              <div className="absolute inset-0 bg-zinc-800/80 border-2 border-dashed border-zinc-400 rounded-lg flex items-center justify-center z-10">
+                <div className="text-center">
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-zinc-400" />
+                  <p className="text-sm text-zinc-400">
+                    {language === 'es' ? 'Suelta la imagen aquí' : 'Drop image here'}
+                  </p>
+                </div>
+              </div>
+            )}
+            
             <div className="flex gap-2">
-              <Textarea
-                ref={textareaRef}
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={language === 'es' 
-                  ? "¿Qué cambios quieres hacer?"
-                  : "What changes would you like to make?"}
-                className="flex-1 min-h-[60px] max-h-[120px] resize-none"
-                disabled={isLoading}
-                data-testid="textarea-chat-input"
-              />
-              <Button
-                onClick={sendMessage}
-                disabled={!inputMessage.trim() || isLoading}
-                className="self-end"
-                data-testid="button-send-message"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              <div className="flex flex-col gap-2 flex-1">
+                <Textarea
+                  ref={textareaRef}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={language === 'es' 
+                    ? "Describe los cambios o arrastra una imagen..."
+                    : "Describe changes or drag an image..."}
+                  className="flex-1 min-h-[60px] max-h-[120px] resize-none"
+                  disabled={isLoading}
+                  data-testid="textarea-chat-input"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="self-start"
+                  data-testid="button-upload-image"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={sendMessage}
+                  disabled={!inputMessage.trim() || isLoading}
+                  className="self-end"
+                  data-testid="button-send-message"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
             {storedImage && (
               <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                 <Image className="h-3 w-3" />
-                <span>{language === 'es' ? 'Imagen cargada' : 'Image loaded'}</span>
+                <span>{language === 'es' ? 'Imagen cargada para editar' : 'Image loaded for editing'}</span>
               </div>
             )}
           </div>
