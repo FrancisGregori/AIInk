@@ -330,7 +330,7 @@ function DesignEditor() {
         body: JSON.stringify({
           prompt: prompt,
           imageData: referencePreview,
-          model: modelVariant === 'pro' ? 'black-forest-labs/flux-kontext-pro' : 'black-forest-labs/flux-kontext-max'
+          model: modelVariant // Usar directamente 'pro' o 'max'
         }),
       });
 
@@ -391,12 +391,13 @@ function DesignEditor() {
     } catch (error) {
       console.error('Error generating design:', error);
       
-      // Update job as failed  
-      const jobId = tempJob.id;
-      updateJob(jobId, {
-        status: 'failed',
-        completedAt: new Date().toISOString()
-      });
+      // Update job as failed if it was created
+      if (currentJob) {
+        updateJob(currentJob.id, {
+          status: 'failed',
+          completedAt: new Date().toISOString()
+        });
+      }
       
       setCurrentJob(null);
       
