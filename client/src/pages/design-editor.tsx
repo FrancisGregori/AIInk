@@ -652,41 +652,7 @@ function DesignEditor() {
               </CardContent>
             </Card>
 
-            {/* Description Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{txt.prompt}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={txt.promptPlaceholder}
-                  className="min-h-32"
-                />
-              </CardContent>
-              
-              <CardFooter>
-                <Button
-                  onClick={handleGenerate}
-                  disabled={!prompt.trim() || isGenerating}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {txt.generating}
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      {txt.generate}
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+
 
             {/* Generation Settings */}
             <Card>
