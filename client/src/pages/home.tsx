@@ -139,8 +139,8 @@ export default function Home() {
                     <Cog className="text-black h-3 w-3" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Customizable Output</h4>
-                    <p className="text-light-gray">Choose line thickness, color and processing style</p>
+                    <h4 className="font-semibold mb-1">Professional Artist Styles</h4>
+                    <p className="text-light-gray">4 unique models trained on real tattoo artist techniques</p>
                   </div>
                 </div>
                 
