@@ -58,9 +58,12 @@ export default function Home() {
               <div className="aspect-video relative">
                 <video 
                   className="w-full h-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
                   controls
-                  preload="metadata"
-                  poster="/api/video-thumbnail" // Optional: thumbnail image
+                  preload="auto"
                   data-testid="video-demo"
                 >
                   <source src="/videos/demo.mp4" type="video/mp4" />
