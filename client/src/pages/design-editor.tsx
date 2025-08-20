@@ -120,46 +120,19 @@ function DesignEditor() {
     }
   }, [activeJobsOfType]);
 
-  // Polling para verificar estado del trabajo en progreso
+  // Verificar si el trabajo actual se completó usando React Query
   useEffect(() => {
     if (!currentJob || currentJob.status !== 'processing') return;
 
-    const pollInterval = setInterval(async () => {
-      try {
-        // Verificar si el proyecto se completó
-        const response = await fetch(`/api/flux/projects`);
-        if (response.ok) {
-          const projects = await response.json();
-          const completedProject = projects.find((p: any) => p.id === currentJob.id);
-          
-          if (completedProject && completedProject.status === 'completed' && completedProject.imageUrl) {
-            // Trabajo completado - actualizar estado
-            setIsGenerating(false);
-            updateJob(currentJob.id, {
-              status: 'completed',
-              processedImageUrl: completedProject.imageUrl,
-              completedAt: new Date().toISOString()
-            });
-            setCurrentJob({
-              ...currentJob,
-              status: 'completed',
-              processedImageUrl: completedProject.imageUrl
-            });
-            
-            // Mostrar toast de éxito
-            toast({
-              title: "Diseño completado",
-              description: "Tu imagen ha sido generada exitosamente",
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error polling job status:', error);
-      }
-    }, 3000); // Verificar cada 3 segundos
+    const checkInterval = setInterval(() => {
+      // Simplemente invalidar la query para que se refresque automáticamente
+      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+    }, 5000); // Refrescar cada 5 segundos
 
-    return () => clearInterval(pollInterval);
-  }, [currentJob, updateJob, toast]);
+    return () => clearInterval(checkInterval);
+  }, [currentJob, queryClient]);
+
+
 
   // Translations
   const t = {
@@ -233,6 +206,37 @@ function DesignEditor() {
 
   const txt = t[language];
 
+  // Fetch user's projects (moved before useEffect to avoid initialization error)
+  const { data: projects = [] } = useQuery<FluxProject[]>({
+    queryKey: ["/api/flux/projects"],
+  });
+
+  // Verificar automáticamente cuando se actualiza la lista de proyectos
+  useEffect(() => {
+    if (!currentJob || currentJob.status !== 'processing' || !projects.length) return;
+
+    const completedProject = projects.find((p: any) => p.id === currentJob.id);
+    if (completedProject && completedProject.imageUrl && !completedProject.imageUrl.includes('placeholder')) {
+      console.log('Design job completed, updating state');
+      setIsGenerating(false);
+      updateJob(currentJob.id, {
+        status: 'completed',
+        processedImageUrl: completedProject.imageUrl,
+        completedAt: new Date().toISOString()
+      });
+      setCurrentJob({
+        ...currentJob,
+        status: 'completed',
+        processedImageUrl: completedProject.imageUrl
+      });
+      
+      toast({
+        title: "Diseño completado",
+        description: "Tu imagen ha sido generada exitosamente",
+      });
+    }
+  }, [projects, currentJob, updateJob, toast]);
+
   // Quick prompt suggestions
   const promptSuggestions = [
     { es: "Rosa realista en blanco y negro", en: "Realistic black and white rose" },
@@ -242,11 +246,6 @@ function DesignEditor() {
     { es: "Fénix en acuarela", en: "Watercolor phoenix" },
     { es: "Calavera mexicana ornamental", en: "Ornamental Mexican skull" },
   ];
-
-  // Fetch user's projects
-  const { data: projects = [] } = useQuery<FluxProject[]>({
-    queryKey: ["/api/flux/projects"],
-  });
 
   // Create project mutation
   const createProjectMutation = useMutation({
