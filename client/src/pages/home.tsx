@@ -54,23 +54,21 @@ export default function Home() {
           {/* Video/Media Section */}
           <div className="relative max-w-5xl mx-auto">
             <div className="relative bg-gray-900 rounded-2xl border border-gray-700 overflow-hidden shadow-2xl">
-              {/* Advanced Video Player with Controls */}
-              <div className="aspect-video relative group">
+              {/* Video Player */}
+              <div className="aspect-video relative">
                 <video 
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover"
                   autoPlay
                   muted
                   loop
                   playsInline
                   controls
                   preload="auto"
-                  controlsList="nodownload"
                   data-testid="video-demo"
-                  id="demo-video"
                 >
                   <source src="/videos/demo.mp4" type="video/mp4" />
                   <source src="/videos/demo.webm" type="video/webm" />
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center rounded-lg">
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
                     <div className="text-center">
                       <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 opacity-80">
                         <svg className="w-8 h-8 text-black ml-1" fill="currentColor" viewBox="0 0 20 20">
@@ -82,41 +80,6 @@ export default function Home() {
                     </div>
                   </div>
                 </video>
-                
-                {/* Custom Video Controls Overlay */}
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button
-                    onClick={() => {
-                      const video = document.getElementById('demo-video') as HTMLVideoElement;
-                      if (video.requestFullscreen) {
-                        video.requestFullscreen();
-                      }
-                    }}
-                    className="bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-lg transition-all duration-200"
-                    title="Pantalla completa"
-                    data-testid="button-fullscreen"
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zM16 4a1 1 0 00-1-1h-4a1 1 0 000 2h1.586l-2.293 2.293a1 1 0 001.414 1.414L13 6.414V8a1 1 0 002 0V4zM3 16a1 1 0 001 1h4a1 1 0 000-2H6.414l2.293-2.293a1 1 0 00-1.414-1.414L5 13.414V12a1 1 0 00-2 0v4zM16 16a1 1 0 00-1 1h-4a1 1 0 000-2h1.586l-2.293-2.293a1 1 0 001.414-1.414L13 13.414V12a1 1 0 002 0v4z"/>
-                    </svg>
-                  </button>
-                  
-                  <a
-                    href="/videos/demo.mp4"
-                    download="TattooStencilPro-Demo.mp4"
-                    className="bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-lg transition-all duration-200 flex items-center"
-                    title="Descargar video"
-                    data-testid="button-download"
-                  >
-                    <Download className="w-4 h-4" />
-                  </a>
-                </div>
-                
-                {/* Video Info Overlay */}
-                <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <p className="text-sm font-medium">Demo TattooStencilPro</p>
-                  <p className="text-xs text-gray-300">HD • 30s • Herramientas IA</p>
-                </div>
               </div>
             </div>
           </div>
