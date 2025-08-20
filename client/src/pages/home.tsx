@@ -140,7 +140,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-semibold mb-1">Professional Artist Styles</h4>
-                    <p className="text-light-gray">4 unique models trained on real tattoo artist techniques</p>
+                    <p className="text-light-gray">Multiple models trained on real tattoo artist techniques</p>
                   </div>
                 </div>
                 
