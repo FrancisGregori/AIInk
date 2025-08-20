@@ -81,12 +81,6 @@ export default function Home() {
                   </div>
                 </video>
               </div>
-              
-              {/* Sample thumbnails around video */}
-              <div className="absolute -left-4 top-8 w-24 h-32 bg-gray-700 rounded-lg opacity-80 hidden lg:block"></div>
-              <div className="absolute -left-8 bottom-16 w-28 h-20 bg-gray-600 rounded-lg opacity-60 hidden lg:block"></div>
-              <div className="absolute -right-4 top-12 w-24 h-32 bg-gray-700 rounded-lg opacity-80 hidden lg:block"></div>
-              <div className="absolute -right-8 bottom-20 w-28 h-20 bg-gray-600 rounded-lg opacity-60 hidden lg:block"></div>
             </div>
           </div>
 
