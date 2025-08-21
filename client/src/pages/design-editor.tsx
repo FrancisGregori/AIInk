@@ -68,6 +68,49 @@ function DesignEditor() {
   // Estado para trabajo actual y persistencia
   const [currentJob, setCurrentJob] = useState<any>(null);
   const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
+  
+  // Suggested edit prompts organized by category
+  const editSuggestions = {
+    poseChanges: [
+      { es: "Vista frontal directa a cámara", en: "Front view looking directly at camera" },
+      { es: "Girar cabeza ligeramente a la izquierda", en: "Turn head slightly to the left" },
+      { es: "Girar cabeza ligeramente a la derecha", en: "Turn head slightly to the right" },
+      { es: "Perfil completo lateral", en: "Show complete side profile" },
+      { es: "Vista de tres cuartos", en: "Three-quarter angle view" },
+      { es: "Mirar hacia arriba con esperanza", en: "Look upward with hopeful gaze" },
+      { es: "Mirar hacia abajo pensativo", en: "Look down contemplatively" },
+      { es: "Mirar sobre el hombro", en: "Look over shoulder toward camera" },
+    ],
+    lightingChanges: [
+      { es: "Luz suave desde la derecha", en: "Soft light from right" },
+      { es: "Luz suave desde la izquierda", en: "Soft light from left" },
+      { es: "Iluminación mariposa", en: "Butterfly lighting" },
+      { es: "Iluminación Rembrandt", en: "Rembrandt lighting" },
+      { es: "Hora dorada", en: "Golden hour" },
+      { es: "Luz dramática baja", en: "Low-key dramatic" },
+      { es: "Luz de ventana", en: "Window light" },
+      { es: "Contraluz", en: "Backlighting" },
+    ],
+    styleChanges: [
+      { es: "Dibujo a lápiz", en: "Pencil sketch" },
+      { es: "Hiperrealista", en: "Hyperrealistic" },
+      { es: "Acuarela", en: "Watercolor" },
+      { es: "Tinta", en: "Ink drawing" },
+      { es: "Óleo", en: "Oil painting" },
+      { es: "Minimalista", en: "Minimalist" },
+      { es: "Grabado vintage", en: "Vintage engraving" },
+      { es: "Arte vectorial", en: "Vector art" },
+    ],
+    cameraAngles: [
+      { es: "Vista aérea", en: "Bird's eye view" },
+      { es: "Ángulo bajo", en: "Low angle" },
+      { es: "Ángulo holandés", en: "Dutch angle" },
+      { es: "Plano medio", en: "Medium shot" },
+      { es: "Primer plano", en: "Close-up" },
+      { es: "Nivel de ojos", en: "Eye level" },
+      { es: "Nivel del suelo", en: "Ground level" },
+    ],
+  };
 
   // Recuperar trabajo en progreso al cargar la página - CARGA INSTANTÁNEA
   useEffect(() => {
@@ -144,14 +187,12 @@ function DesignEditor() {
       settings: "Configuración",
       analyzing: "Analizando imagen...",
       generating: "Generando diseño...",
-      suggestions: "Sugerencias rápidas",
-      styles: "Estilos populares",
-      traditional: "Tradicional",
-      realism: "Realismo",
-      geometric: "Geométrico",
-      watercolor: "Acuarela",
-      blackwork: "Blackwork",
-      neoTraditional: "Neo-tradicional",
+      suggestions: "Ediciones sugeridas",
+      poseChanges: "Cambios de pose",
+      lightingChanges: "Iluminación",
+      styleChanges: "Estilos",
+      cameraAngles: "Ángulos de cámara",
+      expressions: "Expresiones",
     },
     en: {
       title: "Design Editor",
@@ -177,14 +218,12 @@ function DesignEditor() {
       settings: "Settings",
       analyzing: "Analyzing image...",
       generating: "Generating design...",
-      suggestions: "Quick suggestions",
-      styles: "Popular styles",
-      traditional: "Traditional",
-      realism: "Realism",
-      geometric: "Geometric",
-      watercolor: "Watercolor",
-      blackwork: "Blackwork",
-      neoTraditional: "Neo-traditional",
+      suggestions: "Suggested edits",
+      poseChanges: "Pose changes",
+      lightingChanges: "Lighting",
+      styleChanges: "Styles",
+      cameraAngles: "Camera angles",
+      expressions: "Expressions",
     }
   };
 
@@ -221,15 +260,7 @@ function DesignEditor() {
     }
   }, [projects, currentJob, updateJob, toast]);
 
-  // Quick prompt suggestions
-  const promptSuggestions = [
-    { es: "Rosa realista en blanco y negro", en: "Realistic black and white rose" },
-    { es: "Lobo geométrico minimalista", en: "Minimalist geometric wolf" },
-    { es: "Mandala con detalles florales", en: "Mandala with floral details" },
-    { es: "Dragón japonés tradicional", en: "Traditional Japanese dragon" },
-    { es: "Fénix en acuarela", en: "Watercolor phoenix" },
-    { es: "Calavera mexicana ornamental", en: "Ornamental Mexican skull" },
-  ];
+
 
   // Create project mutation
   const createProjectMutation = useMutation({
@@ -623,23 +654,69 @@ function DesignEditor() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Palette className="h-5 w-5" />
-                    {txt.styles}
+                    {txt.suggestions}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {promptSuggestions.map((sugg, idx) => (
-                    <Button
-                      key={idx}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start text-left h-auto p-3"
-                      onClick={() => setPrompt(sugg[language])}
-                    >
-                      <div className="text-xs">
-                        {sugg[language]}
-                      </div>
-                    </Button>
-                  ))}
+                <CardContent className="space-y-4">
+                  {/* Pose Changes */}
+                  <div>
+                    <Label className="text-xs mb-2">{txt.poseChanges}</Label>
+                    <div className="space-y-2">
+                      {editSuggestions.poseChanges.slice(0, 3).map((sugg, idx) => (
+                        <Button
+                          key={`pose-${idx}`}
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-left h-auto p-2"
+                          onClick={() => setPrompt(sugg[language])}
+                        >
+                          <div className="text-xs">
+                            {sugg[language]}
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Lighting Changes */}
+                  <div>
+                    <Label className="text-xs mb-2">{txt.lightingChanges}</Label>
+                    <div className="space-y-2">
+                      {editSuggestions.lightingChanges.slice(0, 3).map((sugg, idx) => (
+                        <Button
+                          key={`light-${idx}`}
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-left h-auto p-2"
+                          onClick={() => setPrompt(sugg[language])}
+                        >
+                          <div className="text-xs">
+                            {sugg[language]}
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Style Changes */}
+                  <div>
+                    <Label className="text-xs mb-2">{txt.styleChanges}</Label>
+                    <div className="space-y-2">
+                      {editSuggestions.styleChanges.slice(0, 3).map((sugg, idx) => (
+                        <Button
+                          key={`style-${idx}`}
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-left h-auto p-2"
+                          onClick={() => setPrompt(sugg[language])}
+                        >
+                          <div className="text-xs">
+                            {sugg[language]}
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -945,30 +1022,7 @@ function DesignEditor() {
               </CardContent>
             </Card>
 
-            {/* Style Examples */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Palette className="h-4 w-4" />
-                  {txt.styles}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {[txt.traditional, txt.realism, txt.geometric, txt.watercolor, txt.blackwork, txt.neoTraditional].map((style) => (
-                    <Button
-                      key={style}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => setPrompt(`${style} ${prompt}`.trim())}
-                    >
-                      {style}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+
           </div>
         </div>
       </main>
