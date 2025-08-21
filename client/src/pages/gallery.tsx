@@ -37,18 +37,22 @@ export default function Gallery() {
   const [selectedType, setSelectedType] = useState<'all' | 'stencil' | 'design'>('all');
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
-  // Fetch gallery items
-  const { data: galleryItems = [], isLoading, refetch } = useQuery({
-    queryKey: ['/api/gallery', selectedType],
+  // Fetch ALL gallery items (not filtered by type)
+  const { data: allGalleryItems = [], isLoading, refetch } = useQuery({
+    queryKey: ['/api/gallery'],
     queryFn: async () => {
-      const params = selectedType !== 'all' ? `?type=${selectedType}` : '';
-      const response = await apiRequest('GET', `/api/gallery${params}`);
+      const response = await apiRequest('GET', '/api/gallery');
       return response.json();
     },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     staleTime: 0
   });
+
+  // Filter items based on selected type
+  const galleryItems = selectedType === 'all' 
+    ? allGalleryItems 
+    : allGalleryItems.filter((item: any) => item.type === selectedType);
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -171,11 +175,14 @@ export default function Gallery() {
                 Todos tus diseños y stencils en un solo lugar
               </p>
             </div>
-            {galleryItems.length > 0 && (
+            {allGalleryItems.length > 0 && (
               <div className="text-right">
                 <p className="text-2xl font-bold">{galleryItems.length}</p>
                 <p className="text-sm text-muted-foreground">
-                  {galleryItems.length === 1 ? 'creación' : 'creaciones'}
+                  {selectedType === 'all' 
+                    ? `${galleryItems.length} ${galleryItems.length === 1 ? 'creación' : 'creaciones'}`
+                    : `${galleryItems.length} ${selectedType === 'stencil' ? 'stencil' : 'diseño'}${galleryItems.length !== 1 ? 's' : ''}`
+                  }
                 </p>
               </div>
             )}
@@ -227,13 +234,13 @@ export default function Gallery() {
           <Tabs value={selectedType} onValueChange={(value: any) => setSelectedType(value)}>
             <TabsList className="w-full sm:w-auto">
               <TabsTrigger value="all">
-                Todos ({galleryItems.length})
+                Todos ({allGalleryItems.length})
               </TabsTrigger>
               <TabsTrigger value="stencil">
-                Stencils ({galleryItems.filter((i: any) => i.type === 'stencil').length})
+                Stencils ({allGalleryItems.filter((i: any) => i.type === 'stencil').length})
               </TabsTrigger>
               <TabsTrigger value="design">
-                Diseños ({galleryItems.filter((i: any) => i.type === 'design').length})
+                Diseños ({allGalleryItems.filter((i: any) => i.type === 'design').length})
               </TabsTrigger>
             </TabsList>
           </Tabs>
