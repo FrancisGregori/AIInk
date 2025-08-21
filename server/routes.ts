@@ -5,7 +5,6 @@ import { storage } from "./storage";
 import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
-import { ObjectStorageService } from "./objectStorage";
 import Replicate from "replicate";
 import { z } from "zod";
 
@@ -46,22 +45,6 @@ const generateImageSchema = z.object({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize services
   const comfyDeploy = new ComfyDeployService();
-  const objectStorageService = new ObjectStorageService();
-  
-  // Serve public objects from object storage
-  app.get("/public-objects/:filePath(*)", async (req, res) => {
-    const filePath = req.params.filePath;
-    try {
-      const file = await objectStorageService.searchPublicObject(filePath);
-      if (!file) {
-        return res.status(404).json({ error: "File not found" });
-      }
-      await objectStorageService.downloadObject(file, res);
-    } catch (error) {
-      console.error("Error serving public object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  });
   
   // Stencil Tool Routes
   
