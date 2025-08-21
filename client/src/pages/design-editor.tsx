@@ -349,8 +349,9 @@ function DesignEditor() {
         },
         body: JSON.stringify({
           prompt: prompt,
-          imageData: referencePreview,
-          model: modelVariant // Just send 'pro' or 'max'
+          inputImageUrl: referencePreview, // Changed from imageData to inputImageUrl like InkVision
+          model: modelVariant, // Just send 'pro' or 'max'
+          aspectRatio: 'match_input_image'
         }),
       });
 
