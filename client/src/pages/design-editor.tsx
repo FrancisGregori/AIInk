@@ -123,7 +123,7 @@ function DesignEditor() {
     es: {
       title: "Design Editor",
       subtitle: "Editor de diseños con IA",
-      prompt: "Descripción del diseño",
+      prompt: "Manual Prompt",
       promptPlaceholder: "Describe tu diseño de tatuaje aquí...",
       referenceImage: "Imagen para editar",
       generate: "Generar diseño",
@@ -156,7 +156,7 @@ function DesignEditor() {
     en: {
       title: "Design Editor",
       subtitle: "AI Design Editor",
-      prompt: "Design description",
+      prompt: "Manual Prompt",
       promptPlaceholder: "Describe your tattoo design here...",
       referenceImage: "Image to edit",
       generate: "Generate design",
