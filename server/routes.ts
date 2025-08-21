@@ -901,6 +901,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes (temporary for testing)
+  app.post("/api/admin/add-credits", isAuthenticated, async (req: any, res) => {
+    const { userId, credits } = req.body;
+    
+    if (!userId || !credits || credits <= 0) {
+      return res.status(400).json({ error: "Invalid userId or credits amount" });
+    }
+
+    try {
+      // Add credits to the user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const updatedUser = await storage.updateUserCredits(userId, (user.credits || 0) + credits);
+      console.log(`[Admin] Added ${credits} credits to user ${userId}. New total: ${updatedUser.credits}`);
+      
+      res.json({ 
+        success: true, 
+        userId, 
+        creditsAdded: credits, 
+        newTotal: updatedUser.credits 
+      });
+    } catch (error) {
+      console.error("[Admin] Error adding credits:", error);
+      res.status(500).json({ error: "Failed to add credits" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

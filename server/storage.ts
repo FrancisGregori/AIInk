@@ -42,6 +42,7 @@ export interface IStorage {
   // Credit system methods
   getUserCredits(userId: string): Promise<number>;
   deductCredits(userId: string, amount: number): Promise<boolean>;
+  updateUserCredits(userId: string, newCredits: number): Promise<UserProfile>;
   
   // Stencil methods
   getStencilStyles(): Promise<StencilStyle[]>;
@@ -306,6 +307,24 @@ export class MemStorage implements IStorage {
     });
     
     return true;
+  }
+
+  async updateUserCredits(userId: string, newCredits: number): Promise<UserProfile> {
+    const user = await this.getUserProfile(userId);
+    if (!user) {
+      throw new Error(`User ${userId} not found`);
+    }
+    
+    // Update credits directly
+    const updated = await this.updateUserProfile(userId, {
+      credits: newCredits
+    });
+    
+    if (!updated) {
+      throw new Error(`Failed to update credits for user ${userId}`);
+    }
+    
+    return updated;
   }
 
   // Stencil methods

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Navigation from "@/components/Navigation";
 import { Link } from "wouter";
-import { ArrowLeft, CreditCard, User, Mail, Calendar, Package } from "lucide-react";
+import { ArrowLeft, CreditCard, User, Mail, Calendar, Package, Coins } from "lucide-react";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -51,13 +51,21 @@ export default function Profile() {
       <Navigation />
       
       <main className="container mx-auto px-4 py-20 max-w-2xl">
-        {/* Back Button */}
-        <Link href="/">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
-        </Link>
+        {/* Back Button and Admin */}
+        <div className="flex justify-between items-center mb-6">
+          <Link href="/">
+            <Button variant="ghost">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+          </Link>
+          <Link href="/admin-credits">
+            <Button variant="outline">
+              <Coins className="mr-2 h-4 w-4" />
+              Administrar Créditos (Testing)
+            </Button>
+          </Link>
+        </div>
 
         {/* Profile Header */}
         <div className="mb-8">
