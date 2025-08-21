@@ -1039,7 +1039,7 @@ function DesignEditor() {
             
             {/* Removed Latest Design section per user request */}
 
-            {/* History */}
+            {/* History - Portrait Style, Only 2 Items */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -1048,23 +1048,30 @@ function DesignEditor() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-64">
-                  <div className="grid grid-cols-2 gap-2">
-                    {projects.slice(1, 9).map((project) => (
-                      <Dialog key={project.id}>
-                        <DialogTrigger asChild>
-                          <div className="relative group cursor-pointer">
-                            <img
-                              src={project.imageUrl || ""}
-                              alt={project.name}
-                              className="w-full aspect-square rounded-lg object-cover hover:opacity-90 transition-opacity"
-                              data-testid={`img-history-${project.id}`}
-                            />
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                              <p className="text-[10px] text-white/80">{new Date(project.createdAt || "").toLocaleDateString()}</p>
-                            </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {projects.slice(1, 3).map((project) => (
+                    <Dialog key={project.id}>
+                      <DialogTrigger asChild>
+                        <div className="relative group cursor-pointer">
+                          <img
+                            src={project.imageUrl || ""}
+                            alt={project.name}
+                            className="w-full aspect-[3/4] rounded-lg object-cover hover:opacity-90 transition-opacity"
+                            data-testid={`img-history-${project.id}`}
+                          />
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3 rounded-b-lg">
+                            <p className="text-sm font-semibold text-white">{project.name}</p>
+                            <p className="text-xs text-white/70">
+                              {new Date(project.createdAt || "").toLocaleString('es-ES', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
                           </div>
-                        </DialogTrigger>
+                        </div>
+                      </DialogTrigger>
                         <DialogContent className="max-w-4xl max-h-[90vh] p-4">
                           <div className="space-y-4">
                             <div className="relative">
@@ -1117,7 +1124,6 @@ function DesignEditor() {
                       </Dialog>
                     ))}
                   </div>
-                </ScrollArea>
               </CardContent>
             </Card>
 

@@ -209,70 +209,119 @@ export default function Gallery() {
           </div>
         )}
 
-        {/* Gallery content */}
+        {/* Gallery content - Organized by day */}
         {Object.entries(groupedItems).map(([date, items]: [string, any]) => (
-          <div key={date} className="mb-8">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              {date}
-            </h3>
+          <div key={date} className="mb-10">
+            {/* Date header with improved styling */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px bg-border flex-1" />
+              <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-semibold">{date}</span>
+                <Badge variant="secondary" className="ml-2">
+                  {items.length} {items.length === 1 ? 'diseño' : 'diseños'}
+                </Badge>
+              </div>
+              <div className="h-px bg-border flex-1" />
+            </div>
 
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {items.map((item: any) => (
-                  <Card key={item.id} className="overflow-hidden group">
+                  <Card key={item.id} className="overflow-hidden group hover:shadow-xl transition-all">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <div className="relative aspect-square cursor-pointer">
+                        <div className="relative aspect-[3/4] cursor-pointer bg-zinc-900">
                           <img
                             src={item.imageUrl}
                             alt={item.title || 'Diseño'}
                             className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           />
+                          {/* Overlay on hover */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                              <p className="text-white text-sm font-semibold truncate">
+                                {item.title || 'Sin título'}
+                              </p>
+                              <p className="text-white/70 text-xs">
+                                {new Date(item.createdAt).toLocaleTimeString('es-ES', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          {/* Badges */}
                           {item.isFavorite && (
-                            <Heart className="absolute top-2 right-2 w-5 h-5 text-red-500 fill-red-500" />
+                            <Heart className="absolute top-2 right-2 w-4 h-4 text-red-500 fill-red-500 drop-shadow-lg" />
                           )}
                           <Badge 
-                            className="absolute top-2 left-2"
+                            className="absolute top-2 left-2 text-xs"
                             variant={item.type === 'stencil' ? 'default' : 'secondary'}
                           >
                             {item.type === 'stencil' ? 'Stencil' : 'Diseño'}
                           </Badge>
                         </div>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <img
-                          src={item.imageUrl}
-                          alt={item.title || 'Diseño'}
-                          className="w-full h-auto"
-                        />
+                      <DialogContent className="max-w-5xl">
+                        <div className="space-y-4">
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title || 'Diseño'}
+                            className="w-full h-auto max-h-[80vh] object-contain"
+                          />
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h3 className="text-lg font-semibold">{item.title || 'Sin título'}</h3>
+                              {item.style && (
+                                <p className="text-sm text-muted-foreground">Estilo: {item.style}</p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => favoriteMutation.mutate(item.id)}
+                              >
+                                <Heart className={`w-4 h-4 mr-1 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                                Favorito
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleDownload(item.imageUrl, item.title)}
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                Descargar
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       </DialogContent>
                     </Dialog>
-                    <CardContent className="p-3">
-                      <h4 className="font-semibold truncate">
-                        {item.title || 'Sin título'}
-                      </h4>
-                      {item.style && (
-                        <p className="text-sm text-muted-foreground">
-                          Estilo: {item.style}
-                        </p>
-                      )}
-                      <div className="flex gap-1 mt-2">
+                    {/* Quick actions bar */}
+                    <CardContent className="p-2 bg-card/50">
+                      <div className="flex gap-1">
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8"
-                          onClick={() => favoriteMutation.mutate(item.id)}
+                          className="h-7 w-7 flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            favoriteMutation.mutate(item.id);
+                          }}
                         >
-                          <Heart className={`w-4 h-4 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                          <Heart className={`w-3 h-3 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
                         </Button>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8"
-                          onClick={() => handleDownload(item.imageUrl, item.title)}
+                          className="h-7 w-7 flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(item.imageUrl, item.title);
+                          }}
                         >
-                          <Download className="w-4 h-4" />
+                          <Download className="w-3 h-3" />
                         </Button>
                         <Button
                           size="icon"

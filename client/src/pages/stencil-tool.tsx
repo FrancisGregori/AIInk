@@ -476,52 +476,55 @@ Press and hold the stencil image above and select "Copy", then paste it directly
 
           {/* Right Column - Gallery */}
           <div className="xl:col-span-1 lg:col-span-1">
-            {/* Recent Gallery - Compact */}
+            {/* Recent Gallery - Portrait Style, Only 2 Items */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  Galería Reciente
+                  Últimos Trabajos
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[500px] pr-2">
-                  {recentJobs.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2">
-                      {recentJobs.map((job) => {
-                        const isDisabled = isProcessing || (currentJob && currentJob.status === 'processing');
-                        return (
-                        <div
-                          key={job.id}
-                          className={`group ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                          onClick={() => !isDisabled && loadFromGallery(job)}
-                        >
-                          <div className="relative overflow-hidden rounded-lg bg-zinc-900 aspect-video">
-                            <img
-                              src={job.processedImageUrl || job.originalImageUrl}
-                              alt={`Stencil ${job.style}`}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Eye className="h-5 w-5 text-white" />
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-1.5">
-                              <p className="text-xs font-medium truncate">{job.style}</p>
-                              <p className="text-xs text-zinc-400">
-                                {new Date(job.createdAt || "").toLocaleDateString()}
-                              </p>
-                            </div>
+                {recentJobs.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3">
+                    {recentJobs.slice(0, 2).map((job) => {
+                      const isDisabled = isProcessing || (currentJob && currentJob.status === 'processing');
+                      return (
+                      <div
+                        key={job.id}
+                        className={`group ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                        onClick={() => !isDisabled && loadFromGallery(job)}
+                      >
+                        <div className="relative overflow-hidden rounded-lg bg-zinc-900 aspect-[3/4]">
+                          <img
+                            src={job.processedImageUrl || job.originalImageUrl}
+                            alt={`Stencil ${job.style}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Eye className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3">
+                            <p className="text-sm font-semibold capitalize">{job.style}</p>
+                            <p className="text-xs text-zinc-400">
+                              {new Date(job.createdAt || "").toLocaleString('es-ES', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
                           </div>
                         </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-zinc-500 text-xs">No hay trabajos recientes</p>
-                    </div>
-                  )}
-                </ScrollArea>
+                      </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-zinc-500 text-sm">No hay trabajos recientes</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
