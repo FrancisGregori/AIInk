@@ -19,7 +19,8 @@ import {
   Clock,
   Star,
   ArrowLeft,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import {
   Dialog,
@@ -37,13 +38,16 @@ export default function Gallery() {
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
   // Fetch gallery items
-  const { data: galleryItems = [], isLoading } = useQuery({
+  const { data: galleryItems = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/gallery', selectedType],
     queryFn: async () => {
       const params = selectedType !== 'all' ? `?type=${selectedType}` : '';
       const response = await apiRequest('GET', `/api/gallery${params}`);
       return response.json();
-    }
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0
   });
 
   // Delete mutation
@@ -160,10 +164,22 @@ export default function Gallery() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Mi Galería</h1>
-          <p className="text-muted-foreground">
-            Todos tus diseños y stencils en un solo lugar
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Mi Galería</h1>
+              <p className="text-muted-foreground">
+                Todos tus diseños y stencils en un solo lugar
+              </p>
+            </div>
+            {galleryItems.length > 0 && (
+              <div className="text-right">
+                <p className="text-2xl font-bold">{galleryItems.length}</p>
+                <p className="text-sm text-muted-foreground">
+                  {galleryItems.length === 1 ? 'creación' : 'creaciones'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Controls */}
@@ -180,8 +196,16 @@ export default function Gallery() {
               />
             </div>
 
-            {/* View toggle */}
+            {/* View toggle and refresh */}
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => refetch()}
+                title="Actualizar galería"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </Button>
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'outline'}
                 size="icon"
