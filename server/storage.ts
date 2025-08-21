@@ -12,9 +12,19 @@ import {
   type UsageTracking,
   type InsertUsageTracking,
   type GalleryItem,
-  type InsertGalleryItem
+  type InsertGalleryItem,
+  users,
+  userGallery,
+  userProfiles,
+  stencilJobs,
+  stencilStyles,
+  fluxProjects,
+  geminiChats,
+  usageTracking
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 // Interface for stencil processing
 export interface StencilProcessRequest {
@@ -593,4 +603,295 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+class DatabaseStorage implements IStorage {
+  // User profile methods (for backward compatibility)
+  async getUserProfile(id: string): Promise<UserProfile | undefined> {
+    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.id, id));
+    return profile;
+  }
+
+  async getUserProfileByEmail(email: string): Promise<UserProfile | undefined> {
+    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.email, email));
+    return profile;
+  }
+
+  async createUserProfile(profile: InsertUserProfile): Promise<UserProfile> {
+    const [newProfile] = await db.insert(userProfiles).values(profile).returning();
+    return newProfile;
+  }
+
+  async updateUserProfile(id: string, updates: Partial<UserProfile>): Promise<UserProfile | undefined> {
+    const safeUpdates = {
+      email: updates.email,
+      displayName: updates.displayName,
+      avatarUrl: updates.avatarUrl,
+      subscriptionTier: updates.subscriptionTier,
+      monthlyCredits: updates.monthlyCredits,
+      creditsUsed: updates.creditsUsed,
+      totalJobsProcessed: updates.totalJobsProcessed,
+      updatedAt: new Date()
+    };
+    
+    // Remove undefined values
+    Object.keys(safeUpdates).forEach((key) => {
+      if ((safeUpdates as any)[key] === undefined) {
+        delete (safeUpdates as any)[key];
+      }
+    });
+    
+    const [updated] = await db.update(userProfiles)
+      .set(safeUpdates)
+      .where(eq(userProfiles.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Replit Auth required methods
+  async getUser(id: string): Promise<UserProfile | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    if (!user) return undefined;
+    
+    // Map from users table to UserProfile type
+    return {
+      id: user.id,
+      email: user.email || '',
+      displayName: user.firstName && user.lastName 
+        ? `${user.firstName} ${user.lastName}` 
+        : user.firstName || user.email || 'User',
+      avatarUrl: user.profileImageUrl || null,
+      subscriptionTier: user.subscriptionTier,
+      monthlyCredits: user.credits,
+      creditsUsed: 0,
+      totalJobsProcessed: 0,
+      createdAt: user.createdAt || new Date(),
+      updatedAt: user.updatedAt || new Date(),
+    };
+  }
+
+  async upsertUser(userData: Partial<UserProfile>): Promise<UserProfile> {
+    const upsertData = {
+      id: userData.id!,
+      email: userData.email,
+      firstName: userData.displayName?.split(' ')[0],
+      lastName: userData.displayName?.split(' ').slice(1).join(' '),
+      profileImageUrl: userData.avatarUrl,
+      subscriptionTier: userData.subscriptionTier || 'free',
+      credits: userData.monthlyCredits || 100,
+    };
+
+    const [user] = await db.insert(users)
+      .values(upsertData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...upsertData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+
+    return this.getUser(user.id) as Promise<UserProfile>;
+  }
+
+  // Credit system methods
+  async getUserCredits(userId: string): Promise<number> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    return user?.credits || 0;
+  }
+
+  async deductCredits(userId: string, amount: number): Promise<boolean> {
+    const credits = await this.getUserCredits(userId);
+    if (credits < amount) return false;
+
+    await db.update(users)
+      .set({ credits: sql`${users.credits} - ${amount}` })
+      .where(eq(users.id, userId));
+    
+    return true;
+  }
+
+  async updateUserCredits(userId: string, newCredits: number): Promise<UserProfile> {
+    const [updated] = await db.update(users)
+      .set({ credits: newCredits, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return this.getUser(updated.id) as Promise<UserProfile>;
+  }
+
+  // Stencil methods
+  async getStencilStyles(): Promise<StencilStyle[]> {
+    return db.select().from(stencilStyles).orderBy(stencilStyles.displayOrder);
+  }
+
+  async getStencilStyle(id: string): Promise<StencilStyle | undefined> {
+    const [style] = await db.select().from(stencilStyles).where(eq(stencilStyles.id, id));
+    return style;
+  }
+
+  async createStencilJob(job: InsertStencilJob): Promise<StencilJob> {
+    const [newJob] = await db.insert(stencilJobs).values(job).returning();
+    return newJob;
+  }
+
+  async updateStencilJob(id: string, updates: Partial<StencilJob>): Promise<StencilJob | undefined> {
+    const [updated] = await db.update(stencilJobs)
+      .set(updates)
+      .where(eq(stencilJobs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getStencilJob(id: string): Promise<StencilJob | undefined> {
+    const [job] = await db.select().from(stencilJobs).where(eq(stencilJobs.id, id));
+    return job;
+  }
+
+  async getStencilJobs(userId?: string): Promise<StencilJob[]> {
+    if (userId) {
+      return db.select().from(stencilJobs)
+        .where(eq(stencilJobs.userId, userId))
+        .orderBy(desc(stencilJobs.createdAt));
+    }
+    return db.select().from(stencilJobs).orderBy(desc(stencilJobs.createdAt));
+  }
+
+  async getGalleryStencils(userId?: string, limit?: number): Promise<StencilJob[]> {
+    let baseQuery = userId 
+      ? db.select().from(stencilJobs)
+          .where(and(
+            eq(stencilJobs.userId, userId),
+            eq(stencilJobs.status, 'completed')
+          ))
+      : db.select().from(stencilJobs)
+          .where(eq(stencilJobs.status, 'completed'));
+    
+    const orderedQuery = baseQuery.orderBy(desc(stencilJobs.createdAt));
+    
+    if (limit) {
+      return orderedQuery.limit(limit);
+    }
+    
+    return orderedQuery;
+  }
+
+  // Flux Kontext methods
+  async getFluxProjects(userId?: string): Promise<FluxProject[]> {
+    if (userId) {
+      return db.select().from(fluxProjects)
+        .where(eq(fluxProjects.userId, userId))
+        .orderBy(desc(fluxProjects.createdAt));
+    }
+    return db.select().from(fluxProjects).orderBy(desc(fluxProjects.createdAt));
+  }
+
+  async createFluxProject(project: InsertFluxProject): Promise<FluxProject> {
+    const [newProject] = await db.insert(fluxProjects).values(project).returning();
+    return newProject;
+  }
+
+  async updateFluxProject(id: string, updates: Partial<FluxProject>): Promise<FluxProject | undefined> {
+    const [updated] = await db.update(fluxProjects)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(fluxProjects.id, id))
+      .returning();
+    return updated;
+  }
+
+  async regenerateFluxProject(id: string): Promise<FluxProject | undefined> {
+    return this.updateFluxProject(id, { updatedAt: new Date() });
+  }
+
+  async deleteFluxProject(id: string): Promise<boolean> {
+    const result = await db.delete(fluxProjects).where(eq(fluxProjects.id, id));
+    return true; // If no error thrown, assume success
+  }
+
+  // Gemini chat methods
+  async saveGeminiChat(chat: InsertGeminiChat): Promise<GeminiChat> {
+    const [newChat] = await db.insert(geminiChats).values(chat).returning();
+    return newChat;
+  }
+
+  async getGeminiChats(projectId?: string): Promise<GeminiChat[]> {
+    if (projectId) {
+      return db.select().from(geminiChats)
+        .where(eq(geminiChats.projectId, projectId))
+        .orderBy(desc(geminiChats.createdAt));
+    }
+    return db.select().from(geminiChats).orderBy(desc(geminiChats.createdAt));
+  }
+
+  // Usage tracking methods
+  async trackUsage(usage: InsertUsageTracking): Promise<UsageTracking> {
+    const [tracked] = await db.insert(usageTracking).values(usage).returning();
+    return tracked;
+  }
+
+  async getUserUsage(userId: string): Promise<UsageTracking[]> {
+    return db.select().from(usageTracking)
+      .where(eq(usageTracking.userId, userId))
+      .orderBy(desc(usageTracking.createdAt));
+  }
+
+  // Gallery methods
+  async getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]> {
+    let baseQuery = type
+      ? db.select().from(userGallery)
+          .where(and(
+            eq(userGallery.userId, userId),
+            eq(userGallery.type, type)
+          ))
+      : db.select().from(userGallery)
+          .where(eq(userGallery.userId, userId));
+    
+    const orderedQuery = baseQuery.orderBy(desc(userGallery.createdAt));
+    
+    if (limit) {
+      return orderedQuery.limit(limit);
+    }
+    
+    return orderedQuery;
+  }
+
+  async addToGallery(item: InsertGalleryItem): Promise<GalleryItem> {
+    const [newItem] = await db.insert(userGallery).values(item).returning();
+    return newItem;
+  }
+
+  async updateGalleryItem(id: string, updates: Partial<GalleryItem>): Promise<GalleryItem | undefined> {
+    const [updated] = await db.update(userGallery)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(userGallery.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteGalleryItem(id: string, userId: string): Promise<boolean> {
+    await db.delete(userGallery)
+      .where(and(
+        eq(userGallery.id, id),
+        eq(userGallery.userId, userId)
+      ));
+    return true; // If no error thrown, assume success
+  }
+
+  async toggleFavorite(id: string, userId: string): Promise<boolean> {
+    const [item] = await db.select().from(userGallery)
+      .where(and(
+        eq(userGallery.id, id),
+        eq(userGallery.userId, userId)
+      ));
+    
+    if (!item) return false;
+
+    await db.update(userGallery)
+      .set({ isFavorite: !item.isFavorite, updatedAt: new Date() })
+      .where(eq(userGallery.id, id));
+    
+    return true;
+  }
+}
+
+export const storage = new DatabaseStorage();
