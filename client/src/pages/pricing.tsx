@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
+import Navigation from "@/components/Navigation";
 
 export default function Pricing() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
@@ -98,7 +99,9 @@ export default function Pricing() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-20 max-w-7xl">
+    <>
+      <Navigation />
+      <div className="container mx-auto px-4 pt-24 pb-20 max-w-7xl">
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -336,5 +339,6 @@ export default function Pricing() {
         </p>
       </div>
     </div>
+    </>
   );
 }
