@@ -78,7 +78,7 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
       <div className="grid grid-cols-2 gap-4">
         <div>
           <h4 className="text-sm font-medium mb-2 text-gray-400">Original Image</h4>
-          <div className="relative bg-gray-100 rounded-lg overflow-hidden">
+          <div className="relative bg-[#f5f5f5] rounded-lg overflow-hidden">
             <img 
               src={originalImage} 
               alt="Original" 
@@ -88,7 +88,7 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
         </div>
         <div>
           <h4 className="text-sm font-medium mb-2 text-gray-400">Result</h4>
-          <div className="relative bg-gray-100 rounded-lg overflow-hidden">
+          <div className="relative bg-[#f5f5f5] rounded-lg overflow-hidden">
             <img 
               src={processedImage} 
               alt="Processed" 
@@ -103,7 +103,7 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
   return (
     <div 
       ref={containerRef}
-      className="relative bg-gray-100 rounded-lg overflow-hidden cursor-ew-resize select-none touch-none"
+      className="relative bg-[#f5f5f5] rounded-lg overflow-hidden cursor-ew-resize select-none touch-none"
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >

@@ -283,11 +283,11 @@ export default function Gallery() {
                   <Card key={item.id} className="overflow-hidden group hover:shadow-xl transition-all">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <div className="relative aspect-[3/4] cursor-pointer bg-zinc-900">
+                        <div className={`relative aspect-[3/4] cursor-pointer ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
                           <img
                             src={item.imageUrl}
                             alt={item.title || 'Diseño'}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
                           />
                           {/* Overlay on hover */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">

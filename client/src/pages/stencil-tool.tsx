@@ -495,11 +495,11 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                         className={`group ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                         onClick={() => !isDisabled && loadFromGallery(job)}
                       >
-                        <div className="relative overflow-hidden rounded-lg bg-zinc-900 aspect-[3/4]">
+                        <div className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]">
                           <img
                             src={job.processedImageUrl || job.originalImageUrl}
                             alt={`Stencil ${job.style}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                           />
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <Eye className="h-6 w-6 text-white" />
