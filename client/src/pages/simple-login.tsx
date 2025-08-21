@@ -28,13 +28,10 @@ export default function SimpleLogin() {
           <img 
             src={logoPath} 
             alt="TattooStencilPro" 
-            className="h-16 mx-auto mb-8"
+            className="h-16 mx-auto mb-6"
           />
           
-          {/* Welcome Text */}
-          <h1 className="text-3xl font-semibold text-white mb-2">
-            Welcome to TattooStencilPro
-          </h1>
+          {/* Subtitle */}
           <p className="text-gray-400 mb-12">
             Log in or sign up
           </p>
