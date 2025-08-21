@@ -76,14 +76,16 @@ export default function Navigation() {
           
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors"
-              data-testid="button-nav-pricing"
-            >
-              Pricing
-            </Button>
+            <Link href="/pricing">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-gray-300 hover:text-white hover:bg-gray-800/50 transition-colors"
+                data-testid="button-nav-pricing"
+              >
+                Pricing
+              </Button>
+            </Link>
             <Button
               size="sm"
               className="bg-white text-black hover:bg-gray-100 font-medium px-6"
@@ -154,6 +156,11 @@ export default function Navigation() {
                   <Link href="/design-editor">
                     <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-design">
                       Design Editor
+                    </span>
+                  </Link>
+                  <Link href="/pricing">
+                    <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-pricing">
+                      Pricing
                     </span>
                   </Link>
                 </>

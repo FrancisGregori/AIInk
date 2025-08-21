@@ -8,6 +8,7 @@ import JobNotification from "@/components/JobNotification";
 import Home from "@/pages/home";
 import StencilTool from "@/pages/stencil-tool";
 import DesignEditor from "@/pages/design-editor";
+import Pricing from "@/pages/pricing";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/stencil-tool" component={StencilTool} />
       <Route path="/design-editor" component={DesignEditor} />
+      <Route path="/pricing" component={Pricing} />
       <Route component={NotFound} />
     </Switch>
   );
