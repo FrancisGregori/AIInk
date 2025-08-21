@@ -28,19 +28,18 @@ function Router() {
   return (
     <Switch>
       {/* Public routes */}
+      <Route path="/" component={Home} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/login" component={SimpleLogin} />
       
-      {/* Show different home page based on authentication */}
+      {/* Protected routes */}
       {!isAuthenticated ? (
         <>
-          <Route path="/" component={SimpleLogin} />
           <Route path="/stencil-tool" component={SimpleLogin} />
           <Route path="/design-editor" component={SimpleLogin} />
-          <Route path="/login" component={SimpleLogin} />
         </>
       ) : (
         <>
-          <Route path="/" component={Home} />
           <Route path="/stencil-tool" component={StencilTool} />
           <Route path="/design-editor" component={DesignEditor} />
         </>
