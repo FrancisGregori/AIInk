@@ -838,23 +838,28 @@ class DatabaseStorage implements IStorage {
 
   // Gallery methods
   async getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]> {
-    // Optimización: limitar por defecto a 50 items más recientes
-    const defaultLimit = limit || 50;
+    // ULTRA OPTIMIZACIÓN: Solo 15 items por defecto
+    const defaultLimit = limit || 15;
     
-    let baseQuery = type
-      ? db.select().from(userGallery)
-          .where(and(
-            eq(userGallery.userId, userId),
-            eq(userGallery.type, type)
-          ))
-      : db.select().from(userGallery)
-          .where(eq(userGallery.userId, userId));
+    // Query con filtros optimizados
+    if (type) {
+      return db
+        .select()
+        .from(userGallery)
+        .where(and(
+          eq(userGallery.userId, userId),
+          eq(userGallery.type, type)
+        ))
+        .orderBy(desc(userGallery.createdAt))
+        .limit(defaultLimit);
+    }
     
-    const orderedQuery = baseQuery
+    return db
+      .select()
+      .from(userGallery)
+      .where(eq(userGallery.userId, userId))
       .orderBy(desc(userGallery.createdAt))
       .limit(defaultLimit);
-    
-    return orderedQuery;
   }
 
   async addToGallery(item: InsertGalleryItem): Promise<GalleryItem> {

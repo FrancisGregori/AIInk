@@ -815,16 +815,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { type, limit } = req.query;
+      // ULTRA OPTIMIZACIÓN: Máximo 15 items
+      const requestedLimit = limit ? Math.min(parseInt(limit as string), 15) : 15;
+      
+      // Iniciar timer para medir performance
+      const startTime = Date.now();
+      
       const galleryItems = await storage.getUserGallery(
         userId, 
         type as string | undefined,
-        limit ? parseInt(limit as string) : 30 // Por defecto 30 items
+        requestedLimit
       );
       
-      // Headers de cache para respuesta más rápida
+      const queryTime = Date.now() - startTime;
+      console.log(`Gallery query took ${queryTime}ms for ${galleryItems.length} items`);
+      
+      // Cache AGRESIVO para respuesta instantánea
       res.set({
-        'Cache-Control': 'private, max-age=5, must-revalidate',
-        'X-Total-Count': galleryItems.length.toString()
+        'Cache-Control': 'private, max-age=60, immutable',
+        'X-Total-Count': galleryItems.length.toString(),
+        'X-Query-Time': queryTime.toString()
       });
       
       res.json(galleryItems);
