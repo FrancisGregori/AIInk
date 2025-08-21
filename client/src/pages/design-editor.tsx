@@ -901,26 +901,40 @@ function DesignEditor() {
                     {/* Imagen original o resultado */}
                     <div className="relative group">
                       {currentJob.status === 'completed' && currentJob.processedImageUrl ? (
-                        <div 
-                          className="relative cursor-pointer group"
-                          onClick={() => {
-                            // Abrir imagen en nueva pestaña
-                            if (currentJob.processedImageUrl) {
-                              window.open(currentJob.processedImageUrl, '_blank');
-                            }
-                          }}
-                        >
-                          <img
-                            src={currentJob.processedImageUrl}
-                            alt="Processed design"
-                            className="w-full rounded-lg transition-all group-hover:opacity-90"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-all flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-3 py-1 rounded-lg">
-                              <p className="text-xs text-white">Click para ampliar</p>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <div className="relative cursor-pointer group">
+                              <img
+                                src={currentJob.processedImageUrl}
+                                alt="Processed design"
+                                className="w-full rounded-lg transition-all group-hover:opacity-90"
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-all flex items-center justify-center">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-3 py-1 rounded-lg">
+                                  <p className="text-xs text-white">Click para ampliar</p>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+                            <div className="relative">
+                              <img
+                                src={currentJob.processedImageUrl}
+                                alt="Full size design"
+                                className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                              />
+                              <div className="absolute top-2 right-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => downloadImage(currentJob.processedImageUrl!, `design-${currentJob.id}.png`)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  {language === 'es' ? 'Descargar' : 'Download'}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       ) : recoveredImageUrl ? (
                         <div className="relative">
                           <img

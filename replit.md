@@ -106,7 +106,9 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - ✅ Detección inteligente: mensajes con "?" o "¿" se identifican como preguntas
 - ✅ Animación de carga en botón "Aplicar" con spinner y texto "Generando..."
 - ✅ Mensaje de carga eliminado del chat por redundancia - solo animación en botón
-- ✅ Usuario confirma: "funciona bien"
+- ✅ Cuadro "Diseño completado" funciona desde InkVision con callback onImageGenerated
+- ✅ Botones Copiar/Aplicar ocultos en mensajes de confirmación (no son prompts)
+- ✅ Click en imagen de "Diseño completado" ahora abre modal en lugar de nueva pestaña (evita about:blank)
 
 ## System Architecture
 
