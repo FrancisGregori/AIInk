@@ -969,30 +969,39 @@ function DesignEditor() {
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-64">
-                  <div className="space-y-3">
-                    {projects.slice(1, 6).map((project) => (
-                      <div key={project.id} className="flex gap-3 p-2 hover:bg-zinc-900 rounded-lg">
-                        <Dialog>
-                          <DialogTrigger asChild>
+                  <div className="grid grid-cols-2 gap-2">
+                    {projects.slice(1, 9).map((project) => (
+                      <Dialog key={project.id}>
+                        <DialogTrigger asChild>
+                          <div className="relative group cursor-pointer">
                             <img
                               src={project.imageUrl || ""}
                               alt={project.name}
-                              className="w-20 h-20 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              className="w-full aspect-square rounded-lg object-cover hover:opacity-90 transition-opacity"
                               data-testid={`img-history-${project.id}`}
                             />
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                              <p className="text-[10px] text-white/80">{new Date(project.createdAt || "").toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] p-4">
+                          <div className="space-y-4">
                             <div className="relative">
                               <img
                                 src={project.imageUrl || ""}
                                 alt={`${project.name} full size`}
-                                className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                                className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
                               />
-                              <div className="absolute top-2 right-2 flex gap-2">
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">{project.name}</p>
+                              <p className="text-xs text-zinc-400">{new Date(project.createdAt || "").toLocaleDateString()}</p>
+                              <div className="flex gap-2 pt-2">
                                 <Button
                                   size="sm"
                                   variant="secondary"
-                                  className="bg-amber-500/30 backdrop-blur-sm text-white hover:bg-amber-500/50"
+                                  className="flex-1"
                                   onClick={() => handleUseAsReference(project.imageUrl || "")}
                                   data-testid={`button-use-as-reference-history-${project.id}`}
                                 >
@@ -1001,6 +1010,7 @@ function DesignEditor() {
                                 </Button>
                                 <Button
                                   size="sm"
+                                  className="flex-1"
                                   onClick={() => downloadImage(project.imageUrl || "", `design-${project.id}.png`)}
                                   data-testid={`button-download-history-${project.id}`}
                                 >
@@ -1009,15 +1019,9 @@ function DesignEditor() {
                                 </Button>
                               </div>
                             </div>
-                          </DialogContent>
-                        </Dialog>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <p className="text-xs font-medium truncate mb-1">
-                            {project.name.length > 30 ? project.name.substring(0, 30) + '...' : project.name}
-                          </p>
-                          <p className="text-[10px] text-zinc-500">{new Date(project.createdAt || "").toLocaleDateString()}</p>
-                        </div>
-                      </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     ))}
                   </div>
                 </ScrollArea>
