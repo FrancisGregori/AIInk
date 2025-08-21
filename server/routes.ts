@@ -181,9 +181,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's stencil jobs
-  app.get("/api/stencil/jobs", async (req, res) => {
+  app.get("/api/stencil/jobs", isAuthenticated, async (req, res) => {
     try {
-      const userId = "demo-user"; // In production, get from auth session
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
       const jobs = await storage.getStencilJobs(userId);
       res.json(jobs);
     } catch (error) {
@@ -193,9 +196,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get gallery stencils
-  app.get("/api/stencil/gallery", async (req, res) => {
+  app.get("/api/stencil/gallery", isAuthenticated, async (req, res) => {
     try {
-      const userId = "demo-user"; // In production, get from auth session or null for public
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
       const limit = parseInt(req.query.limit as string) || 20;
       const stencils = await storage.getGalleryStencils(userId, limit);
       res.json(stencils);
@@ -206,13 +212,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Process stencil with ComfyDeploy
-  app.post("/api/stencil/process", upload.single('image'), async (req, res) => {
+  app.post("/api/stencil/process", isAuthenticated, upload.single('image'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided" });
       }
 
-      const { style = "steven", userId = "demo-user", processingOptions } = req.body;
+      // Get authenticated user ID
+      const authenticatedUserId = (req as any).user?.claims?.sub;
+      if (!authenticatedUserId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      const { style = "steven", processingOptions } = req.body;
+      const userId = authenticatedUserId;
       
       // Check if user has enough credits (5 credits for stencil)
       const STENCIL_COST = 5;
