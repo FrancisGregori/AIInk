@@ -572,21 +572,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       try {
         // Set loading state
         setIsGeneratingImage(true);
-        
-        // Add a loading message to the chat
-        const loadingMessage: Message = {
-          id: `loading-${Date.now()}`,
-          role: 'assistant',
-          content: language === 'es' 
-            ? '⏳ Generando tu imagen editada...'
-            : '⏳ Generating your edited image...',
-          timestamp: new Date(),
-          isAnalyzing: true
-        };
-        setMessages(prev => [...prev, loadingMessage]);
-        
-        // Scroll to bottom to show loading message
-        setTimeout(() => scrollToBottom(), 100);
 
         // Call Replicate API with the current image and prompt
         const response = await fetch('/api/generate', {
@@ -609,9 +594,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         const result = await response.json();
         
         if (result.success && result.imageUrl) {
-          // Remove loading message
-          setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
-          
           // Success toast
           toast({
             title: language === 'es' ? "¡Imagen generada!" : "Image generated!",
@@ -673,9 +655,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         
       } catch (error: any) {
         console.error('Error generating image:', error);
-        
-        // Remove loading message
-        setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
         
         // Add error message to chat
         const errorMessage: Message = {

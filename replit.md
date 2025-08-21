@@ -104,7 +104,9 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - ✅ Prompts de ediciones sugeridas siempre se envían en inglés a la API (mejor compatibilidad)
 - ✅ InkVision ahora solo muestra botones Copiar/Aplicar para prompts reales, no para preguntas
 - ✅ Detección inteligente: mensajes con "?" o "¿" se identifican como preguntas
-- ✅ Usuario confirma: "ahora si esta bien"
+- ✅ Animación de carga en botón "Aplicar" con spinner y texto "Generando..."
+- ✅ Mensaje de carga eliminado del chat por redundancia - solo animación en botón
+- ✅ Usuario confirma: "funciona bien"
 
 ## System Architecture
 
