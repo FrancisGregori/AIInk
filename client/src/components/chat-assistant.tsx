@@ -572,13 +572,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       if (onAuthRequired) {
         onAuthRequired();
       }
-      toast({
-        title: language === 'es' ? "Autenticación requerida" : "Authentication required",
-        description: language === 'es' 
-          ? "Debes iniciar sesión para generar imágenes"
-          : "You must sign in to generate images",
-        variant: "destructive"
-      });
+      // Solo mostrar el diálogo, sin mensajes adicionales
       return;
     }
     
