@@ -47,6 +47,7 @@ export interface IStorage {
   createFluxProject(project: InsertFluxProject): Promise<FluxProject>;
   updateFluxProject(id: string, updates: Partial<FluxProject>): Promise<FluxProject | undefined>;
   regenerateFluxProject(id: string): Promise<FluxProject | undefined>;
+  deleteFluxProject(id: string): Promise<boolean>;
   
   // Gemini chat methods
   saveGeminiChat(chat: InsertGeminiChat): Promise<GeminiChat>;
@@ -364,6 +365,14 @@ export class MemStorage implements IStorage {
 
     this.fluxProjects.set(id, updatedProject);
     return updatedProject;
+  }
+
+  async deleteFluxProject(id: string): Promise<boolean> {
+    const existed = this.fluxProjects.has(id);
+    if (existed) {
+      this.fluxProjects.delete(id);
+    }
+    return existed;
   }
 
   // Gemini chat methods

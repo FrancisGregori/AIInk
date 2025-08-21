@@ -38,7 +38,8 @@ import {
   ChevronRight,
   ChevronDown,
   Edit,
-  Clock
+  Clock,
+  Trash2
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import type { FluxProject, StencilJob } from "@shared/schema";
@@ -290,6 +291,31 @@ function DesignEditor() {
     },
     onError: () => {
       setIsGenerating(false);
+    },
+  });
+
+  // Delete project mutation
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const response = await fetch(`/api/flux/projects/${projectId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete project');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/flux/projects'] });
+      toast({
+        title: language === 'es' ? 'Imagen eliminada' : 'Image deleted',
+        description: language === 'es' ? 'La imagen se ha eliminado correctamente' : 'The image has been deleted successfully',
+      });
+    },
+    onError: () => {
+      toast({
+        title: language === 'es' ? 'Error' : 'Error',
+        description: language === 'es' ? 'No se pudo eliminar la imagen' : 'Could not delete the image',
+        variant: 'destructive',
+      });
     },
   });
 
@@ -1037,7 +1063,7 @@ function DesignEditor() {
                                   data-testid={`button-use-as-reference-history-${project.id}`}
                                 >
                                   <Edit className="h-4 w-4 mr-1" />
-                                  {language === 'es' ? 'Editar imagen' : 'Edit image'}
+                                  {language === 'es' ? 'Editar' : 'Edit'}
                                 </Button>
                                 <Button
                                   size="sm"
@@ -1047,6 +1073,19 @@ function DesignEditor() {
                                 >
                                   <Download className="h-4 w-4 mr-1" />
                                   {language === 'es' ? 'Descargar' : 'Download'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => {
+                                    if (confirm(language === 'es' ? '¿Estás seguro de que quieres eliminar esta imagen?' : 'Are you sure you want to delete this image?')) {
+                                      deleteProjectMutation.mutate(project.id);
+                                    }
+                                  }}
+                                  data-testid={`button-delete-history-${project.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  {language === 'es' ? 'Eliminar' : 'Delete'}
                                 </Button>
                               </div>
                             </div>

@@ -328,6 +328,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete flux project
+  app.delete("/api/flux/projects/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteFluxProject(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      
+      res.json({ success: true, message: "Project deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting flux project:", error);
+      res.status(500).json({ error: "Error deleting project" });
+    }
+  });
+
   // Gemini Chat Routes
   app.post("/api/gemini/chat", async (req, res) => {
     try {
