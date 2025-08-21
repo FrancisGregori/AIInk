@@ -740,15 +740,16 @@ function DesignEditor() {
                   onImageGenerated={(imageUrl, prompt) => {
                     // Cuando InkVision genera una imagen, crear un job para mostrar el cuadro
                     const tempJobId = `job-${Date.now()}`;
-                    const tempJob = {
+                    const tempJob: StencilJob = {
                       id: tempJobId,
-                      tool: 'design' as const,
+                      type: 'design' as const,
                       status: 'completed' as const,
-                      createdAt: new Date().toISOString(),
-                      completedAt: new Date().toISOString(),
-                      imageUrl: referencePreview || '',
+                      originalImageUrl: referencePreview || '',
+                      processedImageUrl: imageUrl,
                       style: prompt,
-                      processedImageUrl: imageUrl
+                      errorMessage: null,
+                      startedAt: new Date(),
+                      completedAt: new Date()
                     };
                     setCurrentJob(tempJob);
                   }}
