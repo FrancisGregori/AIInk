@@ -12,6 +12,7 @@ import DesignEditor from "@/pages/design-editor";
 import Pricing from "@/pages/pricing";
 import SimpleLogin from "@/pages/simple-login";
 import Profile from "@/pages/profile";
+import Gallery from "@/pages/gallery";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/pricing" component={Pricing} />
       <Route path="/login" component={SimpleLogin} />
       <Route path="/profile" component={Profile} />
+      <Route path="/gallery" component={Gallery} />
       <Route path="/stencil-tool" component={StencilTool} />
       <Route path="/design-editor" component={DesignEditor} />
       

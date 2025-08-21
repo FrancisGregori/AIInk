@@ -42,6 +42,30 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// User Gallery table for private designs
+export const userGallery = pgTable("user_gallery", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  imageUrl: varchar("image_url").notNull(),
+  thumbnailUrl: varchar("thumbnail_url"),
+  type: varchar("type").notNull(), // 'stencil' or 'design'
+  title: varchar("title"),
+  description: text("description"),
+  prompt: text("prompt"),
+  style: varchar("style"), // for stencils: steven, makishi, etc
+  isFavorite: boolean("is_favorite").default(false),
+  metadata: jsonb("metadata"), // extra data like processing options
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("user_gallery_user_id_idx").on(table.userId),
+  index("user_gallery_type_idx").on(table.type),
+  index("user_gallery_created_at_idx").on(table.createdAt),
+]);
+
+export type InsertGalleryItem = typeof userGallery.$inferInsert;
+export type GalleryItem = typeof userGallery.$inferSelect;
+
 // User profiles table (for backward compatibility)
 export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey(),

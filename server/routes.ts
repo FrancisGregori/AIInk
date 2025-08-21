@@ -275,6 +275,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Deduct credits after successful processing
         await storage.deductCredits(userId, STENCIL_COST);
 
+        // Save to gallery
+        if (result.outputUrl) {
+          await storage.addToGallery({
+            userId,
+            imageUrl: result.outputUrl,
+            type: 'stencil',
+            title: `Stencil - ${style}`,
+            style: style,
+            metadata: {
+              jobId: job.id,
+              processingOptions: options
+            }
+          });
+        }
+
         // Return updated job
         const updatedJob = await storage.getStencilJob(job.id);
         res.json(updatedJob);
@@ -703,6 +718,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Deduct credits after successful generation
       await storage.deductCredits(userId, DESIGN_COST);
       
+      // Save to gallery
+      await storage.addToGallery({
+        userId,
+        imageUrl,
+        type: 'design',
+        title: `Design - ${modelName}`,
+        description: prompt,
+        prompt: prompt,
+        metadata: {
+          model: modelName,
+          inputImageUrl: inputImageUrl
+        }
+      });
+      
       res.json({
         imageUrl,
         prompt,
@@ -719,6 +748,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to generate image",
         details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
       });
+    }
+  });
+
+  // Gallery API Routes
+  
+  // Get user gallery
+  app.get("/api/gallery", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const { type, limit } = req.query;
+      const galleryItems = await storage.getUserGallery(
+        userId, 
+        type as string | undefined,
+        limit ? parseInt(limit as string) : undefined
+      );
+      
+      res.json(galleryItems);
+    } catch (error) {
+      console.error("Error fetching gallery:", error);
+      res.status(500).json({ error: "Failed to fetch gallery" });
+    }
+  });
+  
+  // Add item to gallery (this will be called automatically when generating)
+  app.post("/api/gallery", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const { imageUrl, type, title, description, prompt, style, metadata } = req.body;
+      
+      if (!imageUrl || !type) {
+        return res.status(400).json({ error: "ImageUrl and type are required" });
+      }
+      
+      const galleryItem = await storage.addToGallery({
+        userId,
+        imageUrl,
+        type,
+        title,
+        description,
+        prompt,
+        style,
+        metadata
+      });
+      
+      res.json(galleryItem);
+    } catch (error) {
+      console.error("Error adding to gallery:", error);
+      res.status(500).json({ error: "Failed to add to gallery" });
+    }
+  });
+  
+  // Update gallery item
+  app.patch("/api/gallery/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const updatedItem = await storage.updateGalleryItem(id, updates);
+      if (!updatedItem) {
+        return res.status(404).json({ error: "Gallery item not found" });
+      }
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating gallery item:", error);
+      res.status(500).json({ error: "Failed to update gallery item" });
+    }
+  });
+  
+  // Delete gallery item
+  app.delete("/api/gallery/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const { id } = req.params;
+      const deleted = await storage.deleteGalleryItem(id, userId);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Gallery item not found or not authorized" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting gallery item:", error);
+      res.status(500).json({ error: "Failed to delete gallery item" });
+    }
+  });
+  
+  // Toggle favorite
+  app.post("/api/gallery/:id/favorite", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const { id } = req.params;
+      const toggled = await storage.toggleFavorite(id, userId);
+      
+      if (!toggled) {
+        return res.status(404).json({ error: "Gallery item not found or not authorized" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      res.status(500).json({ error: "Failed to toggle favorite" });
     }
   });
 

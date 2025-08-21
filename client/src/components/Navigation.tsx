@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Bot, Menu, X, LogOut, User, CreditCard } from "lucide-react";
+import { Bot, Menu, X, LogOut, User, CreditCard, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -63,6 +63,13 @@ export default function Navigation() {
                     Design Editor
                   </span>
                 </Link>
+                {isAuthenticated && (
+                  <Link href="/gallery">
+                    <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-gallery">
+                      Mi Galería
+                    </span>
+                  </Link>
+                )}
               </>
             ) : (
               <>
@@ -81,6 +88,13 @@ export default function Navigation() {
                     Design Editor
                   </span>
                 </Link>
+                {isAuthenticated && (
+                  <Link href="/gallery">
+                    <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-gallery">
+                      Mi Galería
+                    </span>
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -130,6 +144,12 @@ export default function Navigation() {
                     <Link href="/profile">
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/gallery">
+                      <Image className="mr-2 h-4 w-4" />
+                      <span>Mi Galería</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -224,6 +244,13 @@ export default function Navigation() {
                       Design Editor
                     </span>
                   </Link>
+                  {isAuthenticated && (
+                    <Link href="/gallery">
+                      <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-gallery">
+                        Mi Galería
+                      </span>
+                    </Link>
+                  )}
                   <Link href="/pricing">
                     <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-pricing">
                       Pricing

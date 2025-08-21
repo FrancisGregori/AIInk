@@ -10,7 +10,9 @@ import {
   type InsertFluxProject, 
   type InsertGeminiChat,
   type UsageTracking,
-  type InsertUsageTracking
+  type InsertUsageTracking,
+  type GalleryItem,
+  type InsertGalleryItem
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -64,6 +66,13 @@ export interface IStorage {
   // Usage tracking methods
   trackUsage(usage: InsertUsageTracking): Promise<UsageTracking>;
   getUserUsage(userId: string): Promise<UsageTracking[]>;
+  
+  // Gallery methods
+  getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]>;
+  addToGallery(item: InsertGalleryItem): Promise<GalleryItem>;
+  updateGalleryItem(id: string, updates: Partial<GalleryItem>): Promise<GalleryItem | undefined>;
+  deleteGalleryItem(id: string, userId: string): Promise<boolean>;
+  toggleFavorite(id: string, userId: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -73,6 +82,7 @@ export class MemStorage implements IStorage {
   private fluxProjects: Map<string, FluxProject>;
   private geminiChats: Map<string, GeminiChat>;
   private usageTracking: Map<string, UsageTracking>;
+  private galleryItems: Map<string, GalleryItem>;
 
   constructor() {
     this.userProfiles = new Map();
@@ -81,6 +91,7 @@ export class MemStorage implements IStorage {
     this.fluxProjects = new Map();
     this.geminiChats = new Map();
     this.usageTracking = new Map();
+    this.galleryItems = new Map();
     
     this.initializeStencilStyles();
     this.initializeSampleData();
@@ -484,6 +495,82 @@ export class MemStorage implements IStorage {
         const bTime = b.createdAt ? b.createdAt.getTime() : 0;
         return bTime - aTime;
       });
+  }
+
+  // Gallery methods
+  async getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]> {
+    let items = Array.from(this.galleryItems.values())
+      .filter(item => item.userId === userId);
+    
+    if (type) {
+      items = items.filter(item => item.type === type);
+    }
+    
+    items.sort((a, b) => {
+      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+      return bTime - aTime;
+    });
+    
+    return limit ? items.slice(0, limit) : items;
+  }
+
+  async addToGallery(insertItem: InsertGalleryItem): Promise<GalleryItem> {
+    const id = randomUUID();
+    const item: GalleryItem = {
+      id,
+      userId: insertItem.userId,
+      imageUrl: insertItem.imageUrl,
+      thumbnailUrl: insertItem.thumbnailUrl || null,
+      type: insertItem.type,
+      title: insertItem.title || null,
+      description: insertItem.description || null,
+      prompt: insertItem.prompt || null,
+      style: insertItem.style || null,
+      isFavorite: insertItem.isFavorite || false,
+      metadata: insertItem.metadata || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.galleryItems.set(id, item);
+    return item;
+  }
+
+  async updateGalleryItem(id: string, updates: Partial<GalleryItem>): Promise<GalleryItem | undefined> {
+    const item = this.galleryItems.get(id);
+    if (!item) return undefined;
+
+    const updatedItem = {
+      ...item,
+      ...updates,
+      updatedAt: new Date(),
+    };
+
+    this.galleryItems.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteGalleryItem(id: string, userId: string): Promise<boolean> {
+    const item = this.galleryItems.get(id);
+    if (!item || item.userId !== userId) return false;
+
+    this.galleryItems.delete(id);
+    return true;
+  }
+
+  async toggleFavorite(id: string, userId: string): Promise<boolean> {
+    const item = this.galleryItems.get(id);
+    if (!item || item.userId !== userId) return false;
+
+    const updatedItem = {
+      ...item,
+      isFavorite: !item.isFavorite,
+      updatedAt: new Date(),
+    };
+
+    this.galleryItems.set(id, updatedItem);
+    return true;
   }
 }
 
