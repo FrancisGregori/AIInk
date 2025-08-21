@@ -231,53 +231,73 @@ export default function Pricing() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl mb-2">
-                🎨 Modelo Personalizado con tu Estilo
+                ✨ Custom AI Model Training - Exclusive Service
               </CardTitle>
-              <CardDescription className="text-base">
-                Entrena un modelo AI exclusivo con tu portfolio personal
+              <CardDescription className="text-base max-w-2xl">
+                Transform your unique tattoo artistry into a personalized AI model. TattooStencilPro 
+                can train a private model exclusively with your tattoo style, allowing you to 
+                generate stencils that perfectly match your artistic signature.
               </CardDescription>
             </div>
             <div className="text-right">
+              <Badge className="mb-2 bg-purple-600">By Invitation</Badge>
               <div className="text-3xl font-bold">$299</div>
-              <div className="text-sm text-muted-foreground">Pago único</div>
+              <div className="text-sm text-muted-foreground">One-time investment</div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <p className="text-sm font-medium flex items-center gap-2">
+              <Zap className="h-4 w-4 text-yellow-500" />
+              This exclusive service is available only to artists who qualify. Contact us to learn if you meet our requirements.
+            </p>
+          </div>
+          
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-semibold mb-3">¿Qué incluye?</h4>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                Premium Benefits
+              </h4>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-primary mt-0.5" />
-                  <span>Preparación profesional de tu dataset</span>
+                  <span>Complete consistency across all generated stencils</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-primary mt-0.5" />
-                  <span>1 hora de GPU H200 para entrenamiento</span>
+                  <span>Your custom model can be shared with your team or kept private</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-primary mt-0.5" />
-                  <span>Modelo privado exclusivo para ti</span>
+                  <span>Faster workflow with your signature style</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-primary mt-0.5" />
-                  <span>3 revisiones y ajustes incluidos</span>
+                  <span>Professional branding with your name featured</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-primary mt-0.5" />
+                  <span>Priority processing for all generations</span>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-3">Disponible para:</h4>
-              <div className="space-y-2">
-                <Badge variant="outline" className="mr-2">Plan Pro</Badge>
-                <Badge variant="outline">Plan Premium</Badge>
+              <h4 className="font-semibold mb-3">Qualification Requirements</h4>
+              <div className="space-y-3 mb-4">
+                <Badge variant="outline" className="mr-2">Pro Plan Required</Badge>
+                <Badge variant="outline">Premium Plan Required</Badge>
               </div>
-              <p className="text-sm text-muted-foreground mt-4">
-                Entrega en 3-5 días hábiles. Solo 10 cupos disponibles por mes.
+              <p className="text-sm text-muted-foreground mb-4">
+                Limited to 5 artists per month. Application review takes 24-48 hours.
               </p>
-              <Button className="mt-4" variant="default">
-                Solicitar Modelo Personalizado
+              <Button className="w-full" variant="default" size="lg">
+                Apply for Custom Model
               </Button>
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                You'll receive a response within 48 hours
+              </p>
             </div>
           </div>
         </CardContent>
