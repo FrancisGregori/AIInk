@@ -236,26 +236,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Upload image to object storage and get public URL
+      // Convert file to base64 URL for processing
       let publicImageUrl;
       try {
-        // Generate unique filename
-        const timestamp = Date.now();
-        const filename = `stencil-${timestamp}-${req.file.originalname || 'image.png'}`;
-        
-        // Upload to object storage
-        const objectPath = `/replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b/public/${filename}`;
-        const objectStorageService = new ObjectStorageService();
-        
-        // Save the file to object storage
-        await objectStorageService.uploadPublicFile(req.file.buffer, filename);
-        
-        // Create public URL for the image
-        publicImageUrl = `https://${req.get('host')}/public-objects/${filename}`;
-        console.log("Image uploaded to object storage:", publicImageUrl);
+        // Convert buffer to base64 data URL
+        const base64 = req.file.buffer.toString('base64');
+        const mimeType = req.file.mimetype || 'image/png';
+        publicImageUrl = `data:${mimeType};base64,${base64}`;
+        console.log("Image prepared for processing");
       } catch (uploadError) {
-        console.error("Error uploading to object storage:", uploadError);
-        return res.status(500).json({ error: "Failed to upload image" });
+        console.error("Error preparing image:", uploadError);
+        return res.status(500).json({ error: "Failed to prepare image" });
       }
       
       // Create the stencil job
