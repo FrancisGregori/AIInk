@@ -118,10 +118,10 @@ function DesignEditor() {
     ],
   };
 
-  // Recuperar trabajo en progreso al cargar la página - CARGA INSTANTÁNEA
+  // Recuperar trabajo en progreso al cargar la página - USANDO JobContext
   useEffect(() => {
-    // Primero cargar desde localStorage para respuesta instantánea
-    const storageKey = 'tattoostencilpro_design_jobs';
+    // Usar el sistema JobContext que ya existe
+    const storageKey = 'tattoo-stencil-jobs'; // Clave correcta del JobContext
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       try {
@@ -149,21 +149,72 @@ function DesignEditor() {
         console.error('Error parsing localStorage:', error);
       }
     }
-    
-    // Sistema de persistencia mejorado - solo localStorage es necesario
   }, []);
 
-  // Verificar si el trabajo actual se completó usando React Query
+  // Guardar trabajo actual en localStorage cuando cambia
+  useEffect(() => {
+    if (currentJob) {
+      // Actualizar el trabajo en el JobContext
+      if (currentJob.status === 'processing') {
+        updateJob(currentJob.id, currentJob);
+      }
+    }
+  }, [currentJob, updateJob]);
+
+  // Verificar si el trabajo actual se completó - usando localStorage polling
   useEffect(() => {
     if (!currentJob || currentJob.status !== 'processing') return;
 
-    const checkInterval = setInterval(() => {
-      // Simplemente invalidar la query para que se refresque automáticamente
+    // Función para verificar el estado del trabajo desde localStorage
+    const checkJobStatus = () => {
+      const storageKey = 'tattoo-stencil-jobs';
+      const stored = localStorage.getItem(storageKey);
+      
+      if (stored) {
+        try {
+          const jobs = JSON.parse(stored);
+          const jobInStorage = jobs.find((job: any) => job.id === currentJob.id);
+          
+          if (jobInStorage) {
+            // Si el trabajo cambió de estado en localStorage
+            if (jobInStorage.status !== currentJob.status) {
+              setCurrentJob(jobInStorage);
+              
+              if (jobInStorage.status === 'completed') {
+                setIsGenerating(false);
+                
+                // Actualizar la vista con la imagen generada
+                if (chatAssistantRef.current && jobInStorage.processedImageUrl) {
+                  chatAssistantRef.current.addImageMessage(jobInStorage.processedImageUrl);
+                }
+                
+                toast({
+                  title: language === 'es' ? "¡Diseño completado!" : "Design completed!",
+                  description: language === 'es' ? "Tu diseño se ha generado exitosamente" : "Your design has been generated successfully",
+                });
+              } else if (jobInStorage.status === 'failed') {
+                setIsGenerating(false);
+                toast({
+                  title: "Error",
+                  description: jobInStorage.errorMessage || "Error generating design",
+                  variant: "destructive",
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error checking job status:', error);
+        }
+      }
+      
+      // También invalidar queries para actualizar el historial
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
-    }, 5000); // Refrescar cada 5 segundos
+    };
+
+    const checkInterval = setInterval(checkJobStatus, 2000); // Verificar cada 2 segundos
 
     return () => clearInterval(checkInterval);
-  }, [currentJob, queryClient]);
+  }, [currentJob, queryClient, language, toast]);
 
 
 
@@ -458,19 +509,17 @@ function DesignEditor() {
       const projectResponse = await apiRequest("POST", "/api/flux/create", projectData);
       const project = await projectResponse.json();
       
-      // Update job status
-      updateJob(tempJobId, {
-        status: 'completed',
-        completedAt: new Date().toISOString()
-      });
-      
-      // Update current job with completed status and image
-      setCurrentJob({
+      // Update job status with the processed image URL
+      const completedJob = {
         ...tempJob,
-        status: 'completed',
+        status: 'completed' as const,
         completedAt: new Date().toISOString(),
-        processedImageUrl: data.imageUrl // Add the generated image URL
-      });
+        processedImageUrl: data.imageUrl,
+        originalImageUrl: referencePreview // Mantener la imagen original
+      };
+      
+      updateJob(tempJobId, completedJob);
+      setCurrentJob(completedJob);
       
       // Don't clear the job - keep it visible until next generation
       
