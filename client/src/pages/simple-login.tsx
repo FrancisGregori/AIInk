@@ -43,7 +43,7 @@ export default function SimpleLogin() {
           <Button
             onClick={handleGoogleLogin}
             variant="outline"
-            className="w-full bg-gray-800 border-gray-700 hover:bg-gray-700 text-white py-6 mb-6"
+            className="w-full bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-white py-6 mb-6"
           >
             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -57,7 +57,7 @@ export default function SimpleLogin() {
           {/* Divider */}
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-800"></div>
+              <div className="w-full border-t border-zinc-800"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-black text-gray-500">or</span>
@@ -73,7 +73,7 @@ export default function SimpleLogin() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 py-6 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600 focus:ring-0"
+                className="w-full pl-10 py-6 bg-zinc-800 border-zinc-700 text-white placeholder-gray-500 focus:border-zinc-600 focus:ring-0"
                 required
               />
             </div>
