@@ -673,7 +673,6 @@ function DesignEditor() {
             >
               <Languages className="h-4 w-4" />
             </Button>
-            {isAuthenticated && <CreditsDisplay />}
           </div>
           <p className="text-zinc-400">{txt.subtitle}</p>
           <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>

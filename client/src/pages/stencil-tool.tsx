@@ -296,7 +296,6 @@ Press and hold the stencil image above and select "Copy", then paste it directly
         <div className="mb-6 text-center">
           <div className="flex items-center justify-center gap-4 mb-2">
             <h1 className="text-3xl font-bold">Stencil Tool</h1>
-            {isAuthenticated && <CreditsDisplay />}
           </div>
           <p className="text-zinc-400 text-sm">Transform images into professional tattoo stencils</p>
         </div>
