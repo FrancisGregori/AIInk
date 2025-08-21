@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Plus, Coins, User } from 'lucide-react';
+import { AlertCircle, Plus, Coins, User, ArrowLeft, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { User as UserType } from '@shared/schema';
+import { Link } from 'wouter';
 
 export default function AdminCredits() {
   const { toast } = useToast();
@@ -68,6 +69,25 @@ export default function AdminCredits() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
+      {/* Navigation */}
+      <div className="mb-6 flex items-center justify-between">
+        <Link href="/profile">
+          <Button variant="ghost" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Volver al Perfil
+          </Button>
+        </Link>
+        <Link href="/">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            title="Volver al Inicio"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </Link>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

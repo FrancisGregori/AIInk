@@ -17,7 +17,9 @@ import {
   List,
   Image as ImageIcon,
   Clock,
-  Star
+  Star,
+  ArrowLeft,
+  X
 } from 'lucide-react';
 import {
   Dialog,
@@ -25,6 +27,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { apiRequest } from '@/lib/queryClient';
+import { Link } from 'wouter';
 
 export default function Gallery() {
   const { toast } = useToast();
@@ -137,6 +140,24 @@ export default function Gallery() {
   return (
     <div className="min-h-screen py-20 px-4">
       <div className="max-w-7xl mx-auto">
+        {/* Navigation */}
+        <div className="mb-6 flex items-center justify-between">
+          <Link href="/">
+            <Button variant="ghost" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Volver al Inicio
+            </Button>
+          </Link>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => window.history.back()}
+            className="lg:hidden"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Mi Galería</h1>
