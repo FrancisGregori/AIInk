@@ -383,7 +383,12 @@ function DesignEditor() {
         processedImageUrl: null,
         errorMessage: null,
         style: prompt.slice(0, 30),
-        startedAt: new Date()
+        startedAt: new Date(),
+        completedAt: null,
+        userId: 'temp-user',
+        createdAt: new Date(),
+        comfyDeployRunId: null,
+        processingOptions: {}
       };
       
       setCurrentJob(tempJob);
@@ -764,6 +769,8 @@ function DesignEditor() {
                   }}
                   language={language}
                   embedded={true}
+                  isAuthenticated={isAuthenticated}
+                  onAuthRequired={() => setShowAuthDialog(true)}
                   onImageUpload={(imageUrl, file) => {
                     // Manejar carga de imagen desde el chat
                     setReferenceImage(file);
@@ -782,7 +789,11 @@ function DesignEditor() {
                       style: prompt,
                       errorMessage: null,
                       startedAt: new Date(),
-                      completedAt: new Date()
+                      completedAt: new Date(),
+                      userId: 'temp-user',
+                      createdAt: new Date(),
+                      comfyDeployRunId: null,
+                      processingOptions: {}
                     };
                     setCurrentJob(tempJob);
                   }}

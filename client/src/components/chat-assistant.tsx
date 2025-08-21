@@ -22,6 +22,8 @@ interface ChatAssistantProps {
   embedded?: boolean;
   onImageUpload?: (imageUrl: string, file: File) => void;
   onImageGenerated?: (imageUrl: string, prompt: string) => void;
+  isAuthenticated?: boolean;
+  onAuthRequired?: () => void;
 }
 
 export interface ChatAssistantRef {
@@ -29,7 +31,7 @@ export interface ChatAssistantRef {
   addImageMessage: (imageUrl: string) => void;
 }
 
-const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload, onImageGenerated }, ref) => {
+const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload, onImageGenerated, isAuthenticated = false, onAuthRequired }, ref) => {
   const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastImageAnalyzed, setLastImageAnalyzed] = useState<string>("");
@@ -565,6 +567,21 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   };
 
   const applyPrompt = async (content: string) => {
+    // Check authentication before allowing image generation
+    if (!isAuthenticated) {
+      if (onAuthRequired) {
+        onAuthRequired();
+      }
+      toast({
+        title: language === 'es' ? "Autenticación requerida" : "Authentication required",
+        description: language === 'es' 
+          ? "Debes iniciar sesión para generar imágenes"
+          : "You must sign in to generate images",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Apply the prompt to the parent component first
     onApplyPrompt(content);
     
