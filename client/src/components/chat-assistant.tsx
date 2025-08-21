@@ -702,33 +702,51 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       return false;
     }
     
-    const promptIndicators = [
-      'Add', 'Remove', 'Change', 'maintaining',
-      'background', 'style', 'color', 'effect',
-      'Transform', 'Create', 'Generate', 'Make',
-      'Enhance', 'Modify', 'Replace', 'Include',
-      'with', 'using', 'keeping', 'while',
-      'convert', 'apply', 'set', 'adjust'
+    // Check if it's a greeting or description (not a prompt)
+    const greetings = [
+      'hola', 'hi', 'hello', 'bienvenido', 'welcome',
+      'soy tu experto', 'soy tu asistente', 'ayudo', 'puedo ayudar',
+      'describe', 'descripción', 'esta imagen', 'elementos principales',
+      'composición', 'análisis', 'veo que', 'observo'
     ];
     
-    // Check if message contains prompt-like language
-    const hasPromptWords = promptIndicators.some(indicator => 
-      content.toLowerCase().includes(indicator.toLowerCase())
+    const isGreeting = greetings.some(greeting => 
+      content.toLowerCase().includes(greeting)
     );
     
-    // Check if message is not just a greeting or explanation
-    const isNotGreeting = !content.toLowerCase().includes('hola') && 
-                         !content.toLowerCase().includes('hi') &&
-                         !content.toLowerCase().includes('experto') &&
-                         !content.toLowerCase().includes('ayudo') &&
-                         !content.toLowerCase().includes('expert') &&
-                         !content.toLowerCase().includes('bienvenido') &&
-                         !content.toLowerCase().includes('welcome');
+    if (isGreeting) {
+      return false;
+    }
     
-    // Check if message is substantial (more than just a few words)
-    const isSubstantial = content.trim().length > 20;
+    // If it's a short phrase (likely a modification prompt), show buttons
+    const isShortPhrase = content.trim().length > 5 && content.trim().length < 100;
     
-    return hasPromptWords && isNotGreeting && isSubstantial;
+    // Check for common modification patterns
+    const modificationPatterns = [
+      // English
+      'add', 'remove', 'change', 'with', 'make', 'convert',
+      'transform', 'edit', 'modify', 'apply', 'generate',
+      // Spanish  
+      'en ', 'con ', 'sin ', 'hacer', 'poner', 'quitar',
+      'cambiar', 'convertir', 'transformar', 'aplicar',
+      // Colors and styles
+      'blanco', 'negro', 'color', 'estilo', 'fondo',
+      'black', 'white', 'style', 'background'
+    ];
+    
+    const hasModification = modificationPatterns.some(pattern => 
+      content.toLowerCase().includes(pattern)
+    );
+    
+    // Debug logging
+    console.log('isPromptMessage check:', {
+      content: content.substring(0, 50),
+      isShortPhrase,
+      hasModification,
+      result: isShortPhrase || hasModification
+    });
+    
+    return isShortPhrase || hasModification;
   };
 
 
