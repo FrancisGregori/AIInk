@@ -15,6 +15,8 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - SIEMPRE pedir autorización antes de modificar código
 - USAR EXACTAMENTE el código del repositorio original que funciona - NO inventar nuevas implementaciones
 - TERMINOLOGÍA: Usar "imagen para editar" NO "imagen de referencia" - la app está diseñada para subir y editar imágenes
+- COLORES DE MARCA: Solo usar negro, blanco y grises - NUNCA usar morado, rosa, azul o cualquier otro color
+- DISEÑO: Mantener interfaz minimalista y profesional sin elementos decorativos innecesarios
 
 **REPOSITORIO ORIGINAL:**
 - Design Editor original: https://github.com/darwintattoo/FluxKontextAI (clonado en temp_clone/)

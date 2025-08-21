@@ -32,11 +32,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      {/* Background gradient effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl" />
-      </div>
 
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
@@ -76,7 +71,7 @@ export default function Login() {
                         id="email"
                         type="email"
                         placeholder="artist@example.com"
-                        className="pl-10 bg-gray-800/50 border-gray-700 focus:border-purple-500"
+                        className="pl-10 bg-gray-800/50 border-gray-700 focus:border-white"
                         required
                       />
                     </div>
@@ -86,7 +81,7 @@ export default function Login() {
                     <div className="flex items-center justify-between">
                       <Label htmlFor="password">Password</Label>
                       <Link href="/forgot-password">
-                        <span className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer">
+                        <span className="text-xs text-gray-400 hover:text-white cursor-pointer">
                           Forgot password?
                         </span>
                       </Link>
@@ -97,7 +92,7 @@ export default function Login() {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-10 pr-10 bg-gray-800/50 border-gray-700 focus:border-purple-500"
+                        className="pl-10 pr-10 bg-gray-800/50 border-gray-700 focus:border-white"
                         required
                       />
                       <button
@@ -118,7 +113,7 @@ export default function Login() {
                     <input
                       type="checkbox"
                       id="remember"
-                      className="rounded border-gray-700 bg-gray-800/50 text-purple-600 focus:ring-purple-500"
+                      className="rounded border-gray-700 bg-gray-800/50 text-white focus:ring-white"
                     />
                     <Label htmlFor="remember" className="text-sm font-normal">
                       Remember me for 30 days
@@ -127,7 +122,7 @@ export default function Login() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    className="w-full bg-white text-black hover:bg-gray-200"
                     disabled={isLoading}
                   >
                     {isLoading ? "Signing in..." : "Sign In"}
