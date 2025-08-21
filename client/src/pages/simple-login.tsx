@@ -25,11 +25,13 @@ export default function SimpleLogin() {
       <div className="w-full max-w-sm">
         <div className="text-center">
           {/* Logo */}
-          <img 
-            src={logoPath} 
-            alt="TattooStencilPro" 
-            className="h-16 mx-auto mb-6"
-          />
+          <Link href="/">
+            <img 
+              src={logoPath} 
+              alt="TattooStencilPro" 
+              className="h-12 mx-auto mb-6 cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </Link>
           
           {/* Subtitle */}
           <p className="text-gray-400 mb-12">
