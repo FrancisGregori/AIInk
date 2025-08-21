@@ -37,16 +37,18 @@ export default function Gallery() {
   const [selectedType, setSelectedType] = useState<'all' | 'stencil' | 'design'>('all');
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
-  // Fetch ALL gallery items (not filtered by type)
+  // Fetch ALL gallery items con cache optimizado
   const { data: allGalleryItems = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/gallery'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/gallery');
       return response.json();
     },
-    refetchOnMount: true,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: true,
-    staleTime: 0
+    staleTime: 10000, // Considerar datos frescos por 10 segundos
+    gcTime: 5 * 60 * 1000, // Mantener en cache por 5 minutos
+    refetchInterval: 5000 // Actualizar cada 5 segundos automáticamente
   });
 
   // Filter items based on selected type

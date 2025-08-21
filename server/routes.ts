@@ -818,8 +818,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const galleryItems = await storage.getUserGallery(
         userId, 
         type as string | undefined,
-        limit ? parseInt(limit as string) : undefined
+        limit ? parseInt(limit as string) : 30 // Por defecto 30 items
       );
+      
+      // Headers de cache para respuesta más rápida
+      res.set({
+        'Cache-Control': 'private, max-age=5, must-revalidate',
+        'X-Total-Count': galleryItems.length.toString()
+      });
       
       res.json(galleryItems);
     } catch (error) {

@@ -758,6 +758,9 @@ class DatabaseStorage implements IStorage {
   }
 
   async getGalleryStencils(userId?: string, limit?: number): Promise<StencilJob[]> {
+    // Optimización: limitar por defecto a 30 items más recientes
+    const defaultLimit = limit || 30;
+    
     let baseQuery = userId 
       ? db.select().from(stencilJobs)
           .where(and(
@@ -767,11 +770,9 @@ class DatabaseStorage implements IStorage {
       : db.select().from(stencilJobs)
           .where(eq(stencilJobs.status, 'completed'));
     
-    const orderedQuery = baseQuery.orderBy(desc(stencilJobs.createdAt));
-    
-    if (limit) {
-      return orderedQuery.limit(limit);
-    }
+    const orderedQuery = baseQuery
+      .orderBy(desc(stencilJobs.createdAt))
+      .limit(defaultLimit);
     
     return orderedQuery;
   }
@@ -837,6 +838,9 @@ class DatabaseStorage implements IStorage {
 
   // Gallery methods
   async getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]> {
+    // Optimización: limitar por defecto a 50 items más recientes
+    const defaultLimit = limit || 50;
+    
     let baseQuery = type
       ? db.select().from(userGallery)
           .where(and(
@@ -846,11 +850,9 @@ class DatabaseStorage implements IStorage {
       : db.select().from(userGallery)
           .where(eq(userGallery.userId, userId));
     
-    const orderedQuery = baseQuery.orderBy(desc(userGallery.createdAt));
-    
-    if (limit) {
-      return orderedQuery.limit(limit);
-    }
+    const orderedQuery = baseQuery
+      .orderBy(desc(userGallery.createdAt))
+      .limit(defaultLimit);
     
     return orderedQuery;
   }

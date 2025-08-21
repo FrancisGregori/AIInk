@@ -259,7 +259,7 @@ function DesignEditor() {
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
     };
 
-    const checkInterval = setInterval(checkJobStatus, 2000); // Verificar cada 2 segundos
+    const checkInterval = setInterval(checkJobStatus, 1000); // Verificar cada 1 segundo para actualización más rápida
 
     return () => clearInterval(checkInterval);
   }, [currentJob?.id, currentJob?.status, queryClient, language, toast]); // Dependencias específicas

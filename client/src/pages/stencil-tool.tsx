@@ -108,6 +108,11 @@ function StencilTool() {
   // Fetch user's recent jobs (gallery)
   const { data: recentJobs = [] } = useQuery<StencilJob[]>({
     queryKey: ["/api/stencil/gallery"],
+    refetchInterval: 3000, // Actualizar cada 3 segundos
+    refetchOnWindowFocus: true,
+    refetchOnMount: 'always',
+    staleTime: 5000, // Datos frescos por 5 segundos
+    gcTime: 5 * 60 * 1000, // Cache por 5 minutos
   });
 
   // Process image mutation
@@ -179,10 +184,10 @@ function StencilTool() {
       } catch (error) {
         console.error("Error polling job status:", error);
       }
-    }, 3000); // Poll every 3 seconds (up to 40 seconds wait)
+    }, 1000); // Poll cada 1 segundo para actualización más rápida
     
     return () => clearInterval(interval);
-  }, [currentJob, queryClient]);
+  }, [currentJob, queryClient, updateJob]);
 
   // Handle file selection with auto-scroll
   const handleFileSelectWithScroll = (file: File | null) => {
