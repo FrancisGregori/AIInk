@@ -10,7 +10,7 @@ import Home from "@/pages/home";
 import StencilTool from "@/pages/stencil-tool";
 import DesignEditor from "@/pages/design-editor";
 import Pricing from "@/pages/pricing";
-import AuthLanding from "@/pages/auth-landing";
+import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,9 +33,10 @@ function Router() {
       {/* Show different home page based on authentication */}
       {!isAuthenticated ? (
         <>
-          <Route path="/" component={AuthLanding} />
-          <Route path="/stencil-tool" component={AuthLanding} />
-          <Route path="/design-editor" component={AuthLanding} />
+          <Route path="/" component={Login} />
+          <Route path="/stencil-tool" component={Login} />
+          <Route path="/design-editor" component={Login} />
+          <Route path="/login" component={Login} />
         </>
       ) : (
         <>
