@@ -1,11 +1,49 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, boolean, integer, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User profiles table (linked to Supabase Auth)
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Users table for Replit Auth
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  
+  // Subscription and credits
+  subscriptionTier: varchar("subscription_tier").default("free"), // free, basic, pro, premium
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  monthlyCredits: integer("monthly_credits").default(0),
+  creditsUsed: integer("credits_used").default(0),
+  creditsRollover: integer("credits_rollover").default(0),
+  
+  // Settings
+  autoTopUpEnabled: boolean("auto_top_up_enabled").default(false),
+  preferredModel: varchar("preferred_model"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+
+// User profiles table (for backward compatibility)
 export const userProfiles = pgTable("user_profiles", {
-  id: varchar("id").primaryKey(), // This matches Supabase Auth user ID
+  id: varchar("id").primaryKey(),
   email: text("email").notNull().unique(),
   displayName: text("display_name"),
   avatarUrl: text("avatar_url"),

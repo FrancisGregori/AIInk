@@ -33,6 +33,10 @@ export interface IStorage {
   createUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
   updateUserProfile(id: string, updates: Partial<UserProfile>): Promise<UserProfile | undefined>;
   
+  // Replit Auth required methods
+  getUser(id: string): Promise<UserProfile | undefined>;
+  upsertUser(user: Partial<UserProfile>): Promise<UserProfile>;
+  
   // Stencil methods
   getStencilStyles(): Promise<StencilStyle[]>;
   getStencilStyle(id: string): Promise<StencilStyle | undefined>;
@@ -243,6 +247,26 @@ export class MemStorage implements IStorage {
     const updated = { ...profile, ...updates, updatedAt: new Date() };
     this.userProfiles.set(id, updated);
     return updated;
+  }
+
+  // Replit Auth required methods
+  async getUser(id: string): Promise<UserProfile | undefined> {
+    return this.getUserProfile(id);
+  }
+
+  async upsertUser(user: Partial<UserProfile>): Promise<UserProfile> {
+    const id = user.id || randomUUID();
+    const existing = await this.getUserProfile(id);
+    
+    if (existing) {
+      return await this.updateUserProfile(id, user) || existing;
+    } else {
+      return await this.createUserProfile({
+        ...user,
+        id,
+        email: user.email || "",
+      } as InsertUserProfile);
+    }
   }
 
   // Stencil methods
