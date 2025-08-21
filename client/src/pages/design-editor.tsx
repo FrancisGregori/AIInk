@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -45,6 +47,8 @@ import Navigation from "@/components/Navigation";
 import type { FluxProject, StencilJob } from "@shared/schema";
 
 function DesignEditor() {
+  const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const [prompt, setPrompt] = useState<string>("");
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
@@ -343,6 +347,22 @@ function DesignEditor() {
 
   // Handle design generation
   const handleGenerate = async () => {
+    // Check authentication before generating
+    if (!isAuthenticated) {
+      toast({
+        title: language === 'es' ? "Autenticación Requerida" : "Authentication Required",
+        description: language === 'es' ? 
+          "Por favor inicia sesión para generar diseños. Cada diseño cuesta 3 créditos." : 
+          "Please sign in to generate designs. Each design costs 3 credits.",
+        variant: "destructive",
+      });
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        setLocation('/login');
+      }, 1500);
+      return;
+    }
+
     if (!prompt.trim()) {
       toast({
         title: "Error",
