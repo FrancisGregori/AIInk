@@ -702,19 +702,24 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       return false;
     }
     
-    // Check if it's a greeting or description (not a prompt)
-    const greetings = [
+    // Check if it's a greeting, description, or result message (not a prompt)
+    const notPromptPhrases = [
       'hola', 'hi', 'hello', 'bienvenido', 'welcome',
       'soy tu experto', 'soy tu asistente', 'ayudo', 'puedo ayudar',
       'describe', 'descripción', 'esta imagen', 'elementos principales',
-      'composición', 'análisis', 'veo que', 'observo'
+      'composición', 'análisis', 'veo que', 'observo',
+      // Result messages - these should NOT have buttons
+      '✨', 'aquí está', 'here is', 'tu imagen editada', 'your edited image',
+      'imagen generada', 'generated image', 'resultado', 'result',
+      '🎨', '✅', '❌', 'completado', 'completed', 'listo', 'ready',
+      'diseño generado', 'design generated'
     ];
     
-    const isGreeting = greetings.some(greeting => 
-      content.toLowerCase().includes(greeting)
+    const isNotPrompt = notPromptPhrases.some(phrase => 
+      content.toLowerCase().includes(phrase)
     );
     
-    if (isGreeting) {
+    if (isNotPrompt) {
       return false;
     }
     
@@ -743,7 +748,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       content: content.substring(0, 50),
       isShortPhrase,
       hasModification,
-      result: isShortPhrase || hasModification
+      isNotPrompt,
+      result: !isNotPrompt && (isShortPhrase || hasModification)
     });
     
     return isShortPhrase || hasModification;
