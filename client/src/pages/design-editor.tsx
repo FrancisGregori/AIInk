@@ -737,6 +737,21 @@ function DesignEditor() {
                     setAspectRatio("Match Input");
                     setMatchInput(true);
                   }}
+                  onImageGenerated={(imageUrl, prompt) => {
+                    // Cuando InkVision genera una imagen, crear un job para mostrar el cuadro
+                    const tempJobId = `job-${Date.now()}`;
+                    const tempJob = {
+                      id: tempJobId,
+                      tool: 'design' as const,
+                      status: 'completed' as const,
+                      createdAt: new Date().toISOString(),
+                      completedAt: new Date().toISOString(),
+                      imageUrl: referencePreview || '',
+                      style: prompt,
+                      processedImageUrl: imageUrl
+                    };
+                    setCurrentJob(tempJob);
+                  }}
                 />
               </CardContent>
             </Card>

@@ -21,6 +21,7 @@ interface ChatAssistantProps {
   language?: "es" | "en";
   embedded?: boolean;
   onImageUpload?: (imageUrl: string, file: File) => void;
+  onImageGenerated?: (imageUrl: string, prompt: string) => void;
 }
 
 export interface ChatAssistantRef {
@@ -28,7 +29,7 @@ export interface ChatAssistantRef {
   addImageMessage: (imageUrl: string) => void;
 }
 
-const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload }, ref) => {
+const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload, onImageGenerated }, ref) => {
   const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastImageAnalyzed, setLastImageAnalyzed] = useState<string>("");
@@ -617,6 +618,11 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           
           // Clear loading state
           setIsGeneratingImage(false);
+
+          // Call onImageGenerated callback to update currentJob in design-editor
+          if (onImageGenerated) {
+            onImageGenerated(result.imageUrl, content);
+          }
 
           // También crear un nuevo proyecto para que aparezca en el editor principal
           try {
