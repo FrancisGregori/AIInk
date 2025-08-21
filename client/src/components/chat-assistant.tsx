@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip } from "lucide-react";
+import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -36,6 +36,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -569,13 +570,23 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     // Also trigger image generation if we have an image
     if (storedImage) {
       try {
-        // Show loading toast
-        toast({
-          title: language === 'es' ? "Generando imagen..." : "Generating image...",
-          description: language === 'es' 
-            ? "El prompt se está procesando con Flux Kontext"
-            : "The prompt is being processed with Flux Kontext"
-        });
+        // Set loading state
+        setIsGeneratingImage(true);
+        
+        // Add a loading message to the chat
+        const loadingMessage: Message = {
+          id: `loading-${Date.now()}`,
+          role: 'assistant',
+          content: language === 'es' 
+            ? '⏳ Generando tu imagen editada...'
+            : '⏳ Generating your edited image...',
+          timestamp: new Date(),
+          isAnalyzing: true
+        };
+        setMessages(prev => [...prev, loadingMessage]);
+        
+        // Scroll to bottom to show loading message
+        setTimeout(() => scrollToBottom(), 100);
 
         // Call Replicate API with the current image and prompt
         const response = await fetch('/api/generate', {
@@ -598,6 +609,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         const result = await response.json();
         
         if (result.success && result.imageUrl) {
+          // Remove loading message
+          setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
+          
           // Success toast
           toast({
             title: language === 'es' ? "¡Imagen generada!" : "Image generated!",
@@ -618,6 +632,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           };
           
           setMessages(prev => [...prev, generatedMessage]);
+          
+          // Clear loading state
+          setIsGeneratingImage(false);
 
           // También crear un nuevo proyecto para que aparezca en el editor principal
           try {
@@ -656,6 +673,21 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         
       } catch (error: any) {
         console.error('Error generating image:', error);
+        
+        // Remove loading message
+        setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
+        
+        // Add error message to chat
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: language === 'es' 
+            ? '❌ No se pudo generar la imagen. Por favor intenta de nuevo.'
+            : '❌ Could not generate image. Please try again.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        
         toast({
           title: language === 'es' ? "Error al generar" : "Generation error",
           description: language === 'es' 
@@ -663,6 +695,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             : "Could not generate image. Check configuration.",
           variant: "destructive"
         });
+      } finally {
+        // Always clear the loading state
+        setIsGeneratingImage(false);
       }
     } else {
       // No image, just apply the prompt
@@ -835,6 +870,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                         size="sm"
                         className="h-7 px-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-xs"
                         data-testid={`button-copy-message-${msg.id}`}
+                        disabled={isGeneratingImage}
                       >
                         Copiar
                       </Button>
@@ -842,10 +878,18 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                         onClick={() => applyPrompt(msg.content)}
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 rounded-lg bg-white hover:bg-zinc-200 border border-zinc-300 text-xs text-black"
+                        className="h-7 px-2 rounded-lg bg-white hover:bg-zinc-200 border border-zinc-300 text-xs text-black disabled:opacity-50 disabled:cursor-not-allowed"
                         data-testid={`button-apply-message-${msg.id}`}
+                        disabled={isGeneratingImage}
                       >
-                        Aplicar
+                        {isGeneratingImage ? (
+                          <>
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            {language === 'es' ? 'Generando...' : 'Generating...'}
+                          </>
+                        ) : (
+                          'Aplicar'
+                        )}
                       </Button>
                     </div>
                   )}
