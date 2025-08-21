@@ -432,10 +432,7 @@ function DesignEditor() {
         processedImageUrl: data.imageUrl // Add the generated image URL
       });
       
-      // Clear the job after 3 seconds to reset the preview
-      setTimeout(() => {
-        setCurrentJob(null);
-      }, 3000);
+      // Don't clear the job - keep it visible until next generation
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
@@ -459,10 +456,7 @@ function DesignEditor() {
         updateJob(currentJob.id, failedJob);
         setCurrentJob(failedJob);
         
-        // Clear after showing error for 3 seconds
-        setTimeout(() => {
-          setCurrentJob(null);
-        }, 3000);
+        // Keep error visible until next generation
       }
       
       toast({
