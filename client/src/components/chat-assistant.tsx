@@ -305,18 +305,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     // Don't set isLoading to true here to allow immediate typing
     // Only show loading indicator in the messages area
     
-    // Add user message with the image
-    const imageMessage: Message = {
-      id: `image-${Date.now()}`,
-      role: 'user',
-      content: language === 'es' 
-        ? 'He subido esta imagen para análisis'
-        : 'I uploaded this image for analysis',
-      image: storedImage,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, imageMessage]);
+    // Don't add duplicate image message - it was already added when image was uploaded
+    // Just add the analyzing indicator
     
     // Add a message indicating analysis is starting with special flag
     const analyzingMessage: Message = {
