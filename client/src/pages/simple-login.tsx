@@ -43,7 +43,7 @@ export default function SimpleLogin() {
           <Button
             onClick={handleGoogleLogin}
             variant="outline"
-            className="w-full bg-gray-900 border-gray-800 hover:bg-gray-800 text-white py-6 mb-6"
+            className="w-full bg-gray-800 border-gray-700 hover:bg-gray-700 text-white py-6 mb-6"
           >
             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -73,7 +73,7 @@ export default function SimpleLogin() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 py-6 bg-gray-900 border-gray-800 text-white placeholder-gray-500 focus:border-gray-700 focus:ring-0"
+                className="w-full pl-10 py-6 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-600 focus:ring-0"
                 required
               />
             </div>
