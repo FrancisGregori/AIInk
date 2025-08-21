@@ -149,14 +149,15 @@ export default function Navigation() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button
-                size="sm"
-                className="bg-white text-black hover:bg-gray-100 font-medium px-6"
-                onClick={() => window.location.href = '/api/login'}
-                data-testid="button-nav-signin"
-              >
-                Sign In
-              </Button>
+              <Link href="/login">
+                <Button
+                  size="sm"
+                  className="bg-white text-black hover:bg-gray-100 font-medium px-6"
+                  data-testid="button-nav-signin"
+                >
+                  Sign In
+                </Button>
+              </Link>
             )}
           </div>
           
