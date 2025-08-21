@@ -668,7 +668,7 @@ function DesignEditor() {
                           variant="outline"
                           size="sm"
                           className="w-full justify-start text-left h-auto p-2"
-                          onClick={() => setPrompt(sugg[language])}
+                          onClick={() => setPrompt(sugg.en)}
                         >
                           <div className="text-xs">
                             {sugg[language]}
@@ -688,7 +688,7 @@ function DesignEditor() {
                           variant="outline"
                           size="sm"
                           className="w-full justify-start text-left h-auto p-2"
-                          onClick={() => setPrompt(sugg[language])}
+                          onClick={() => setPrompt(sugg.en)}
                         >
                           <div className="text-xs">
                             {sugg[language]}
@@ -708,7 +708,7 @@ function DesignEditor() {
                           variant="outline"
                           size="sm"
                           className="w-full justify-start text-left h-auto p-2"
-                          onClick={() => setPrompt(sugg[language])}
+                          onClick={() => setPrompt(sugg.en)}
                         >
                           <div className="text-xs">
                             {sugg[language]}
