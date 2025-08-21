@@ -677,11 +677,18 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
 
   // Function to determine if a message contains a prompt that should have action buttons
   const isPromptMessage = (content: string) => {
+    // If the message contains questions, it's not a prompt
+    if (content.includes('?') || content.includes('¿')) {
+      return false;
+    }
+    
     const promptIndicators = [
       'Add', 'Remove', 'Change', 'maintaining',
       'background', 'style', 'color', 'effect',
       'Transform', 'Create', 'Generate', 'Make',
-      'Enhance', 'Modify', 'Replace', 'Include'
+      'Enhance', 'Modify', 'Replace', 'Include',
+      'with', 'using', 'keeping', 'while',
+      'convert', 'apply', 'set', 'adjust'
     ];
     
     // Check if message contains prompt-like language
@@ -694,7 +701,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                          !content.toLowerCase().includes('hi') &&
                          !content.toLowerCase().includes('experto') &&
                          !content.toLowerCase().includes('ayudo') &&
-                         !content.toLowerCase().includes('expert');
+                         !content.toLowerCase().includes('expert') &&
+                         !content.toLowerCase().includes('bienvenido') &&
+                         !content.toLowerCase().includes('welcome');
     
     // Check if message is substantial (more than just a few words)
     const isSubstantial = content.trim().length > 20;
