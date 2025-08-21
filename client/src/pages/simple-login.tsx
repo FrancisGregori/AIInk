@@ -28,7 +28,7 @@ export default function SimpleLogin() {
           <img 
             src={logoPath} 
             alt="TattooStencilPro" 
-            className="h-16 mx-auto mb-8 invert"
+            className="h-16 mx-auto mb-8"
           />
           
           {/* Welcome Text */}
@@ -80,7 +80,7 @@ export default function SimpleLogin() {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 font-medium"
+              className="w-full bg-white hover:bg-gray-200 text-black py-6 font-medium"
               disabled={isLoading}
             >
               Continue with email →
