@@ -118,21 +118,49 @@ function DesignEditor() {
     ],
   };
 
-  // Recuperar trabajo en progreso al cargar la página - USANDO JobContext
+  // Recuperar trabajo en progreso al cargar la página - CON LIMPIEZA
   useEffect(() => {
-    // Usar el sistema JobContext que ya existe
-    const storageKey = 'tattoo-stencil-jobs'; // Clave correcta del JobContext
+    // Limpiar trabajos colgados viejos primero
+    const storageKey = 'tattoo-stencil-jobs';
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       try {
         const jobs = JSON.parse(stored);
-        const activeJob = jobs.find((job: any) => job.status === 'processing' && job.type === 'design');
+        const now = Date.now();
+        
+        // Filtrar trabajos: eliminar los que están procesando por más de 5 minutos
+        const cleanedJobs = jobs.map((job: any) => {
+          if (job.type === 'design' && job.status === 'processing') {
+            const startTime = new Date(job.startedAt || job.createdAt).getTime();
+            const timeDiff = (now - startTime) / 1000 / 60; // minutos
+            
+            if (timeDiff > 5) {
+              // Marcar como fallido si lleva más de 5 minutos
+              return {
+                ...job,
+                status: 'failed',
+                errorMessage: 'Timeout - proceso interrumpido',
+                completedAt: new Date().toISOString()
+              };
+            }
+          }
+          return job;
+        });
+        
+        // Guardar los trabajos limpiados
+        localStorage.setItem(storageKey, JSON.stringify(cleanedJobs));
+        
+        // Buscar trabajo activo válido
+        const activeJob = cleanedJobs.find((job: any) => 
+          job.status === 'processing' && job.type === 'design'
+        );
+        
         if (activeJob) {
-          console.log('Design job recovery: Found active job in localStorage', activeJob.id);
+          console.log('Design job recovery: Found active job', activeJob.id);
           setCurrentJob(activeJob);
           setIsGenerating(true);
           
-          // Restaurar imagen si existe
+          // Restaurar datos
           if (activeJob.originalImageUrl) {
             setRecoveredImageUrl(activeJob.originalImageUrl);
             setReferencePreview(activeJob.originalImageUrl);
@@ -140,7 +168,6 @@ function DesignEditor() {
             setReferenceImage(fakeFile);
           }
           
-          // Restaurar prompt si existe
           if (activeJob.style) {
             setPrompt(activeJob.style);
           }
@@ -149,17 +176,38 @@ function DesignEditor() {
         console.error('Error parsing localStorage:', error);
       }
     }
-  }, []);
+  }, []); // Solo ejecutar al montar
 
-  // Guardar trabajo actual en localStorage cuando cambia
+  // NO usar updateJob para evitar loops - solo guardar directamente
   useEffect(() => {
-    if (currentJob) {
-      // Actualizar el trabajo en el JobContext
-      if (currentJob.status === 'processing') {
-        updateJob(currentJob.id, currentJob);
+    if (!currentJob || currentJob.status !== 'processing') return;
+    
+    const saveJobDirectly = () => {
+      const storageKey = 'tattoo-stencil-jobs';
+      const stored = localStorage.getItem(storageKey);
+      
+      try {
+        const jobs = stored ? JSON.parse(stored) : [];
+        const existingIndex = jobs.findIndex((j: any) => j.id === currentJob.id);
+        
+        if (existingIndex >= 0) {
+          // Actualizar trabajo existente
+          jobs[existingIndex] = currentJob;
+        } else {
+          // Agregar nuevo trabajo
+          jobs.push(currentJob);
+        }
+        
+        localStorage.setItem(storageKey, JSON.stringify(jobs));
+      } catch (error) {
+        console.error('Error saving job:', error);
       }
-    }
-  }, [currentJob, updateJob]);
+    };
+    
+    // Guardar solo una vez cuando cambia el ID o estado
+    const timeoutId = setTimeout(saveJobDirectly, 100);
+    return () => clearTimeout(timeoutId);
+  }, [currentJob?.id, currentJob?.status]); // Dependencias mínimas
 
   // Verificar si el trabajo actual se completó - usando localStorage polling
   useEffect(() => {
@@ -214,7 +262,7 @@ function DesignEditor() {
     const checkInterval = setInterval(checkJobStatus, 2000); // Verificar cada 2 segundos
 
     return () => clearInterval(checkInterval);
-  }, [currentJob, queryClient, language, toast]);
+  }, [currentJob?.id, currentJob?.status, queryClient, language, toast]); // Dependencias específicas
 
 
 
@@ -1040,7 +1088,39 @@ function DesignEditor() {
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
                             <div className="text-center">
                               <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                              <p className="text-xs text-zinc-300">Generando...</p>
+                              <p className="text-xs text-zinc-300 mb-2">Generando...</p>
+                              {/* Botón para cancelar trabajo colgado */}
+                              <button
+                                onClick={() => {
+                                  // Limpiar trabajo de localStorage
+                                  const storageKey = 'tattoo-stencil-jobs';
+                                  const stored = localStorage.getItem(storageKey);
+                                  if (stored) {
+                                    try {
+                                      const jobs = JSON.parse(stored);
+                                      const cleanedJobs = jobs.filter((j: any) => j.id !== currentJob?.id);
+                                      localStorage.setItem(storageKey, JSON.stringify(cleanedJobs));
+                                    } catch (error) {
+                                      console.error('Error canceling:', error);
+                                    }
+                                  }
+                                  
+                                  // Resetear estado
+                                  setCurrentJob(null);
+                                  setIsGenerating(false);
+                                  setReferencePreview('');
+                                  setReferenceImage(null);
+                                  setRecoveredImageUrl('');
+                                  
+                                  toast({
+                                    title: language === 'es' ? "Proceso cancelado" : "Process canceled",
+                                    description: language === 'es' ? "El diseño fue cancelado correctamente" : "The design was canceled successfully",
+                                  });
+                                }}
+                                className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+                              >
+                                {language === 'es' ? 'Cancelar' : 'Cancel'}
+                              </button>
                             </div>
                           </div>
                         </div>
