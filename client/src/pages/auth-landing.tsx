@@ -70,9 +70,9 @@ export default function AuthLanding() {
               </Link>
               <Button 
                 onClick={() => window.location.href = '/api/login'}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-white text-black hover:bg-gray-200 font-medium"
               >
-                Sign In with Replit
+                Sign In
               </Button>
             </div>
           </div>
@@ -138,7 +138,7 @@ export default function AuthLanding() {
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
               </div>
               <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl" />
-              <div className="absolute -top-6 -left-6 w-32 h-32 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-3xl" />
+              <div className="absolute -top-6 -left-6 w-32 h-32 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl" />
             </motion.div>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function AuthLanding() {
                   <CardHeader>
                     <div className="flex items-center gap-1 mb-2">
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <Star key={i} className="w-4 h-4 fill-purple-500 text-purple-500" />
                       ))}
                     </div>
                     <CardDescription className="text-white">
