@@ -969,15 +969,15 @@ function DesignEditor() {
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-64">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {projects.slice(1, 6).map((project) => (
-                      <div key={project.id} className="flex gap-2 p-2 hover:bg-zinc-900 rounded">
+                      <div key={project.id} className="flex gap-3 p-2 hover:bg-zinc-900 rounded-lg">
                         <Dialog>
                           <DialogTrigger asChild>
                             <img
                               src={project.imageUrl || ""}
                               alt={project.name}
-                              className="w-12 h-12 rounded object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              className="w-20 h-20 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
                               data-testid={`img-history-${project.id}`}
                             />
                           </DialogTrigger>
@@ -1011,9 +1011,11 @@ function DesignEditor() {
                             </div>
                           </DialogContent>
                         </Dialog>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs truncate">{project.name}</p>
-                          <p className="text-xs text-zinc-600">{new Date(project.createdAt || "").toLocaleDateString()}</p>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <p className="text-xs font-medium truncate mb-1">
+                            {project.name.length > 30 ? project.name.substring(0, 30) + '...' : project.name}
+                          </p>
+                          <p className="text-[10px] text-zinc-500">{new Date(project.createdAt || "").toLocaleDateString()}</p>
                         </div>
                       </div>
                     ))}
