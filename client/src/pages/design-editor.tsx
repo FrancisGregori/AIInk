@@ -900,16 +900,26 @@ function DesignEditor() {
                     {/* Imagen original o resultado */}
                     <div className="relative group">
                       {currentJob.status === 'completed' && currentJob.processedImageUrl ? (
-                        <img
-                          src={currentJob.processedImageUrl}
-                          alt="Processed design"
-                          className="w-full rounded-lg"
+                        <div 
+                          className="relative cursor-pointer group"
                           onClick={() => {
-                            // Abrir imagen en nueva pestaña en lugar de modal
-                            window.open(currentJob.processedImageUrl, '_blank');
+                            // Abrir imagen en nueva pestaña
+                            if (currentJob.processedImageUrl) {
+                              window.open(currentJob.processedImageUrl, '_blank');
+                            }
                           }}
-                          style={{ cursor: 'pointer' }}
-                        />
+                        >
+                          <img
+                            src={currentJob.processedImageUrl}
+                            alt="Processed design"
+                            className="w-full rounded-lg transition-all group-hover:opacity-90"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-all flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-3 py-1 rounded-lg">
+                              <p className="text-xs text-white">Click para ampliar</p>
+                            </div>
+                          </div>
+                        </div>
                       ) : recoveredImageUrl ? (
                         <div className="relative">
                           <img
