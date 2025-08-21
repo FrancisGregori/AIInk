@@ -211,6 +211,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serve temporary images for ComfyDeploy
+  app.get("/api/temp-image/:id", (req, res) => {
+    const { id } = req.params;
+    
+    if (!global.tempImages || !global.tempImages.has(id)) {
+      return res.status(404).json({ error: "Image not found or expired" });
+    }
+    
+    const imageData = global.tempImages.get(id);
+    res.set('Content-Type', imageData.mimeType);
+    res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.send(imageData.buffer);
+  });
+
   // Process stencil with ComfyDeploy
   app.post("/api/stencil/process", isAuthenticated, upload.single('image'), async (req, res) => {
     try {
@@ -249,14 +263,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Convert file to base64 URL for processing
+      // Upload image to a temporary public URL for ComfyDeploy
       let publicImageUrl;
       try {
-        // Convert buffer to base64 data URL
+        // For now, we'll use a temporary storage solution
+        // ComfyDeploy needs a real public URL, not base64
         const base64 = req.file.buffer.toString('base64');
         const mimeType = req.file.mimetype || 'image/png';
-        publicImageUrl = `data:${mimeType};base64,${base64}`;
-        console.log("Image prepared for processing");
+        
+        // Create a temporary endpoint to serve this image
+        const tempImageId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Store temporarily in memory (this will be served by our temp endpoint)
+        if (!global.tempImages) {
+          global.tempImages = new Map();
+        }
+        global.tempImages.set(tempImageId, {
+          buffer: req.file.buffer,
+          mimeType: mimeType,
+          createdAt: Date.now()
+        });
+        
+        // Clean up old temp images (older than 1 hour)
+        const oneHourAgo = Date.now() - 3600000;
+        for (const [id, data] of global.tempImages.entries()) {
+          if (data.createdAt < oneHourAgo) {
+            global.tempImages.delete(id);
+          }
+        }
+        
+        // Create public URL for ComfyDeploy to fetch
+        // Use Replit's public domain for production
+        const replitDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
+        const publicHost = replitDomain || req.get('host') || 'localhost:5000';
+        const protocol = replitDomain ? 'https' : (req.protocol || 'https');
+        publicImageUrl = `${protocol}://${publicHost}/api/temp-image/${tempImageId}`;
+        
+        console.log("Image uploaded to temporary URL:", publicImageUrl);
       } catch (uploadError) {
         console.error("Error preparing image:", uploadError);
         return res.status(500).json({ error: "Failed to prepare image" });
