@@ -90,6 +90,13 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - ✅ Títulos ahora completamente visibles sin cortes
 - ✅ Usuario confirma: "quedó muy bien"
 
+### API Integration Fix (2025-08-21 Madrugada)
+- ✅ Corregido error en botón "Generar diseño" - ahora usa `inputImageUrl` como InkVision
+- ✅ Agregado `aspectRatio: 'match_input_image'` para mantener proporciones
+- ✅ Verificado contra código original de GitHub para asegurar compatibilidad
+- ✅ Generación de imágenes funciona correctamente desde ambos puntos
+- ✅ Usuario confirma: "ahora si funciona"
+
 ## System Architecture
 
 ### Frontend Architecture
