@@ -6,7 +6,7 @@
 /* Override dialog input and button focus states to remove blue colors */
 .auth-dialog input:focus,
 .auth-dialog input:focus-visible {
-  border-color: rgb(156 163 175) !important; /* gray-400 */
+  border-color: #5a5a5a !important;
   outline: none !important;
   box-shadow: none !important;
 }
@@ -15,6 +15,24 @@
 .auth-dialog button:focus-visible {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* Force pure gray colors for auth dialog */
+.auth-dialog input::placeholder,
+.auth-email-input::placeholder {
+  color: #808080 !important;
+}
+
+.auth-dialog * {
+  --ring-color: transparent !important;
+  --border-color: #4a4a4a !important;
+}
+
+/* Override any Radix/Tailwind blue-gray tints */
+.auth-dialog,
+.auth-dialog * {
+  --tw-bg-opacity: 1 !important;
+  --tw-text-opacity: 1 !important;
 }
 
 @layer utilities {
