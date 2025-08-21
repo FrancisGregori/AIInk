@@ -343,11 +343,9 @@ function DesignEditor() {
       const tempJob: StencilJob = {
         id: tempJobId,
         status: 'processing',
-        imageUrl: referencePreview,
+        originalImageUrl: referencePreview,
         processedImageUrl: null,
         errorMessage: null,
-        type: 'design' as const,
-        originalImageUrl: referencePreview,
         style: prompt.slice(0, 30),
         startedAt: new Date()
       };
@@ -359,10 +357,10 @@ function DesignEditor() {
         status: 'processing',
         type: 'design',
         originalImageUrl: referencePreview,
-        processedImageUrl: null,
+        processedImageUrl: undefined,
         style: prompt.slice(0, 30),
         startedAt: new Date().toISOString(),
-        errorMessage: null
+        errorMessage: undefined
       });
       
       // Call the same API that InkVision uses
@@ -742,7 +740,6 @@ function DesignEditor() {
                     const tempJobId = `job-${Date.now()}`;
                     const tempJob: StencilJob = {
                       id: tempJobId,
-                      type: 'design' as const,
                       status: 'completed' as const,
                       originalImageUrl: referencePreview || '',
                       processedImageUrl: imageUrl,
