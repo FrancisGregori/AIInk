@@ -6,7 +6,7 @@ TattoostencilPro is a professional AI-powered design platform that provides two 
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+Preferred communication style: Simple, everyday language in Spanish (español).
 Project landing page: https://tattoostencilpro.app (for project promotion)
 
 **CRITICAL RULES:**
