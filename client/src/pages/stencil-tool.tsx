@@ -4,9 +4,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { useJobs } from "@/contexts/JobContext";
 import { useJobRecovery } from "@/hooks/useJobRecovery";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { AuthDialog } from "@/components/auth-dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -46,8 +46,8 @@ interface ProcessingOptions {
 
 function StencilTool() {
   const { isAuthenticated } = useAuth();
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string>("steven");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -204,15 +204,7 @@ function StencilTool() {
 
     // Check authentication before processing
     if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to generate stencils. Each stencil costs 5 credits.",
-        variant: "destructive",
-      });
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        setLocation('/login');
-      }, 1500);
+      setShowAuthDialog(true);
       return;
     }
 
@@ -529,6 +521,13 @@ Press and hold the stencil image above and select "Copy", then paste it directly
           </div>
         </div>
       </main>
+      
+      <AuthDialog 
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        language="es"
+        toolType="stencil"
+      />
     </div>
   );
 }
