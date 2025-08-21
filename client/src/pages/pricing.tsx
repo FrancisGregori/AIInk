@@ -13,8 +13,8 @@ export default function Pricing() {
     {
       name: "Basic",
       icon: <Sparkles className="h-6 w-6" />,
-      price: billingPeriod === "monthly" ? 9.99 : 99,
-      originalPrice: billingPeriod === "annual" ? 119.88 : null,
+      price: billingPeriod === "monthly" ? 11.99 : 119,
+      originalPrice: billingPeriod === "annual" ? 143.88 : null,
       credits: 200,
       period: billingPeriod === "monthly" ? "mes" : "año",
       popular: false,

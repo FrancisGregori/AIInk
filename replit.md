@@ -85,7 +85,7 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 
 ### Pricing Page Implementation (2025-08-21 Tarde)
 - ✅ Página de precios profesional creada con planes definidos
-- ✅ Basic ($9.99) - 200 créditos/mes, 40 stencils, 66 diseños
+- ✅ Basic ($11.99) - 200 créditos/mes, 40 stencils, 66 diseños
 - ✅ Pro ($19.99) - 500 créditos/mes, 100 stencils, 166 diseños
 - ✅ Premium ($39.99) - 1,000 créditos/mes, 200 stencils, 333 diseños
 - ✅ Modelo personalizado como add-on ($299 pago único)
