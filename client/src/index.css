@@ -3,6 +3,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Override dialog input and button focus states to remove blue colors */
+.auth-dialog input:focus,
+.auth-dialog input:focus-visible {
+  border-color: rgb(156 163 175) !important; /* gray-400 */
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.auth-dialog button:focus,
+.auth-dialog button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 @layer utilities {
   @keyframes fadeIn {
     from {

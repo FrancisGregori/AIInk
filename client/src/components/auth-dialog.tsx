@@ -1,7 +1,10 @@
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail } from "lucide-react";
@@ -52,7 +55,11 @@ export function AuthDialog({ open, onOpenChange, language = "en", toolType }: Au
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-black border-gray-800 p-8">
+      <DialogContent className="auth-dialog sm:max-w-md bg-black border-gray-600 p-8">
+        <VisuallyHidden>
+          <DialogTitle>{t.title}</DialogTitle>
+          <DialogDescription>Authentication dialog</DialogDescription>
+        </VisuallyHidden>
         <div className="flex flex-col items-center space-y-6">
           {/* Logo */}
           <img 
@@ -91,7 +98,7 @@ export function AuthDialog({ open, onOpenChange, language = "en", toolType }: Au
             <Input
               type="email"
               placeholder={t.emailPlaceholder}
-              className="w-full bg-gray-800 border-gray-700 text-white pl-10 py-6 text-base placeholder:text-gray-500"
+              className="w-full bg-gray-800 border-gray-600 text-white pl-10 py-6 text-base placeholder:text-gray-500 focus:border-gray-400 focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
           
