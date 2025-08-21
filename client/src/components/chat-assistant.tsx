@@ -129,6 +129,16 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Check authentication before allowing image upload
+    if (!isAuthenticated) {
+      if (onAuthRequired) {
+        onAuthRequired();
+      }
+      // Reset the input value so same file can be selected again after login
+      e.target.value = '';
+      return;
+    }
+    
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
@@ -181,6 +191,14 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    
+    // Check authentication before allowing image upload
+    if (!isAuthenticated) {
+      if (onAuthRequired) {
+        onAuthRequired();
+      }
+      return;
+    }
     
     const files = Array.from(e.dataTransfer.files);
     const imageFile = files.find(file => file.type.startsWith("image/"));
