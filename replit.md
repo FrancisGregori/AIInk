@@ -97,6 +97,15 @@ Project landing page: https://tattoostencilpro.app (for project promotion)
 - ✅ Generación de imágenes funciona correctamente desde ambos puntos
 - ✅ Usuario confirma: "ahora si funciona"
 
+### UI/UX Improvements (2025-08-21)
+- ✅ Cambió "Descripción del diseño" a "Manual Prompt" para mayor claridad
+- ✅ Actualizó "Estilos populares" a "Ediciones sugeridas" con categorías organizadas
+- ✅ Implementó categorías de edición del repositorio original: Pose changes, Lighting, Styles, Camera angles
+- ✅ Prompts de ediciones sugeridas siempre se envían en inglés a la API (mejor compatibilidad)
+- ✅ InkVision ahora solo muestra botones Copiar/Aplicar para prompts reales, no para preguntas
+- ✅ Detección inteligente: mensajes con "?" o "¿" se identifican como preguntas
+- ✅ Usuario confirma: "ahora si esta bien"
+
 ## System Architecture
 
 ### Frontend Architecture
