@@ -27,12 +27,19 @@ export class ComfyDeployService {
     processingOptions?: any
   ): Promise<{ runId: string; status: string; outputUrl?: string }> {
     if (!this.apiKey) {
-      // Mock processing for development
-      console.log("Mock processing image:", { imageUrl, style, processingOptions });
+      // Mock processing for development - return immediately
+      console.log("Mock processing image (no ComfyDeploy API key):", { imageUrl, style, processingOptions });
+      
+      // Simulate a processed stencil by adding a query parameter
+      // This will make it appear different from the original
+      const mockOutputUrl = imageUrl.includes('?') 
+        ? `${imageUrl}&stencil=${style}&t=${Date.now()}`
+        : `${imageUrl}?stencil=${style}&t=${Date.now()}`;
+      
       return {
         runId: `mock-${Date.now()}`,
         status: "completed",
-        outputUrl: imageUrl, // Return original image in mock mode
+        outputUrl: mockOutputUrl,
       };
     }
 
