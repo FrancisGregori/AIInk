@@ -298,6 +298,14 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   }, [storedImage, lastImageAnalyzed, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   
   const analyzeImage = async () => {
+    // Check authentication before allowing image analysis
+    if (!isAuthenticated) {
+      if (onAuthRequired) {
+        onAuthRequired();
+      }
+      return;
+    }
+    
     if (!storedImage) {
       console.log('No image to analyze');
       return;
@@ -433,6 +441,14 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   };
 
   const sendMessage = async () => {
+    // Check authentication before allowing chat
+    if (!isAuthenticated) {
+      if (onAuthRequired) {
+        onAuthRequired();
+      }
+      return;
+    }
+    
     if (!inputMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
