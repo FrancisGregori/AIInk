@@ -153,6 +153,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
               processedImageUrl: status.outputUrl,
               completedAt: new Date(),
             });
+            
+            // Save to gallery when completed
+            try {
+              await storage.addToGallery({
+                userId: job.userId,
+                imageUrl: status.outputUrl,
+                thumbnailUrl: job.originalImageUrl,
+                type: 'stencil',
+                title: `Stencil - ${job.style}`,
+                style: job.style,
+                metadata: {
+                  jobId: job.id,
+                  processingOptions: job.processingOptions
+                }
+              });
+              console.log("Stencil saved to gallery");
+            } catch (galleryError) {
+              console.error("Error saving to gallery:", galleryError);
+              // Don't fail the request if gallery save fails
+            }
           } else if (status.status === "failed") {
             console.log("Job failed:", status.error);
             await storage.updateStencilJob(job.id, {
@@ -304,17 +324,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Save to gallery
         if (result.outputUrl) {
-          await storage.addToGallery({
-            userId,
-            imageUrl: result.outputUrl,
-            type: 'stencil',
-            title: `Stencil - ${style}`,
-            style: style,
-            metadata: {
-              jobId: job.id,
-              processingOptions: options
-            }
-          });
+          try {
+            await storage.addToGallery({
+              userId,
+              imageUrl: result.outputUrl,
+              thumbnailUrl: publicImageUrl,
+              type: 'stencil',
+              title: `Stencil - ${style}`,
+              style: style,
+              metadata: {
+                jobId: job.id,
+                processingOptions: options
+              }
+            });
+            console.log("Stencil saved to gallery immediately");
+          } catch (galleryError) {
+            console.error("Error saving to gallery:", galleryError);
+          }
         }
 
         // Return updated job
