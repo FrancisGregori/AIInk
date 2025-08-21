@@ -37,6 +37,10 @@ export interface IStorage {
   getUser(id: string): Promise<UserProfile | undefined>;
   upsertUser(user: Partial<UserProfile>): Promise<UserProfile>;
   
+  // Credit system methods
+  getUserCredits(userId: string): Promise<number>;
+  deductCredits(userId: string, amount: number): Promise<boolean>;
+  
   // Stencil methods
   getStencilStyles(): Promise<StencilStyle[]>;
   getStencilStyle(id: string): Promise<StencilStyle | undefined>;
@@ -267,6 +271,30 @@ export class MemStorage implements IStorage {
         email: user.email || "",
       } as InsertUserProfile);
     }
+  }
+
+  async getUserCredits(userId: string): Promise<number> {
+    const user = await this.getUserProfile(userId);
+    if (!user) return 0;
+    
+    // For now, just use monthly credits minus used (simplified for MemStorage)
+    const available = (user.monthlyCredits || 10) - (user.creditsUsed || 0);
+    return Math.max(0, available);
+  }
+
+  async deductCredits(userId: string, amount: number): Promise<boolean> {
+    const user = await this.getUserProfile(userId);
+    if (!user) return false;
+    
+    const availableCredits = await this.getUserCredits(userId);
+    if (availableCredits < amount) return false;
+    
+    // Update credits used
+    await this.updateUserProfile(userId, {
+      creditsUsed: (user.creditsUsed || 0) + amount
+    });
+    
+    return true;
   }
 
   // Stencil methods

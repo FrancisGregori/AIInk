@@ -61,6 +61,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
+
+  // Get user credits
+  app.get('/api/credits', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const credits = await storage.getUserCredits(userId);
+      const profile = await storage.getUserProfile(userId);
+      
+      res.json({
+        available: credits,
+        monthlyAllowance: profile?.monthlyCredits || 10,
+        used: profile?.creditsUsed || 0,
+        subscriptionTier: profile?.subscriptionTier || 'free'
+      });
+    } catch (error) {
+      console.error("Error fetching credits:", error);
+      res.status(500).json({ message: "Failed to fetch credits" });
+    }
+  });
   
   // Stencil Tool Routes
   
@@ -195,6 +214,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { style = "steven", userId = "demo-user", processingOptions } = req.body;
       
+      // Check if user has enough credits (5 credits for stencil)
+      const STENCIL_COST = 5;
+      const availableCredits = await storage.getUserCredits(userId);
+      
+      if (availableCredits < STENCIL_COST) {
+        return res.status(402).json({ 
+          error: "Insufficient credits",
+          required: STENCIL_COST,
+          available: availableCredits
+        });
+      }
+      
       // Parse processing options if it's a string
       let options = processingOptions;
       if (typeof processingOptions === 'string') {
@@ -249,6 +280,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: result.status,
           processedImageUrl: result.outputUrl,
         });
+
+        // Deduct credits after successful processing
+        await storage.deductCredits(userId, STENCIL_COST);
 
         // Return updated job
         const updatedJob = await storage.getStencilJob(job.id);
@@ -483,9 +517,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Replicate FLUX Kontext endpoint - Exact implementation from your original
-  app.post("/api/generate", async (req, res) => {
+  app.post("/api/generate", isAuthenticated, async (req: any, res) => {
     try {
       const { prompt, inputImageUrl, width, height, aspectRatio, model } = generateImageSchema.parse(req.body);
+      
+      // Get authenticated user ID
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      // Check if user has enough credits (3 credits for design)
+      const DESIGN_COST = 3;
+      const availableCredits = await storage.getUserCredits(userId);
+      
+      if (availableCredits < DESIGN_COST) {
+        return res.status(402).json({ 
+          error: "Insufficient credits",
+          required: DESIGN_COST,
+          available: availableCredits
+        });
+      }
       
       const replicateToken = process.env.REPLICATE_API_TOKEN;
       
@@ -657,6 +709,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Devolver la URL de la imagen generada - Igual que tu repositorio
+      // Deduct credits after successful generation
+      await storage.deductCredits(userId, DESIGN_COST);
+      
       res.json({
         imageUrl,
         prompt,

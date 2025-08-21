@@ -26,9 +26,10 @@ export const users = pgTable("users", {
   subscriptionTier: varchar("subscription_tier").default("free"), // free, basic, pro, premium
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
-  monthlyCredits: integer("monthly_credits").default(0),
-  creditsUsed: integer("credits_used").default(0),
-  creditsRollover: integer("credits_rollover").default(0),
+  credits: integer("credits").default(10), // Current available credits
+  monthlyCredits: integer("monthly_credits").default(0), // Monthly credit allowance
+  creditsUsed: integer("credits_used").default(0), // Credits used this billing period
+  creditsRollover: integer("credits_rollover").default(0), // Credits rolled over from previous month
   
   // Settings
   autoTopUpEnabled: boolean("auto_top_up_enabled").default(false),

@@ -44,6 +44,7 @@ import {
   Trash2
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
 import type { FluxProject, StencilJob } from "@shared/schema";
 
 function DesignEditor() {
@@ -672,6 +673,7 @@ function DesignEditor() {
             >
               <Languages className="h-4 w-4" />
             </Button>
+            {isAuthenticated && <CreditsDisplay />}
           </div>
           <p className="text-zinc-400">{txt.subtitle}</p>
           <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
@@ -815,7 +817,8 @@ function DesignEditor() {
                 />
               </CardContent>
               
-              <CardFooter>
+              <CardFooter className="space-y-3">
+                {prompt.trim() && <CreditsRequirement cost={3} action="design" />}
                 <Button
                   onClick={handleGenerate}
                   disabled={!prompt.trim() || isGenerating}

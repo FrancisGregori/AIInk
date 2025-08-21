@@ -37,6 +37,7 @@ import Navigation from "@/components/Navigation";
 import PreviewArea from "@/components/preview-area";
 import StyleSelector from "@/components/style-selector";
 import ImageUploader from "@/components/image-uploader";
+import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
 import type { StencilJob, StencilStyle } from "@shared/schema";
 
 interface ProcessingOptions {
@@ -293,7 +294,10 @@ Press and hold the stencil image above and select "Copy", then paste it directly
       <main className="container mx-auto px-4 py-20 max-w-7xl">
         {/* Header */}
         <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold mb-1">Stencil Tool</h1>
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <h1 className="text-3xl font-bold">Stencil Tool</h1>
+            {isAuthenticated && <CreditsDisplay />}
+          </div>
           <p className="text-zinc-400 text-sm">Transform images into professional tattoo stencils</p>
         </div>
 
@@ -371,8 +375,10 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               </CardContent>
               
               <CardFooter className="pt-3">
-                <div className="flex gap-2 w-full">
-                  <Button
+                <div className="w-full space-y-3">
+                  {selectedFile && <CreditsRequirement cost={5} action="stencil" />}
+                  <div className="flex gap-2">
+                    <Button
                     onClick={handleProcess}
                     disabled={!selectedFile || isProcessing}
                     className="flex-1 bg-white hover:bg-gray-100 text-black font-semibold"
@@ -399,6 +405,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                   >
                     Clear
                   </Button>
+                  </div>
                 </div>
               </CardFooter>
             </Card>
