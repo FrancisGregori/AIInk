@@ -671,18 +671,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         input.height = height;
       }
 
-      console.log("Final input object for Replicate:", JSON.stringify(input, null, 2));
-      console.log("Model being used:", modelName);
-      
-      // Validación final: asegurar que la imagen es válida si existe
-      const imageField = model === "qwen" ? "image" : "input_image";
-      if (input[imageField] && typeof input[imageField] === 'string') {
-        if (!input[imageField].startsWith('data:') && !input[imageField].startsWith('http')) {
-          console.error(`CRITICAL: ${imageField} is not a valid URI or base64:`, input[imageField]);
-          return res.status(400).json({ error: "Reference image format is invalid for Replicate API" });
-        }
-      }
-
       // Seleccionar el modelo basado en el parámetro
       console.log("Model parameter received:", model);
       let modelName: string;
@@ -695,6 +683,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`Using model: ${modelName}`);
+      console.log("Final input object for Replicate:", JSON.stringify(input, null, 2));
+      
+      // Validación final: asegurar que la imagen es válida si existe
+      const imageField = model === "qwen" ? "image" : "input_image";
+      if (input[imageField] && typeof input[imageField] === 'string') {
+        if (!input[imageField].startsWith('data:') && !input[imageField].startsWith('http')) {
+          console.error(`CRITICAL: ${imageField} is not a valid URI or base64:`, input[imageField]);
+          return res.status(400).json({ error: "Reference image format is invalid for Replicate API" });
+        }
+      }
 
       // Usar el SDK de Replicate con reintentos para manejar interrupciones
       let output;
