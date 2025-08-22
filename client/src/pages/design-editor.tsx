@@ -209,9 +209,9 @@ function DesignEditor() {
     }
   }, [user]); // Ejecutar cuando cambie el usuario
 
-  // NO usar updateJob para evitar loops - solo guardar directamente
+  // Guardar TODOS los trabajos (processing, completed, failed) en localStorage
   useEffect(() => {
-    if (!currentJob || currentJob.status !== 'processing') return;
+    if (!currentJob) return;
     
     const saveJobDirectly = () => {
       const storageKey = 'tattoo-stencil-jobs';
@@ -230,15 +230,16 @@ function DesignEditor() {
         }
         
         localStorage.setItem(storageKey, JSON.stringify(jobs));
+        console.log(`Trabajo ${currentJob.status} guardado en localStorage:`, currentJob.id);
       } catch (error) {
         console.error('Error saving job:', error);
       }
     };
     
-    // Guardar solo una vez cuando cambia el ID o estado
+    // Guardar inmediatamente cuando cambia el ID o estado
     const timeoutId = setTimeout(saveJobDirectly, 100);
     return () => clearTimeout(timeoutId);
-  }, [currentJob?.id, currentJob?.status]); // Dependencias mínimas
+  }, [currentJob?.id, currentJob?.status]); // Se ejecuta para TODOS los estados
 
   // Verificar si el trabajo actual se completó - usando localStorage polling
   useEffect(() => {
