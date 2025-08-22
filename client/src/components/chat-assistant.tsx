@@ -1025,6 +1025,17 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             )}
             
             <div className="flex gap-2">
+              {/* Botón de clip movido a la izquierda */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                className="self-end"
+                data-testid="button-upload-image"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+              
               <div className="flex flex-col gap-2 flex-1">
                 <Textarea
                   ref={textareaRef}
@@ -1039,25 +1050,16 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   data-testid="textarea-chat-input"
                 />
               </div>
-              <div className="flex flex-col gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="self-start"
-                  data-testid="button-upload-image"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-                <Button
-                  onClick={sendMessage}
-                  disabled={!inputMessage.trim() || isLoading}
-                  className="self-end"
-                  data-testid="button-send-message"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+              
+              {/* Botón de enviar a la derecha */}
+              <Button
+                onClick={sendMessage}
+                disabled={!inputMessage.trim() || isLoading}
+                className="self-end"
+                data-testid="button-send-message"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
             
             <input
