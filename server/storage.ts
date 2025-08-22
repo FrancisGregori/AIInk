@@ -1015,23 +1015,8 @@ class DatabaseStorage implements IStorage {
     const [newItem] = await db.insert(userGallery).values(item).returning();
     
     // INVALIDAR TODO EL CACHÉ del usuario cuando se agrega un nuevo item
-    // Limpiar todas las variaciones de claves de caché
-    const cachePatterns = [
-      `gallery:${item.userId}:all:`,
-      `gallery:${item.userId}:stencil:`,
-      `gallery:${item.userId}:design:`,
-      `gallery-count:${item.userId}:`,
-      `stencils:${item.userId}:`
-    ];
-    
-    // Limpiar todas las claves que coincidan con los patrones
-    for (const [key] of galleryCache.keys()) {
-      if (cachePatterns.some(pattern => key.startsWith(pattern))) {
-        galleryCache.delete(key);
-        console.log(`[CACHE] Cleared cache key: ${key}`);
-      }
-    }
-    
+    // Usar el método invalidate existente que limpia por patrón
+    galleryCache.invalidate(item.userId);
     console.log(`[CACHE] Invalidated all gallery caches for user ${item.userId}`);
     
     return newItem;
@@ -1068,23 +1053,8 @@ class DatabaseStorage implements IStorage {
       ));
     
     // INVALIDAR TODO EL CACHÉ del usuario cuando se elimina un item
-    // Limpiar todas las variaciones de claves de caché
-    const cachePatterns = [
-      `gallery:${userId}:all:`,
-      `gallery:${userId}:stencil:`,
-      `gallery:${userId}:design:`,
-      `gallery-count:${userId}:`,
-      `stencils:${userId}:`
-    ];
-    
-    // Limpiar todas las claves que coincidan con los patrones
-    for (const [key] of galleryCache.keys()) {
-      if (cachePatterns.some(pattern => key.startsWith(pattern))) {
-        galleryCache.delete(key);
-        console.log(`[CACHE] Cleared cache key: ${key}`);
-      }
-    }
-    
+    // Usar el método invalidate existente que limpia por patrón
+    galleryCache.invalidate(userId);
     console.log(`[CACHE] Invalidated all gallery caches for user ${userId} after deletion`);
     
     return true; // If no error thrown, assume success
