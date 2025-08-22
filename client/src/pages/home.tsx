@@ -167,22 +167,18 @@ export default function Home() {
           
           {/* Hero Video Section */}
           <div className="relative max-w-5xl mx-auto mt-12 animate-fade-in-delay-2">
-            <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-800">
-              {/* Video Background */}
-              <video 
-                className="w-full h-[600px] object-cover"
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black">
+              <video
                 autoPlay
-                muted
                 loop
+                muted
                 playsInline
+                className="w-full h-auto object-cover rounded-2xl"
                 poster={stencilExample1}
               >
                 <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_9606-7wXjUza5iHfO4woAkktUJemkhAYzvt.MP4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
-              
-              {/* Overlay gradient for better text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
             </div>
           </div>
           
@@ -203,7 +199,7 @@ export default function Home() {
           </div>
           
           {/* Tools Grid */}
-          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             
             {/* Stencil Generator Card */}
             <div className="animate-card-in animate-card-in-1">
