@@ -675,19 +675,25 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
 
           // También crear un nuevo proyecto para que aparezca en el editor principal
           try {
+            // Crear abreviatura del modelo
+            const modelAbbr = modelVariant === 'qwen' ? 'Q' : 
+                            modelVariant === 'pro' ? 'P' : 
+                            modelVariant === 'max' ? 'M' : 
+                            modelVariant.charAt(0).toUpperCase();
+            
             const projectResponse = await fetch('/api/flux/create', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                name: content.slice(0, 50) + " - InkVision",
+                name: content.slice(0, 45) + ` (${modelAbbr})`,
                 description: content,
                 prompt: content,
                 imageUrl: result.imageUrl,
                 settings: {
                   aspectRatio: 'match_input_image',
-                  modelVariant: 'pro',
+                  modelVariant: modelVariant,
                   referenceImage: storedImage
                 },
                 userId: "demo-user",
