@@ -834,12 +834,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Deduct credits after successful generation
       await storage.deductCredits(userId, DESIGN_COST);
       
+      // Crear abreviatura del modelo
+      const modelAbbr = model === 'qwen' ? 'Q' : 
+                       model === 'pro' ? 'P' : 
+                       model === 'max' ? 'M' : 
+                       model.charAt(0).toUpperCase();
+      
       // Save to gallery
       await storage.addToGallery({
         userId,
         imageUrl,
         type: 'design',
-        title: `Design - ${modelName}`,
+        title: `${prompt.slice(0, 45)} (${modelAbbr})`,
         description: prompt,
         prompt: prompt,
         metadata: {

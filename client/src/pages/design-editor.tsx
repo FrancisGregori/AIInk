@@ -576,7 +576,8 @@ function DesignEditor() {
         status: 'completed' as const,
         completedAt: new Date().toISOString(),
         processedImageUrl: data.imageUrl,
-        originalImageUrl: referencePreview // Mantener la imagen original
+        originalImageUrl: referencePreview, // Mantener la imagen original
+        startedAt: tempJob.startedAt || new Date().toISOString() // Ensure startedAt is string
       };
       
       updateJob(tempJobId, completedJob);
