@@ -26,6 +26,64 @@ import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
 
+// SISTEMA DE CACHÉ EN MEMORIA PARA GALERÍA INSTANTÁNEA
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number; // Time to live en ms
+}
+
+class MemoryCache {
+  private cache = new Map<string, CacheEntry<any>>();
+  private readonly DEFAULT_TTL = 60000; // 60 segundos por defecto
+  
+  set<T>(key: string, data: T, ttl?: number): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl: ttl || this.DEFAULT_TTL
+    });
+  }
+  
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    
+    // Verificar si expiró
+    if (Date.now() - entry.timestamp > entry.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return entry.data as T;
+  }
+  
+  invalidate(pattern?: string): void {
+    if (!pattern) {
+      this.cache.clear();
+      return;
+    }
+    
+    // Invalidar todas las keys que coincidan con el patrón
+    for (const key of this.cache.keys()) {
+      if (key.includes(pattern)) {
+        this.cache.delete(key);
+      }
+    }
+  }
+  
+  // Estadísticas del caché
+  getStats() {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys())
+    };
+  }
+}
+
+// Instancia global del caché
+const galleryCache = new MemoryCache();
+
 // Interface for stencil processing
 export interface StencilProcessRequest {
   userId: string;
@@ -740,6 +798,13 @@ class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(stencilJobs.id, id))
       .returning();
+    
+    // Si el job se completó, invalidar caché de stencils
+    if (updated && updates.status === 'completed') {
+      galleryCache.invalidate(`stencils:${updated.userId}`);
+      console.log(`[CACHE] Invalidated stencil cache for user ${updated.userId}`);
+    }
+    
     return updated;
   }
 
@@ -761,6 +826,18 @@ class DatabaseStorage implements IStorage {
     // Optimización: limitar por defecto a 30 items más recientes
     const defaultLimit = limit || 30;
     
+    // Crear clave de caché única para stencils
+    const cacheKey = `stencils:${userId || 'all'}:${defaultLimit}`;
+    
+    // Intentar obtener del caché primero
+    const cachedData = galleryCache.get<StencilJob[]>(cacheKey);
+    if (cachedData) {
+      console.log(`[CACHE HIT] Stencil gallery served from cache for ${cacheKey}`);
+      return cachedData;
+    }
+    
+    console.log(`[CACHE MISS] Fetching stencil gallery from DB for ${cacheKey}`);
+    
     let baseQuery = userId 
       ? db.select().from(stencilJobs)
           .where(and(
@@ -770,11 +847,14 @@ class DatabaseStorage implements IStorage {
       : db.select().from(stencilJobs)
           .where(eq(stencilJobs.status, 'completed'));
     
-    const orderedQuery = baseQuery
+    const result = await baseQuery
       .orderBy(desc(stencilJobs.createdAt))
       .limit(defaultLimit);
     
-    return orderedQuery;
+    // Guardar en caché con TTL de 5 minutos
+    galleryCache.set(cacheKey, result, 300000);
+    
+    return result;
   }
 
   // Flux Kontext methods
@@ -841,9 +921,22 @@ class DatabaseStorage implements IStorage {
     // ULTRA OPTIMIZACIÓN: Solo 15 items por defecto
     const defaultLimit = limit || 15;
     
+    // Crear clave de caché única
+    const cacheKey = `gallery:${userId}:${type || 'all'}:${defaultLimit}`;
+    
+    // Intentar obtener del caché primero
+    const cachedData = galleryCache.get<GalleryItem[]>(cacheKey);
+    if (cachedData) {
+      console.log(`[CACHE HIT] Gallery data served from cache for ${cacheKey}`);
+      return cachedData;
+    }
+    
+    console.log(`[CACHE MISS] Fetching gallery data from DB for ${cacheKey}`);
+    
     // Query con filtros optimizados
+    let result: GalleryItem[];
     if (type) {
-      return db
+      result = await db
         .select()
         .from(userGallery)
         .where(and(
@@ -852,18 +945,28 @@ class DatabaseStorage implements IStorage {
         ))
         .orderBy(desc(userGallery.createdAt))
         .limit(defaultLimit);
+    } else {
+      result = await db
+        .select()
+        .from(userGallery)
+        .where(eq(userGallery.userId, userId))
+        .orderBy(desc(userGallery.createdAt))
+        .limit(defaultLimit);
     }
     
-    return db
-      .select()
-      .from(userGallery)
-      .where(eq(userGallery.userId, userId))
-      .orderBy(desc(userGallery.createdAt))
-      .limit(defaultLimit);
+    // Guardar en caché con TTL de 5 minutos
+    galleryCache.set(cacheKey, result, 300000);
+    
+    return result;
   }
 
   async addToGallery(item: InsertGalleryItem): Promise<GalleryItem> {
     const [newItem] = await db.insert(userGallery).values(item).returning();
+    
+    // INVALIDAR CACHÉ cuando se agrega un nuevo item
+    galleryCache.invalidate(`gallery:${item.userId}`);
+    console.log(`[CACHE] Invalidated gallery cache for user ${item.userId}`);
+    
     return newItem;
   }
 
@@ -881,6 +984,11 @@ class DatabaseStorage implements IStorage {
         eq(userGallery.id, id),
         eq(userGallery.userId, userId)
       ));
+    
+    // INVALIDAR CACHÉ cuando se elimina un item
+    galleryCache.invalidate(`gallery:${userId}`);
+    console.log(`[CACHE] Invalidated gallery cache for user ${userId} after deletion`);
+    
     return true; // If no error thrown, assume success
   }
 
