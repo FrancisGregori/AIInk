@@ -106,17 +106,26 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       });
       
       const base64Image = await fetchImageAsBase64(imageUrl);
-      console.log('Base64 conversion complete, calling onApplyPrompt with image as reference');
+      console.log('Base64 conversion complete, setting as reference');
       console.log('Base64 length:', base64Image.length);
       
-      // Call onApplyPrompt with the image as reference and default editing prompt
-      if (onApplyPrompt) {
-        onApplyPrompt("Front view looking directly at camera, keep the same composition and elements");
-      }
+      // Set the image as the current stored image
+      setStoredImage(base64Image);
+      
+      // Add image message to chat showing it's loaded
+      const imageMessage: Message = {
+        id: `image-${Date.now()}`,
+        role: 'user',
+        content: language === 'es' ? 'Imagen cargada' : 'Image loaded',
+        timestamp: new Date(),
+        image: base64Image
+      };
+      
+      setMessages(prev => [...prev, imageMessage]);
       
       toast({
-        title: language === 'es' ? "Imagen cargada para editar" : "Image loaded for editing",
-        description: language === 'es' ? "Ya puedes editar esta imagen con nuevas instrucciones" : "You can now edit this image with a new prompt",
+        title: language === 'es' ? "Imagen lista" : "Image ready",
+        description: language === 'es' ? "Ya puedes editar esta imagen con nuevas instrucciones" : "You can now edit this image with new instructions",
       });
     } catch (error) {
       console.error('Error in use as reference:', error);
