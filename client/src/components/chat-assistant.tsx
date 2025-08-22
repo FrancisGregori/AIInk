@@ -717,22 +717,37 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       } catch (error: any) {
         console.error('Error generating image:', error);
         
-        // Add error message to chat
+        // Check if it's an insufficient credits error
+        const isCreditsError = error.message?.includes('402') || 
+                              error.message?.includes('Insufficient credits') ||
+                              error.message?.includes('credits');
+        
+        // Add appropriate error message to chat
         const errorMessage: Message = {
           id: `error-${Date.now()}`,
           role: 'assistant',
-          content: language === 'es' 
-            ? '❌ No se pudo generar la imagen. Por favor intenta de nuevo.'
-            : '❌ Could not generate image. Please try again.',
+          content: isCreditsError 
+            ? (language === 'es' 
+              ? '⚠️ **Créditos insuficientes**\n\nNo tienes suficientes créditos para generar esta imagen.\n\n• Necesitas 3 créditos para Qwen\n• Necesitas 10 créditos para Flux Pro\n• Necesitas 15 créditos para Flux Max\n\nContacta al administrador para obtener más créditos.'
+              : '⚠️ **Insufficient Credits**\n\nYou don\'t have enough credits to generate this image.\n\n• 3 credits needed for Qwen\n• 10 credits needed for Flux Pro\n• 15 credits needed for Flux Max\n\nContact admin to get more credits.')
+            : (language === 'es' 
+              ? '❌ No se pudo generar la imagen. Por favor intenta de nuevo.'
+              : '❌ Could not generate image. Please try again.'),
           timestamp: new Date()
         };
         setMessages(prev => [...prev, errorMessage]);
         
         toast({
-          title: language === 'es' ? "Error al generar" : "Generation error",
-          description: language === 'es' 
-            ? "No se pudo generar la imagen. Verifica la configuración."
-            : "Could not generate image. Check configuration.",
+          title: isCreditsError 
+            ? (language === 'es' ? "⚠️ Créditos insuficientes" : "⚠️ Insufficient credits")
+            : (language === 'es' ? "Error al generar" : "Generation error"),
+          description: isCreditsError
+            ? (language === 'es' 
+              ? "No tienes suficientes créditos. Contacta al administrador."
+              : "You don't have enough credits. Contact admin.")
+            : (language === 'es' 
+              ? "No se pudo generar la imagen. Verifica la configuración."
+              : "Could not generate image. Check configuration."),
           variant: "destructive"
         });
       } finally {
