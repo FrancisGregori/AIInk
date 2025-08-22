@@ -995,6 +995,35 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               </div>
             )}
             
+            {/* Imagen miniatura - movida arriba */}
+            {storedImage && (
+              <div className="mb-2 flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={storedImage} 
+                    alt="Loaded image"
+                    className="h-8 w-8 object-cover rounded border border-zinc-700"
+                  />
+                  <span>{language === 'es' ? 'Imagen cargada para editar' : 'Image loaded for editing'}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStoredImage("");
+                    if (onImageUpload) {
+                      // Clear the parent state as well
+                      const emptyFile = new File([""], "empty.png", { type: "image/png" });
+                      onImageUpload("", emptyFile);
+                    }
+                  }}
+                  className="h-6 w-6 p-0 hover:bg-zinc-800"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+            
             <div className="flex gap-2">
               <div className="flex flex-col gap-2 flex-1">
                 <Textarea
@@ -1038,34 +1067,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               onChange={handleFileSelect}
               className="hidden"
             />
-            
-            {storedImage && (
-              <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={storedImage} 
-                    alt="Loaded image"
-                    className="h-8 w-8 object-cover rounded border border-zinc-700"
-                  />
-                  <span>{language === 'es' ? 'Imagen cargada para editar' : 'Image loaded for editing'}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setStoredImage("");
-                    if (onImageUpload) {
-                      // Clear the parent state as well
-                      const emptyFile = new File([""], "empty.png", { type: "image/png" });
-                      onImageUpload("", emptyFile);
-                    }
-                  }}
-                  className="h-6 w-6 p-0 hover:bg-zinc-800"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       )}
