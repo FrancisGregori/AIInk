@@ -237,16 +237,6 @@ export default function Home() {
               />
             </div>
 
-            {/* Expression Modifier Card */}
-            <div className="animate-card-in animate-card-in-4">
-              <ToolCard
-                title="Expression Modifier"
-                description="Adjust facial expressions and positions"
-                icon={Wand2}
-                imageUrl={stencilExample2}
-                isActive={false}
-              />
-            </div>
             
           </div>
         </div>
