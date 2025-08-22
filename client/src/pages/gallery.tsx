@@ -355,7 +355,7 @@ export default function Gallery() {
                             : 'aspect-[3/4]'
                         } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
                           <img
-                            src={item.imageUrl} 
+                            src={item.thumbnailUrl || item.imageUrl} 
                             alt={item.title || 'Diseño'}
                             loading="lazy"
                             className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}

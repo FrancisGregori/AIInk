@@ -8,6 +8,7 @@ import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema
 import ComfyDeployService from "./comfydeploy";
 import Replicate from "replicate";
 import { z } from "zod";
+import { ObjectStorageService } from "./objectStorage";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -840,19 +841,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        model === 'max' ? 'M' : 
                        model.charAt(0).toUpperCase();
       
-      // LOG: Mostrar detalles de guardado
-      console.log('=== GUARDANDO IMAGEN EN GALERÍA ===');
-      console.log('Usuario:', userId);
-      console.log('URL de imagen:', imageUrl);
-      console.log('Tipo de URL:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
-      console.log('Tamaño de URL:', imageUrl.length, 'caracteres');
-      console.log('Título:', `${prompt.slice(0, 45)} (${modelAbbr})`);
-      console.log('Modelo:', modelName);
+      // Subir imagen a Object Storage en lugar de guardar base64
+      const objectStorage = new ObjectStorageService();
+      let finalImageUrl = imageUrl;
+      let thumbnailUrl = null;
       
-      // Save to gallery
+      try {
+        console.log('=== PROCESANDO IMAGEN PARA OBJECT STORAGE ===');
+        console.log('Tipo de imagen:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
+        
+        // Subir la imagen a Object Storage
+        if (imageUrl.startsWith('data:')) {
+          // Si es base64, subir directamente
+          const uploadResult = await objectStorage.uploadImageFromBase64(
+            imageUrl,
+            'designs',
+            userId
+          );
+          finalImageUrl = uploadResult.imageUrl;
+          thumbnailUrl = uploadResult.thumbnailUrl;
+        } else {
+          // Si es URL externa, descargar y subir
+          const uploadResult = await objectStorage.uploadImageFromUrl(
+            imageUrl,
+            'designs',
+            userId
+          );
+          finalImageUrl = uploadResult.imageUrl;
+          thumbnailUrl = uploadResult.thumbnailUrl;
+        }
+        
+        console.log('=== IMAGEN OPTIMIZADA ===');
+        console.log('URL final:', finalImageUrl);
+        console.log('URL miniatura:', thumbnailUrl);
+      } catch (uploadError) {
+        console.error('Error subiendo a Object Storage, usando URL original:', uploadError);
+        // Si falla, mantener la URL original
+      }
+      
+      // Save to gallery con URLs optimizadas
       const savedItem = await storage.addToGallery({
         userId,
-        imageUrl,
+        imageUrl: finalImageUrl,
+        thumbnailUrl: thumbnailUrl,
         type: 'design',
         title: `${prompt.slice(0, 45)} (${modelAbbr})`,
         description: prompt,
@@ -863,12 +894,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      console.log('=== IMAGEN GUARDADA ===');
-      console.log('ID de galería:', savedItem.id);
-      console.log('Fecha de creación:', savedItem.createdAt);
+      console.log('=== IMAGEN GUARDADA EN GALERÍA ===');
+      console.log('ID:', savedItem.id);
+      console.log('Título:', savedItem.title);
       
       res.json({
-        imageUrl,
+        imageUrl: finalImageUrl, // Devolver URL optimizada en lugar de base64
+        thumbnailUrl: thumbnailUrl,
         prompt,
         model: modelName,
         success: true
