@@ -62,7 +62,7 @@ function DesignEditor() {
   const [compareMode, setCompareMode] = useState<boolean>(false);
   const [comparePosition, setComparePosition] = useState<number>(50);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
-  const [isPromptOpen, setIsPromptOpen] = useState<boolean>(true); // Inicialmente abierto
+  const [isPromptOpen, setIsPromptOpen] = useState<boolean>(false); // Inicialmente cerrado
   const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true for Match Input
   
   const fileInputRef = useRef<HTMLInputElement>(null);
