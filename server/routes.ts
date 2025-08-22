@@ -457,7 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Gemini Chat Routes
-  app.post("/api/gemini/chat", async (req, res) => {
+  app.post("/api/gemini/chat", isAuthenticated, async (req: any, res) => {
     try {
       const { message, context } = req.body;
       
@@ -468,9 +468,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use Gemini to generate response
       const response = await summarizeArticle(message + (context ? `\n\nContext: ${context}` : ''));
       
+      // Get authenticated user ID
+      const userId = req.user?.claims?.sub || "anonymous";
+      
       // Save chat message
       await storage.saveGeminiChat({
-        userId: "demo-user", // In production, get from auth session
+        userId,
         message,
         response,
         role: 'assistant',
