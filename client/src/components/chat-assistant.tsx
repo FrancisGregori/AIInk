@@ -1015,7 +1015,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       onImageUpload("", emptyFile);
                     }
                   }}
-                  className="h-6 w-6 p-0 hover:bg-zinc-800 ml-auto"
+                  className="h-6 w-6 p-0 hover:bg-zinc-800"
                 >
                   <X className="h-3 w-3" />
                 </Button>
