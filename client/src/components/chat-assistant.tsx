@@ -567,7 +567,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       
       // Check if the response is a prompt and auto-apply it
       if (fullContent && isPromptMessage(fullContent)) {
-        // Auto-apply the prompt after a short delay to ensure UI updates
+        // Auto-apply the prompt after a minimal delay to ensure UI updates
         setTimeout(() => {
           applyPrompt(fullContent);
           toast({
@@ -576,7 +576,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               ? "El prompt se aplicó automáticamente"
               : "The prompt was applied automatically"
           });
-        }, 1000);
+        }, 200);
       }
     } catch (error) {
       console.error('Chat error:', error);
