@@ -406,7 +406,7 @@ function DesignEditor() {
         description: data.prompt,
         prompt: data.prompt,
         settings: data.settings,
-        userId: "demo-user",
+        userId: (user as any)?.id || "anonymous",
       });
       return response.json();
     },
@@ -593,7 +593,7 @@ function DesignEditor() {
           referenceImage: referencePreview,
           matchInput,
         },
-        userId: "demo-user",
+        userId: (user as any)?.id || "anonymous",
         imageUrl: data.imageUrl
       };
       
@@ -616,12 +616,38 @@ function DesignEditor() {
       
       // Don't clear the job - keep it visible until next generation
       
+      // Save to gallery
+      try {
+        await apiRequest("POST", "/api/gallery", {
+          imageUrl: data.imageUrl,
+          thumbnailUrl: data.imageUrl,
+          type: "design",
+          title: prompt.slice(0, 50),
+          description: prompt,
+          prompt: prompt,
+          style: modelVariant,
+          metadata: {
+            projectId: project.id,
+            aspectRatio,
+            modelVariant,
+            width,
+            height,
+            referenceImage: referencePreview
+          }
+        });
+        console.log("Design saved to gallery");
+      } catch (galleryError) {
+        console.error("Error saving to gallery:", galleryError);
+        // Don't fail the whole operation if gallery save fails
+      }
+      
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
       
       toast({
         title: language === 'es' ? "¡Diseño generado!" : "Design generated!",
-        description: language === 'es' ? "Tu nuevo diseño está listo" : "Your new design is ready",
+        description: language === 'es' ? "Tu nuevo diseño está listo y se ha guardado en tu galería" : "Your new design is ready and has been saved to your gallery",
       });
       
     } catch (error) {

@@ -969,12 +969,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Gallery query took ${queryTime}ms for ${galleryItems.length} items`);
       
       // Cache y metadata de paginación
+      const totalCount = totalItems || 0;
       res.set({
         'Cache-Control': 'private, max-age=60, immutable',
-        'X-Total-Count': totalItems.toString(),
+        'X-Total-Count': totalCount.toString(),
         'X-Page': requestedPage.toString(),
         'X-Page-Size': requestedLimit.toString(),
-        'X-Total-Pages': Math.ceil(totalItems / requestedLimit).toString(),
+        'X-Total-Pages': Math.ceil(totalCount / requestedLimit).toString(),
         'X-Query-Time': queryTime.toString()
       });
       

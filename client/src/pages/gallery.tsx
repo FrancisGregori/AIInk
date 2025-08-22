@@ -42,7 +42,7 @@ export default function Gallery() {
   const [currentPage, setCurrentPage] = useState(1);
   const [allLoadedItems, setAllLoadedItems] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
-  const itemsPerPage = 15;
+  const itemsPerPage = 50; // Increased from 15 to show more items
 
   // Fetch gallery items con paginación
   const { data, isLoading, refetch, isFetching } = useQuery({

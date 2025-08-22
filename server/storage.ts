@@ -937,7 +937,7 @@ class DatabaseStorage implements IStorage {
 
   // Gallery methods
   async getUserGallery(userId: string, type?: string, limit?: number, offset?: number): Promise<GalleryItem[]> {
-    const defaultLimit = limit || 15;
+    const defaultLimit = limit || 100;
     const defaultOffset = offset || 0;
     
     // Crear clave de caché única con offset
