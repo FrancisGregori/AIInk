@@ -8,7 +8,7 @@ import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema
 import ComfyDeployService from "./comfydeploy";
 import Replicate from "replicate";
 import { z } from "zod";
-import { ObjectStorageService } from "./objectStorage";
+import { ObjectStorageService, objectStorageClient } from "./objectStorage";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -1084,6 +1084,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("[Admin] Error adding credits:", error);
       res.status(500).json({ error: "Failed to add credits" });
+    }
+  });
+
+  // Endpoint autenticado para servir imágenes privadas
+  app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
+    try {
+      const filename = decodeURIComponent(req.params.filename);
+      console.log('Sirviendo imagen privada:', filename);
+      
+      // Verificar que el archivo pertenece al usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      
+      // Verificar que el archivo pertenece al usuario
+      // (las imágenes incluyen el userId en la ruta)
+      if (!filename.includes(`/${userId}/`)) {
+        console.warn(`Usuario ${userId} intentó acceder a imagen no autorizada: ${filename}`);
+        return res.status(403).json({ message: "No autorizado para ver esta imagen" });
+      }
+      
+      const objectStorage = new ObjectStorageService();
+      const bucket = objectStorageClient.bucket(objectStorage.bucketName);
+      const file = bucket.file(filename);
+      
+      // Verificar que el archivo existe
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ message: "Imagen no encontrada" });
+      }
+      
+      // Obtener el archivo y enviarlo
+      const [buffer] = await file.download();
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por 1 hora
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error sirviendo imagen privada:', error);
+      res.status(404).json({ message: "Imagen no encontrada" });
     }
   });
 

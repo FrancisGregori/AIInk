@@ -53,7 +53,7 @@ export class ObjectStorageService {
     userId: string
   ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
     try {
-      console.log(`=== SUBIENDO IMAGEN A OBJECT STORAGE ===`);
+      console.log(`=== SUBIENDO IMAGEN A OBJECT STORAGE (PRIVADO) ===`);
       console.log(`Carpeta: ${folder}, Usuario: ${userId}`);
       
       // Limpiar el prefijo de base64 si existe
@@ -63,8 +63,9 @@ export class ObjectStorageService {
       // Generar ID único para el archivo
       const fileId = randomUUID();
       const timestamp = Date.now();
-      const fileName = `${folder}/${userId}/${timestamp}_${fileId}.png`;
-      const thumbnailName = `thumbnails/${userId}/${timestamp}_${fileId}_thumb.png`;
+      // IMPORTANTE: Usar directorio PRIVADO para proteger imágenes de usuarios
+      const fileName = `.private/${folder}/${userId}/${timestamp}_${fileId}.png`;
+      const thumbnailName = `.private/thumbnails/${userId}/${timestamp}_${fileId}_thumb.png`;
       
       // Subir imagen original
       const bucket = objectStorageClient.bucket(this.bucketName);
@@ -94,11 +95,12 @@ export class ObjectStorageService {
         },
       });
       
-      // Generar URLs públicas
-      const imageUrl = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
-      const thumbnailUrl = `https://storage.googleapis.com/${this.bucketName}/${thumbnailName}`;
+      // Generar URLs internas que requieren autenticación
+      // Estas URLs solo funcionarán con el usuario autenticado
+      const imageUrl = `/api/images/${encodeURIComponent(fileName)}`;
+      const thumbnailUrl = `/api/images/${encodeURIComponent(thumbnailName)}`;
       
-      console.log(`=== IMAGEN SUBIDA EXITOSAMENTE ===`);
+      console.log(`=== IMAGEN SUBIDA EXITOSAMENTE (PRIVADA) ===`);
       console.log(`URL Original: ${imageUrl}`);
       console.log(`URL Miniatura: ${thumbnailUrl}`);
       console.log(`Tamaño original: ${imageBuffer.length} bytes`);
@@ -118,7 +120,7 @@ export class ObjectStorageService {
     userId: string
   ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
     try {
-      console.log(`=== DESCARGANDO Y SUBIENDO IMAGEN ===`);
+      console.log(`=== DESCARGANDO Y SUBIENDO IMAGEN (PRIVADO) ===`);
       console.log(`URL origen: ${sourceUrl}`);
       
       // Descargar la imagen
@@ -133,8 +135,9 @@ export class ObjectStorageService {
       // Generar ID único para el archivo
       const fileId = randomUUID();
       const timestamp = Date.now();
-      const fileName = `${folder}/${userId}/${timestamp}_${fileId}.png`;
-      const thumbnailName = `thumbnails/${userId}/${timestamp}_${fileId}_thumb.png`;
+      // IMPORTANTE: Usar directorio PRIVADO para proteger imágenes de usuarios
+      const fileName = `.private/${folder}/${userId}/${timestamp}_${fileId}.png`;
+      const thumbnailName = `.private/thumbnails/${userId}/${timestamp}_${fileId}_thumb.png`;
       
       // Subir imagen original
       const bucket = objectStorageClient.bucket(this.bucketName);
@@ -164,11 +167,12 @@ export class ObjectStorageService {
         },
       });
       
-      // Generar URLs públicas
-      const imageUrl = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
-      const thumbnailUrl = `https://storage.googleapis.com/${this.bucketName}/${thumbnailName}`;
+      // Generar URLs internas que requieren autenticación
+      // Estas URLs solo funcionarán con el usuario autenticado
+      const imageUrl = `/api/images/${encodeURIComponent(fileName)}`;
+      const thumbnailUrl = `/api/images/${encodeURIComponent(thumbnailName)}`;
       
-      console.log(`=== IMAGEN PROCESADA Y SUBIDA ===`);
+      console.log(`=== IMAGEN PROCESADA Y SUBIDA (PRIVADA) ===`);
       console.log(`URL Original: ${imageUrl}`);
       console.log(`URL Miniatura: ${thumbnailUrl}`);
       
