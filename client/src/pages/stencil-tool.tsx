@@ -287,13 +287,9 @@ Press and hold the stencil image above and select "Copy", then paste it directly
     navigator.clipboard.writeText(instructions);
   };
 
-  // Abrir modal de galería
+  // Abrir modal de galería - SIEMPRE permitido
   const openGalleryModal = (job: StencilJob) => {
-    // Prevenir abrir modal si hay un trabajo procesando
-    if (isProcessing || (currentJob && currentJob.status === 'processing')) {
-      return; // Ignorar la acción silenciosamente
-    }
-    
+    // No hay restricción - el usuario puede ver la galería incluso mientras procesa
     setGalleryModal({ open: true, job });
   };
   
@@ -518,12 +514,12 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                 {recentJobs.length > 0 ? (
                   <div className={`grid ${showFullGallery ? 'grid-cols-2 max-h-[600px] overflow-y-auto custom-scrollbar' : 'grid-cols-1'} gap-3`}>
                     {(showFullGallery ? recentJobs : recentJobs.slice(0, 2)).map((job) => {
-                      const isDisabled = isProcessing || (currentJob && currentJob.status === 'processing');
+                      // Galería siempre accesible, incluso durante procesamiento
                       return (
                       <div
                         key={job.id}
-                        className={`group ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                        onClick={() => !isDisabled && openGalleryModal(job)}
+                        className="group cursor-pointer"
+                        onClick={() => openGalleryModal(job)}
                       >
                         <div className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]">
                           <img
