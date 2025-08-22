@@ -159,7 +159,7 @@ function DesignEditor() {
         // Guardar los trabajos limpiados
         localStorage.setItem(storageKey, JSON.stringify(cleanedJobs));
         
-        // Buscar trabajo activo válido
+        // Buscar trabajo activo válido o el último completado
         const activeJob = cleanedJobs.find((job: any) => 
           job.status === 'processing' && job.type === 'design'
         );
@@ -179,6 +179,28 @@ function DesignEditor() {
           
           if (activeJob.style) {
             setPrompt(activeJob.style);
+          }
+        } else {
+          // Si no hay trabajos activos, cargar el último trabajo completado
+          const completedJobs = cleanedJobs
+            .filter((job: any) => job.status === 'completed' && job.type === 'design')
+            .sort((a: any, b: any) => new Date(b.completedAt || b.createdAt).getTime() - new Date(a.completedAt || a.createdAt).getTime());
+          
+          if (completedJobs.length > 0) {
+            const latestJob = completedJobs[0];
+            console.log('Design job recovery: Loading latest completed job', latestJob.id);
+            setCurrentJob(latestJob);
+            
+            // Restaurar datos del trabajo completado
+            if (latestJob.originalImageUrl) {
+              setReferencePreview(latestJob.originalImageUrl);
+              const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
+              setReferenceImage(fakeFile);
+            }
+            
+            if (latestJob.style) {
+              setPrompt(latestJob.style);
+            }
           }
         }
       } catch (error) {
@@ -585,7 +607,8 @@ function DesignEditor() {
         completedAt: new Date().toISOString(),
         processedImageUrl: data.imageUrl,
         originalImageUrl: referencePreview, // Mantener la imagen original
-        startedAt: tempJob.startedAt || new Date().toISOString() // Ensure startedAt is string
+        startedAt: typeof tempJob.startedAt === 'string' ? tempJob.startedAt : new Date().toISOString(), // Ensure startedAt is string
+        errorMessage: tempJob.errorMessage || undefined // Convert null to undefined
       };
       
       updateJob(tempJobId, completedJob);
@@ -1216,7 +1239,7 @@ function DesignEditor() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-3">
-                  {projects.slice(1, 3).map((project) => (
+                  {projects.slice(0, 2).map((project) => (
                     <Dialog key={project.id}>
                       <DialogTrigger asChild>
                         <div className="relative group cursor-pointer">
