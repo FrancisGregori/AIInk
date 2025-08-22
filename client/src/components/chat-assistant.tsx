@@ -777,9 +777,12 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       // English
       'add', 'remove', 'change', 'with', 'make', 'convert',
       'transform', 'edit', 'modify', 'apply', 'generate',
+      'increase', 'decrease', 'enhance', 'improve',
       // Spanish  
       'en ', 'con ', 'sin ', 'hacer', 'poner', 'quitar',
       'cambiar', 'convertir', 'transformar', 'aplicar',
+      'que se vea', 'mas ', 'más ', 'realista', 'detallado',
+      'agregar', 'eliminar', 'mejorar', 'aumentar',
       // Colors and styles
       'blanco', 'negro', 'color', 'estilo', 'fondo',
       'black', 'white', 'style', 'background'
