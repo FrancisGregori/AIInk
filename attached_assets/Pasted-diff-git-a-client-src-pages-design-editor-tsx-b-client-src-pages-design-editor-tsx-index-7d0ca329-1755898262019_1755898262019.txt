@@ -1,0 +1,91 @@
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index 7d0ca329d428ba6c714d25f966e56cc832229378..ea962c249a1e379122f474282c407c5c6373fc72 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -1,28 +1,28 @@
+ import { useState, useRef, useEffect } from "react";
+ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+-import { apiRequest } from "@/lib/queryClient";
++import { apiRequest, getQueryFn } from "@/lib/queryClient";
+ import { useAuth } from "@/hooks/useAuth";
+ import { Button } from "@/components/ui/button";
+ import { AuthDialog } from "@/components/auth-dialog";
+ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+ import { Alert, AlertDescription } from "@/components/ui/alert";
+ import { Textarea } from "@/components/ui/textarea";
+ import { Label } from "@/components/ui/label";
+ import { Slider } from "@/components/ui/slider";
+ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+ import { ScrollArea } from "@/components/ui/scroll-area";
+ import { Badge } from "@/components/ui/badge";
+ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+ import { Separator } from "@/components/ui/separator";
+ import { Input } from "@/components/ui/input";
+ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+ import { Switch } from "@/components/ui/switch";
+ import ChatAssistant, { ChatAssistantRef } from "@/components/chat-assistant";
+ import { useToast } from "@/hooks/use-toast";
+ import { useJobs } from "@/contexts/JobContext";
+ import { useJobRecovery } from "@/hooks/useJobRecovery";
+ import { 
+   Sparkles, 
+   Download, 
+   Image as ImageIcon, 
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index 7d0ca329d428ba6c714d25f966e56cc832229378..ea962c249a1e379122f474282c407c5c6373fc72 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -346,50 +346,52 @@ function DesignEditor() {
+       width: "Width",
+       height: "Height",
+       inkVision: "InkVision - AI Assistant",
+       sendMessage: "Send message",
+       messagePlaceholder: "Ask about designs or request ideas...",
+       apply: "Apply",
+       compareMode: "Compare mode",
+       history: "History",
+       settings: "Settings",
+       analyzing: "Analyzing image...",
+       generating: "Generating design...",
+       suggestions: "Suggested edits",
+       poseChanges: "Pose changes",
+       lightingChanges: "Lighting",
+       styleChanges: "Styles",
+       cameraAngles: "Camera angles",
+       expressions: "Expressions",
+     }
+   };
+ 
+   const txt = t[language];
+ 
+   // Fetch user's projects (moved before useEffect to avoid initialization error)
+   const { data: projects = [] } = useQuery<FluxProject[]>({
+     queryKey: ["/api/flux/projects"],
++    queryFn: getQueryFn({ on401: "returnNull" }),
++    initialData: [],
+   });
+ 
+   // Verificar automáticamente cuando se actualiza la lista de proyectos
+   useEffect(() => {
+     if (!currentJob || currentJob.status !== 'processing' || !projects.length) return;
+ 
+     const completedProject = projects.find((p: any) => p.id === currentJob.id);
+     if (completedProject && completedProject.imageUrl && !completedProject.imageUrl.includes('placeholder')) {
+       console.log('Design job completed, updating state');
+       setIsGenerating(false);
+       updateJob(currentJob.id, {
+         status: 'completed',
+         processedImageUrl: completedProject.imageUrl,
+         completedAt: new Date().toISOString()
+       });
+       setCurrentJob({
+         ...currentJob,
+         status: 'completed',
+         processedImageUrl: completedProject.imageUrl
+       });
+       
+       toast({
+         title: "Diseño completado",
+         description: "Tu imagen ha sido generada exitosamente",
+       });

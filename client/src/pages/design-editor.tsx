@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth-dialog";
@@ -369,6 +369,8 @@ function DesignEditor() {
   // Fetch user's projects (moved before useEffect to avoid initialization error)
   const { data: projects = [] } = useQuery<FluxProject[]>({
     queryKey: ["/api/flux/projects"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    initialData: [],
   });
 
   // Verificar automáticamente cuando se actualiza la lista de proyectos
