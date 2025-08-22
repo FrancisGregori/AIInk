@@ -54,6 +54,7 @@ Default AI model: Qwen Edit (for Design Editor)
 - **Performance**: Optimized preview area, temporary job system for instant feedback, and limits on stored jobs (20 items, 24h expiration) to prevent `QuotaExceededError`.
 - **API Integration**: Replicate API is fully integrated for AI image editing, handling `ReadableStream` and `AsyncIterator`, with retry mechanisms and Zod schema validation.
 - **UI/UX Refinements**: Changed terminology ("Manual Prompt," "Ediciones sugeridas"), intelligent detection of questions vs. prompts, loading animations, and optimized gallery display (limited to 2 latest items, portrait layout, daily organization, hover overlays, quick actions).
+- **SPA Navigation**: Fixed white flash issue by replacing `window.location.href` with wouter's `setLocation` for instant SPA navigation in tool cards (2025-08-22).
 
 ## External Dependencies
 
