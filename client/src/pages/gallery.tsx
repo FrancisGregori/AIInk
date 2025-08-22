@@ -34,6 +34,7 @@ export default function Gallery() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [imageSize, setImageSize] = useState<'small' | 'medium' | 'large'>('small'); // Por defecto pequeño
   const [selectedType, setSelectedType] = useState<'all' | 'stencil' | 'design'>('all');
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
@@ -207,7 +208,7 @@ export default function Gallery() {
               />
             </div>
 
-            {/* View toggle and refresh */}
+            {/* View toggle, size controls and refresh */}
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -217,20 +218,52 @@ export default function Gallery() {
               >
                 <RefreshCw className="w-4 h-4" />
               </Button>
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
+              
+              {/* Controles de tamaño */}
+              <div className="flex gap-1 border-l pl-2">
+                <Button
+                  variant={imageSize === 'small' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setImageSize('small')}
+                  title="Vista pequeña (más rápida)"
+                >
+                  <span className="text-xs font-bold">S</span>
+                </Button>
+                <Button
+                  variant={imageSize === 'medium' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setImageSize('medium')}
+                  title="Vista mediana"
+                >
+                  <span className="text-xs font-bold">M</span>
+                </Button>
+                <Button
+                  variant={imageSize === 'large' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setImageSize('large')}
+                  title="Vista grande"
+                >
+                  <span className="text-xs font-bold">L</span>
+                </Button>
+              </div>
+              
+              {/* Vista grid/list */}
+              <div className="flex gap-1 border-l pl-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid3x3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -282,41 +315,58 @@ export default function Gallery() {
             </div>
 
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className={`grid gap-4 ${
+                imageSize === 'small' 
+                  ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8' 
+                  : imageSize === 'medium'
+                  ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+                  : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+              }`}>
                 {items.map((item: any) => (
                   <Card key={item.id} className="overflow-hidden group hover:shadow-xl transition-all">
                     <Dialog>
                       <DialogTrigger asChild>
-                        <div className={`relative aspect-[3/4] cursor-pointer ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
+                        <div className={`relative cursor-pointer ${
+                          imageSize === 'small' 
+                            ? 'aspect-square' 
+                            : imageSize === 'medium'
+                            ? 'aspect-[3/4]'
+                            : 'aspect-[3/4]'
+                        } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
                           <img
-                            src={item.imageUrl}
+                            src={item.thumbnailUrl || item.imageUrl} 
                             alt={item.title || 'Diseño'}
+                            loading="lazy"
                             className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
                           />
-                          {/* Overlay on hover */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="absolute bottom-0 left-0 right-0 p-3">
-                              <p className="text-white text-sm font-semibold truncate">
-                                {item.title || 'Sin título'}
-                              </p>
-                              <p className="text-white/70 text-xs">
-                                {new Date(item.createdAt).toLocaleTimeString('es-ES', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </p>
+                          {/* Overlay on hover - solo mostrar en tamaños medianos y grandes */}
+                          {imageSize !== 'small' && (
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute bottom-0 left-0 right-0 p-3">
+                                <p className="text-white text-sm font-semibold truncate">
+                                  {item.title || 'Sin título'}
+                                </p>
+                                <p className="text-white/70 text-xs">
+                                  {new Date(item.createdAt).toLocaleTimeString('es-ES', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          {/* Badges */}
-                          {item.isFavorite && (
+                          )}
+                          {/* Badges - ajustar tamaño según la vista */}
+                          {item.isFavorite && imageSize !== 'small' && (
                             <Heart className="absolute top-2 right-2 w-4 h-4 text-red-500 fill-red-500 drop-shadow-lg" />
                           )}
-                          <Badge 
-                            className="absolute top-2 left-2 text-xs"
-                            variant={item.type === 'stencil' ? 'default' : 'secondary'}
-                          >
-                            {item.type === 'stencil' ? 'Stencil' : 'Diseño'}
-                          </Badge>
+                          {imageSize !== 'small' && (
+                            <Badge 
+                              className="absolute top-2 left-2 text-xs"
+                              variant={item.type === 'stencil' ? 'default' : 'secondary'}
+                            >
+                              {item.type === 'stencil' ? 'Stencil' : 'Diseño'}
+                            </Badge>
+                          )}
                         </div>
                       </DialogTrigger>
                       <DialogContent className="max-w-5xl">
