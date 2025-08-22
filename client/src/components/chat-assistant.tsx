@@ -928,10 +928,12 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       >
                         Copiar
                       </Button>
-                      <div className="flex items-center gap-1 text-xs text-zinc-400">
-                        <Sparkles className="h-3 w-3" />
-                        <span>{language === 'es' ? 'Se genera automáticamente' : 'Generates automatically'}</span>
-                      </div>
+                      {isGeneratingImage && (
+                        <div className="flex items-center gap-1 text-xs text-white bg-zinc-800 px-2 py-1 rounded-lg">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>{language === 'es' ? 'Generando...' : 'Generating...'}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
