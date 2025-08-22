@@ -1,0 +1,132 @@
+diff --git a/client/src/pages/stencil-tool.tsx b/client/src/pages/stencil-tool.tsx
+index 84b9728d489daa15bd0d0a25c9c6d524d0c0696e..712b5966e7d760f944f99e8c31979d1e9153c5e3 100644
+--- a/client/src/pages/stencil-tool.tsx
++++ b/client/src/pages/stencil-tool.tsx
+@@ -25,51 +25,51 @@ import {
+   Info,
+   Clock,
+   CheckCircle2,
+   Copy,
+   Eye,
+   Columns,
+   Sparkles,
+   ChevronLeft,
+   ChevronRight,
+   X
+ } from "lucide-react";
+ import Navigation from "@/components/Navigation";
+ import PreviewArea from "@/components/preview-area";
+ import StyleSelector from "@/components/style-selector";
+ import ImageUploader from "@/components/image-uploader";
+ import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
+ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+ import type { StencilJob, StencilStyle } from "@shared/schema";
+ 
+ interface ProcessingOptions {
+   removeBackground: boolean;
+   lineColor: "black" | "red" | "blue" | "green";
+ }
+ 
+ function StencilTool() {
+-  const { isAuthenticated } = useAuth();
++  const { user, isAuthenticated } = useAuth();
+   const { toast } = useToast();
+   const [showAuthDialog, setShowAuthDialog] = useState(false);
+   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+   const [selectedStyle, setSelectedStyle] = useState<string>("steven");
+   const [isProcessing, setIsProcessing] = useState(false);
+   const [currentJob, setCurrentJob] = useState<StencilJob | null>(null);
+   const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
+   const [showFullGallery, setShowFullGallery] = useState(false);
+   const [processingOptions, setProcessingOptions] = useState<ProcessingOptions>({
+     removeBackground: true,
+     lineColor: "black"
+   });
+   // Estado para el modal de galería
+   const [galleryModal, setGalleryModal] = useState<{
+     open: boolean;
+     job: StencilJob | null;
+   }>({ open: false, job: null });
+   
+   const queryClient = useQueryClient();
+   const { addJob, updateJob, getJob } = useJobs();
+   const { activeJobsOfType } = useJobRecovery('stencil');
+ 
+   // Recuperar trabajo en progreso - CARGA INSTANTÁNEA desde localStorage
+   useEffect(() => {
+     const activeStencilJobs = activeJobsOfType.filter(job => job.status === 'processing');
+diff --git a/client/src/pages/stencil-tool.tsx b/client/src/pages/stencil-tool.tsx
+index 84b9728d489daa15bd0d0a25c9c6d524d0c0696e..712b5966e7d760f944f99e8c31979d1e9153c5e3 100644
+--- a/client/src/pages/stencil-tool.tsx
++++ b/client/src/pages/stencil-tool.tsx
+@@ -208,68 +208,68 @@ function StencilTool() {
+       // Auto-scroll to style section when image is loaded
+       setTimeout(() => {
+         styleSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+       }, 100);
+     }
+   };
+ 
+ 
+ 
+   // Process image with auto-scroll to preview
+   const handleProcess = () => {
+     if (!selectedFile || !selectedStyle) return;
+ 
+     // Check authentication before processing
+     if (!isAuthenticated) {
+       setShowAuthDialog(true);
+       return;
+     }
+ 
+     // MOSTRAR INMEDIATAMENTE el estado de procesamiento
+     setIsProcessing(true);
+     
+     // Crear un trabajo temporal inmediatamente para mostrar en el preview
+     const tempJob: StencilJob = {
+       id: 'temp-' + Date.now(),
+-      userId: 'demo-user',
++      userId: user?.id as string,
+       originalImageUrl: '',
+       processedImageUrl: null,
+       style: selectedStyle,
+       status: 'processing',
+       comfyDeployRunId: null,
+       processingOptions: processingOptions,
+       errorMessage: null,
+       startedAt: new Date(),
+       completedAt: null,
+       createdAt: new Date()
+     };
+     setCurrentJob(tempJob);
+ 
+     const formData = new FormData();
+     formData.append("image", selectedFile);
+     formData.append("style", selectedStyle);
+-    formData.append("userId", "demo-user");
++    formData.append("userId", user?.id as string);
+     formData.append("processingOptions", JSON.stringify(processingOptions));
+ 
+     processImageMutation.mutate(formData);
+     
+     // Auto-scroll to preview section when processing starts
+     setTimeout(() => {
+       previewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+     }, 100);
+   };
+ 
+   // Reset all
+   const handleReset = () => {
+     setSelectedFile(null);
+     setCurrentJob(null);
+     setRecoveredImageUrl(null);
+     setSelectedStyle("steven");
+     setProcessingOptions({
+       removeBackground: true,
+       lineColor: "black"
+     });
+   };
+ 
+   // Download processed image
+   const handleDownload = () => {
+     if (!currentJob?.processedImageUrl) return;

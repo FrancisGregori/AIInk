@@ -47,7 +47,7 @@ interface ProcessingOptions {
 }
 
 function StencilTool() {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -232,7 +232,7 @@ function StencilTool() {
     // Crear un trabajo temporal inmediatamente para mostrar en el preview
     const tempJob: StencilJob = {
       id: 'temp-' + Date.now(),
-      userId: 'temp-user', // Temporal hasta obtener ID real del servidor
+      userId: user?.id as string,
       originalImageUrl: '',
       processedImageUrl: null,
       style: selectedStyle,
@@ -249,7 +249,7 @@ function StencilTool() {
     const formData = new FormData();
     formData.append("image", selectedFile);
     formData.append("style", selectedStyle);
-    formData.append("userId", "demo-user");
+    formData.append("userId", user?.id as string);
     formData.append("processingOptions", JSON.stringify(processingOptions));
 
     processImageMutation.mutate(formData);
