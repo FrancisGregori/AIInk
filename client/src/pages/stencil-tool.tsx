@@ -118,10 +118,10 @@ function StencilTool() {
   // Fetch user's recent jobs (gallery)
   const { data: recentJobs = [] } = useQuery<StencilJob[]>({
     queryKey: ["/api/stencil/gallery"],
-    refetchInterval: 3000, // Actualizar cada 3 segundos
+    refetchInterval: isProcessing ? 5000 : false, // Solo polling si hay trabajo activo
     refetchOnWindowFocus: true,
     refetchOnMount: 'always',
-    staleTime: 5000, // Datos frescos por 5 segundos
+    staleTime: 10000, // Datos frescos por 10 segundos
     gcTime: 5 * 60 * 1000, // Cache por 5 minutos
   });
 
