@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -1024,16 +1024,19 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               </div>
             )}
             
-            <div className="flex gap-2">
-              {/* Botón de clip movido a la izquierda */}
+            <div className="flex gap-2 items-end">
+              {/* Botón de cargar imagen con ícono y texto */}
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="self-end"
+                className="flex items-center gap-2 px-3 py-2 h-auto"
                 data-testid="button-upload-image"
               >
-                <Paperclip className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
+                <span className="text-sm">
+                  {language === 'es' ? 'Cargar imagen' : 'Upload image'}
+                </span>
               </Button>
               
               <div className="flex flex-col gap-2 flex-1">
