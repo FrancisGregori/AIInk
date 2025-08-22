@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Palette, Sparkles, RotateCw, Wand2, ArrowRight } from "lucide-react";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
-import stencilExample1 from "@assets/Captura de pantalla 2025-08-21 224136_1755830647325.png";
-import stencilExample2 from "@assets/Captura de pantalla 2025-08-21 224155_1755830650041.png";
-import aiEditorImage from "@assets/Captura de pantalla 2025-08-21 224155_1755830656337.png";
-import rotationImage from "@assets/Captura de pantalla 2025-08-21 224136_1755830532129.png";
+import stencilExample1 from "@assets/hub_stencil1.png";
+import stencilExample2 from "@assets/hub_stencil2.png";
+import stencilExample3 from "@assets/hub_stencil3.png";
+import aiEditorImage from "@assets/hub_stencil2.png";
 
 const ToolCard = ({ 
   title, 
@@ -186,15 +186,14 @@ export default function Home() {
                 muted
                 loop
                 playsInline
-                poster={logoPath}
+                poster={stencilExample1}
               >
-                <source src="/demo-video.mp4" type="video/mp4" />
-                <source src="/demo-video.webm" type="video/webm" />
+                <source src="/hub-demo-video.mp4" type="video/mp4" />
                 {/* Fallback image if video doesn't load */}
                 <img 
-                  src={logoPath}
+                  src={stencilExample1}
                   alt="Tattoo Design Preview"
-                  className="w-full h-[600px] object-contain bg-gradient-to-br from-gray-800 to-gray-900"
+                  className="w-full h-[600px] object-cover"
                 />
               </video>
               
@@ -229,6 +228,7 @@ export default function Home() {
                 description="Convert designs into hand-drawn style stencils"
                 icon={Palette}
                 imageUrl={stencilExample1}
+                videoUrl="/hub-demo-video.mp4"
                 href="/stencil-tool"
                 isActive={true}
               />
@@ -241,6 +241,7 @@ export default function Home() {
                 description="Advanced AI-powered tattoo generator and image editor"
                 icon={Sparkles}
                 imageUrl={aiEditorImage}
+                videoUrl="/hub-demo-video.mp4"
                 href="/design-editor"
                 isActive={true}
               />
@@ -252,7 +253,7 @@ export default function Home() {
                 title="Angle and Rotation Modifier"
                 description="Transform the perspective of your 2D designs into any angle"
                 icon={RotateCw}
-                imageUrl={rotationImage}
+                imageUrl={stencilExample3}
                 isActive={false}
               />
             </div>
