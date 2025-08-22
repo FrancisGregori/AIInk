@@ -55,7 +55,6 @@ function StencilTool() {
   const [currentJob, setCurrentJob] = useState<StencilJob | null>(null);
   const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
   const [showFullGallery, setShowFullGallery] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
   const [processingOptions, setProcessingOptions] = useState<ProcessingOptions>({
     removeBackground: true,
     lineColor: "black"
@@ -98,13 +97,7 @@ function StencilTool() {
     }
   }, [activeJobsOfType, currentJob]);
   
-  // Control loading inicial para evitar flash blanco
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
+
   
   // Refs for scroll behavior
   const styleSectionRef = useRef<HTMLDivElement>(null);
@@ -301,15 +294,6 @@ Press and hold the stencil image above and select "Copy", then paste it directly
     const fakeFile = new File([""], "loaded-image.png", { type: "image/png" });
     setSelectedFile(fakeFile);
   };
-
-  // Loading screen con fondo negro para evitar flash blanco
-  if (isPageLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-white animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-black text-white">

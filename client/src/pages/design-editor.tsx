@@ -50,7 +50,6 @@ import type { FluxProject, StencilJob } from "@shared/schema";
 function DesignEditor() {
   const { isAuthenticated } = useAuth();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
   const [prompt, setPrompt] = useState<string>("");
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
@@ -74,14 +73,6 @@ function DesignEditor() {
 
   // Estado para trabajo actual y persistencia
   const [currentJob, setCurrentJob] = useState<any>(null);
-  
-  // Control loading inicial para evitar flash blanco
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
   const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
   
   // Suggested edit prompts organized by category
@@ -774,15 +765,6 @@ function DesignEditor() {
       setMatchInput(false);
     }
   }, [referencePreview, matchInput]);
-
-  // Loading screen con fondo negro para evitar flash blanco
-  if (isPageLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-white animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-black text-white">
