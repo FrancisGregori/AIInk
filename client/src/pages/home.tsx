@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useState, useRef, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const ToolCard = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     // Auto-play video when component mounts
@@ -120,23 +121,28 @@ const ToolCard = ({
           <p className="text-gray-400 mb-4">{description}</p>
         </div>
         {isActive && href ? (
-          <Link href={href}>
-            <motion.button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full mt-auto text-center transition-colors inline-block w-full font-semibold"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="mt-auto"
+          >
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-center transition-colors w-full font-semibold"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLocation(href);
+              }}
             >
               Try Now
-            </motion.button>
-          </Link>
+            </button>
+          </motion.div>
         ) : (
-          <motion.button
-            className="bg-gray-600 text-white px-4 py-2 rounded-full mt-auto cursor-not-allowed"
+          <button
+            className="bg-gray-600 text-white px-4 py-2 rounded-full mt-auto cursor-not-allowed w-full"
             disabled
           >
             Coming Soon
-          </motion.button>
+          </button>
         )}
       </div>
     </motion.div>
