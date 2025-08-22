@@ -62,6 +62,7 @@ function DesignEditor() {
   const [compareMode, setCompareMode] = useState<boolean>(false);
   const [comparePosition, setComparePosition] = useState<number>(50);
   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
+  const [isPromptOpen, setIsPromptOpen] = useState<boolean>(true); // Inicialmente abierto
   const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true for Match Input
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -913,39 +914,51 @@ function DesignEditor() {
 
             {/* Description Section */}
             <Card>
-              <CardHeader>
-                <CardTitle>{txt.prompt}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={txt.promptPlaceholder}
-                  className="min-h-32"
-                />
-              </CardContent>
-              
-              <CardFooter className="flex flex-col gap-3">
-                {prompt.trim() && <CreditsRequirement cost={3} action="design" />}
-                <Button
-                  onClick={handleGenerate}
-                  disabled={!prompt.trim() || isGenerating}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {txt.generating}
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      {txt.generate}
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
+              <Collapsible open={isPromptOpen} onOpenChange={setIsPromptOpen}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-zinc-900/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Edit className="h-5 w-5" />
+                        {txt.prompt}
+                      </div>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isPromptOpen ? 'rotate-180' : ''}`} />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-4">
+                    <Textarea
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      placeholder={txt.promptPlaceholder}
+                      className="min-h-32"
+                    />
+                  </CardContent>
+                  
+                  <CardFooter className="flex flex-col gap-3">
+                    {prompt.trim() && <CreditsRequirement cost={3} action="design" />}
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={!prompt.trim() || isGenerating}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {txt.generating}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          {txt.generate}
+                        </>
+                      )}
+                    </Button>
+                  </CardFooter>
+                </CollapsibleContent>
+              </Collapsible>
             </Card>
 
             {/* Generation Settings */}
