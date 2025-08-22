@@ -6,6 +6,7 @@ TattoostencilPro is a professional AI-powered design platform featuring two main
 ## User Preferences
 Preferred communication style: Simple, everyday language in Spanish (español).
 Project landing page: https://tattoostencilpro.app (for project promotion)
+Default AI model: Qwen Edit (for Design Editor)
 
 **CRITICAL RULES:**
 - NO confundir Stencil Tool con Design Editor - son completamente separados
