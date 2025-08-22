@@ -40,7 +40,7 @@ const generateImageSchema = z.object({
   width: z.number().optional().default(1024),
   height: z.number().optional().default(1024),
   aspectRatio: z.string().optional().default("match_input_image"),
-  model: z.enum(["max", "pro"]).optional().default("max"),
+  model: z.enum(["max", "pro", "qwen"]).optional().default("max"),
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
