@@ -617,14 +617,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (model === "qwen") {
         input = {
           prompt: prompt,
-          output_quality: 80,
-          watermark: false,
-          num_inference_steps: 50
+          output_format: "png",
+          output_quality: 95,
+          go_fast: true,
+          disable_safety_checker: true
         };
       } else {
         // Configuración para FLUX Kontext
         input = {
           prompt: prompt,
+          guidance_scale: 2,
+          num_inference_steps: 50,
+          num_outputs: 1,
+          output_format: "png",
+          output_quality: 95
         };
       }
 
@@ -727,11 +733,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let optimizedImageBase64: string = "";
       let thumbnailBase64: string = "";
       
-      // Qwen devuelve un array de URIs según su documentación
+      // Qwen devuelve un array de objetos File con método .url()
       if (model === "qwen" && Array.isArray(output) && output.length > 0) {
-        // Qwen returns an array of URIs
-        imageUrl = output[0];
-        console.log("Qwen output URL:", imageUrl);
+        // Qwen returns an array of File objects with url() method
+        const file = output[0];
+        if (file && typeof file.url === 'function') {
+          imageUrl = file.url();
+          console.log("Qwen output URL (from file.url()):", imageUrl);
+        } else if (typeof file === 'string') {
+          // Fallback si ya es string
+          imageUrl = file;
+          console.log("Qwen output URL (direct string):", imageUrl);
+        } else {
+          console.error("Unexpected Qwen output format:", file);
+          throw new Error("Unexpected Qwen output format");
+        }
       } else if (typeof output === 'string') {
         imageUrl = output;
       } else if (Array.isArray(output) && output.length > 0) {
