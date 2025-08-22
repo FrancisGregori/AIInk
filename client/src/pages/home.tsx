@@ -190,10 +190,10 @@ export default function Home() {
       </section>
 
       {/* Tools Section */}
-      <section className="py-10 px-4">
+      <section className="py-5 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Section Title */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">TOOLS</h2>
             <p className="text-lg text-gray-400">Advanced tools for tattoo artists</p>
           </div>
