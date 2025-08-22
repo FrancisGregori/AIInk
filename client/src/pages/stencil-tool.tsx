@@ -158,6 +158,7 @@ function StencilTool() {
         setIsProcessing(false);
       }
       queryClient.invalidateQueries({ queryKey: ["/api/stencil/gallery"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
     },
     onError: () => {
       setIsProcessing(false);
@@ -188,6 +189,7 @@ function StencilTool() {
           if (updatedJob.status === "completed" || updatedJob.status === "failed") {
             setIsProcessing(false);
             queryClient.invalidateQueries({ queryKey: ["/api/stencil/gallery"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
             clearInterval(interval);
           }
         }
@@ -230,7 +232,7 @@ function StencilTool() {
     // Crear un trabajo temporal inmediatamente para mostrar en el preview
     const tempJob: StencilJob = {
       id: 'temp-' + Date.now(),
-      userId: 'demo-user',
+      userId: 'temp-user', // Temporal hasta obtener ID real del servidor
       originalImageUrl: '',
       processedImageUrl: null,
       style: selectedStyle,
