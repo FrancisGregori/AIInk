@@ -770,7 +770,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     }
     
     // If it's a short phrase (likely a modification prompt), show buttons
-    const isShortPhrase = content.trim().length > 5 && content.trim().length < 100;
+    const isShortPhrase = content.trim().length > 5 && content.trim().length < 200;
     
     // Check for common modification patterns
     const modificationPatterns = [
