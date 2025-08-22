@@ -219,31 +219,52 @@ export default function Gallery() {
                 <RefreshCw className="w-4 h-4" />
               </Button>
               
-              {/* Controles de tamaño */}
+              {/* Controles de tamaño con iconos */}
               <div className="flex gap-1 border-l pl-2">
                 <Button
                   variant={imageSize === 'small' ? 'default' : 'outline'}
-                  size="sm"
+                  size="icon"
                   onClick={() => setImageSize('small')}
-                  title="Vista pequeña (más rápida)"
+                  title="Vista compacta (más rápida)"
                 >
-                  <span className="text-xs font-bold">S</span>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="3" height="3" fill="currentColor"/>
+                    <rect x="5" y="1" width="3" height="3" fill="currentColor"/>
+                    <rect x="9" y="1" width="3" height="3" fill="currentColor"/>
+                    <rect x="13" y="1" width="3" height="3" fill="currentColor"/>
+                    <rect x="1" y="5" width="3" height="3" fill="currentColor"/>
+                    <rect x="5" y="5" width="3" height="3" fill="currentColor"/>
+                    <rect x="9" y="5" width="3" height="3" fill="currentColor"/>
+                    <rect x="13" y="5" width="3" height="3" fill="currentColor"/>
+                    <rect x="1" y="9" width="3" height="3" fill="currentColor"/>
+                    <rect x="5" y="9" width="3" height="3" fill="currentColor"/>
+                    <rect x="9" y="9" width="3" height="3" fill="currentColor"/>
+                    <rect x="13" y="9" width="3" height="3" fill="currentColor"/>
+                  </svg>
                 </Button>
                 <Button
                   variant={imageSize === 'medium' ? 'default' : 'outline'}
-                  size="sm"
+                  size="icon"
                   onClick={() => setImageSize('medium')}
-                  title="Vista mediana"
+                  title="Vista normal"
                 >
-                  <span className="text-xs font-bold">M</span>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="5" height="5" fill="currentColor"/>
+                    <rect x="8" y="1" width="5" height="5" fill="currentColor"/>
+                    <rect x="1" y="8" width="5" height="5" fill="currentColor"/>
+                    <rect x="8" y="8" width="5" height="5" fill="currentColor"/>
+                  </svg>
                 </Button>
                 <Button
                   variant={imageSize === 'large' ? 'default' : 'outline'}
-                  size="sm"
+                  size="icon"
                   onClick={() => setImageSize('large')}
-                  title="Vista grande"
+                  title="Vista ampliada"
                 >
-                  <span className="text-xs font-bold">L</span>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="7" height="7" fill="currentColor"/>
+                    <rect x="9" y="1" width="7" height="7" fill="currentColor"/>
+                  </svg>
                 </Button>
               </div>
               
