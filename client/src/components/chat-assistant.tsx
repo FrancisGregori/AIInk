@@ -1046,7 +1046,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   placeholder={language === 'es' 
                     ? "Describe los cambios o arrastra una imagen..."
                     : "Describe changes or drag an image..."}
-                  className="flex-1 min-h-[60px] max-h-[120px] resize-none border border-zinc-700 bg-zinc-900/50 focus:border-zinc-500 transition-colors"
+                  className="flex-1 min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors"
                   disabled={isLoading}
                   data-testid="textarea-chat-input"
                 />
