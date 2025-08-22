@@ -4,6 +4,7 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Palette, Sparkles, RotateCw, Wand2, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
 import stencilExample1 from "@assets/hub_stencil1.png";
 import stencilExample2 from "@assets/hub_stencil2.png";
@@ -56,22 +57,37 @@ const ToolCard = ({
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    // Don't pause video, let it continue playing
+    if (videoUrl && videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+  };
+
+  const handleClick = () => {
+    if (videoUrl && videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsPlaying(true);
+      }
+    }
   };
 
   return (
-    <Card 
-      className={`group relative bg-gradient-to-b from-gray-900/90 to-gray-950/90 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-300 ${isActive ? 'card-hover-lift' : ''} animate-card-in`}
+    <motion.div
+      className="bg-gray-900 rounded-lg overflow-hidden flex flex-col border border-gray-800"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 300 }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      style={{
-        transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
+      onClick={handleClick}
     >
-      <div className="relative h-[350px] overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
+      <div className="relative h-48 overflow-hidden">
         {videoUrl ? (
-          <video
+          <video 
             ref={videoRef}
             src={videoUrl}
             loop
@@ -79,78 +95,51 @@ const ToolCard = ({
             playsInline
             autoPlay
             className="w-full h-full object-cover"
+            preload="auto"
             poster={imageUrl}
           />
-        ) : imageUrl ? (
-          <img
+        ) : (
+          <img 
             src={imageUrl}
             alt={title}
             className="w-full h-full object-cover"
           />
-        ) : (
-          <>
-            {/* Default gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
-            {/* Icon Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className={`w-20 h-20 ${isActive ? 'bg-white/20' : 'bg-gray-500/20'} rounded-full flex items-center justify-center backdrop-blur-sm`}>
-                <Icon className={`w-10 h-10 ${isActive ? 'text-white' : 'text-gray-400'}`} />
-              </div>
-            </div>
-          </>
         )}
-        
-        {/* Overlay gradient for better visibility */}
-        <div className={`absolute inset-0 bg-black ${isHovered || isPlaying ? 'bg-opacity-10' : 'bg-opacity-40'} transition-opacity duration-300`} />
-        
-        {/* Icon on hover */}
-        {!isHovered && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div 
-              className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-300"
-              style={{
-                transform: isHovered ? 'rotate(360deg)' : 'rotate(0deg)',
-              }}
-            >
-              <Icon className="w-10 h-10 text-white" />
-            </div>
-          </div>
-        )}
-        
-        {/* Coming Soon Badge */}
-        {!isActive && (
-          <div className="absolute top-4 right-4 bg-gray-800 px-3 py-1 rounded-full">
-            <span className="text-xs text-gray-400">Coming Soon</span>
-          </div>
-        )}
+        <div className={`absolute inset-0 bg-black ${isHovered || isPlaying ? 'bg-opacity-20' : 'bg-opacity-50'} flex items-center justify-center transition-opacity duration-300`}>
+          <motion.div
+            animate={{ rotate: isHovered ? 360 : 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Icon size={48} className={`text-white ${isHovered || isPlaying ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`} />
+          </motion.div>
+        </div>
       </div>
-      
-      <div className="p-8 space-y-4">
-        <h3 className="text-2xl font-bold text-white">{title}</h3>
-        <p className="text-gray-400">
-          {description}
-        </p>
+      <div className="p-6 flex-grow flex flex-col justify-between">
+        <div>
+          <h3 className="text-xl font-bold mb-2 text-white">{title}</h3>
+          <p className="text-gray-400 mb-4">{description}</p>
+        </div>
         {isActive && href ? (
           <Link href={href}>
-            <Button 
-              className="w-full bg-white text-black hover:bg-gray-100 py-6 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105"
-              style={{
-                transform: isHovered ? 'scale(1.1)' : 'scale(1)',
-              }}
+            <motion.button
+              className="bg-white hover:bg-gray-200 text-black px-4 py-2 rounded-full mt-auto text-center transition-colors inline-block w-full font-semibold"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
             >
               Try Now
-            </Button>
+            </motion.button>
           </Link>
         ) : (
-          <Button 
-            className="w-full bg-gray-700 text-gray-400 py-6 text-lg font-semibold rounded-full cursor-not-allowed"
+          <motion.button
+            className="bg-gray-600 text-white px-4 py-2 rounded-full mt-auto cursor-not-allowed"
             disabled
           >
             Coming Soon
-          </Button>
+          </motion.button>
         )}
       </div>
-    </Card>
+    </motion.div>
   );
 };
 
