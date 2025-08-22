@@ -800,7 +800,7 @@ function DesignEditor() {
                           className="w-full justify-start text-left h-auto p-2"
                           onClick={() => setPrompt(sugg.en)}
                         >
-                          <div className="text-xs">
+                          <div className="text-xs truncate">
                             {sugg[language]}
                           </div>
                         </Button>
@@ -820,7 +820,7 @@ function DesignEditor() {
                           className="w-full justify-start text-left h-auto p-2"
                           onClick={() => setPrompt(sugg.en)}
                         >
-                          <div className="text-xs">
+                          <div className="text-xs truncate">
                             {sugg[language]}
                           </div>
                         </Button>
@@ -840,7 +840,7 @@ function DesignEditor() {
                           className="w-full justify-start text-left h-auto p-2"
                           onClick={() => setPrompt(sugg.en)}
                         >
-                          <div className="text-xs">
+                          <div className="text-xs truncate">
                             {sugg[language]}
                           </div>
                         </Button>
