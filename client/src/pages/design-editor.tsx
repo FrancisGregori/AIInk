@@ -1265,7 +1265,7 @@ function DesignEditor() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-3">
-                  {projects.slice(0, 2).map((project) => (
+                  {projects.slice(0, 5).map((project) => (
                     <Dialog key={project.id}>
                       <DialogTrigger asChild>
                         <div className="relative group cursor-pointer">

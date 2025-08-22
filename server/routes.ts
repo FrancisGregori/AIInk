@@ -947,8 +947,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { type, limit, page } = req.query;
-      // Paginación: 15 items por página por defecto, máximo 50
-      const requestedLimit = limit ? Math.min(parseInt(limit as string), 50) : 15;
+      // Paginación: 50 items por página por defecto, máximo 100
+      const requestedLimit = limit ? Math.min(parseInt(limit as string), 100) : 50;
       const requestedPage = page ? Math.max(parseInt(page as string), 1) : 1;
       const offset = (requestedPage - 1) * requestedLimit;
       

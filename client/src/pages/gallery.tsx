@@ -72,11 +72,16 @@ export default function Gallery() {
 
   // Actualizar items cuando cambia la data
   React.useEffect(() => {
-    if (data) {
+    if (data && Array.isArray(data)) {
       if (currentPage === 1) {
         setAllLoadedItems(data);
       } else {
         setAllLoadedItems(prev => [...prev, ...data]);
+      }
+    } else if (data === null || data === undefined) {
+      // Si no hay datos, asegurarse de que la galería muestre vacía
+      if (currentPage === 1) {
+        setAllLoadedItems([]);
       }
     }
   }, [data, currentPage]);
@@ -90,10 +95,8 @@ export default function Gallery() {
 
   const allGalleryItems = allLoadedItems;
 
-  // Filter items based on selected type
-  const galleryItems = selectedType === 'all' 
-    ? allGalleryItems 
-    : allGalleryItems.filter((item: any) => item.type === selectedType);
+  // Items already filtered by server, no need to filter again
+  const galleryItems = allGalleryItems;
 
   // Delete mutation
   const deleteMutation = useMutation({
