@@ -1,0 +1,57 @@
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index 7d0ca329d428ba6c714d25f966e56cc832229378..73b147ce4bbf1a9424f54db9038b74cf9be49c2f 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -189,51 +189,51 @@ function DesignEditor() {
+           if (completedJobs.length > 0) {
+             const latestJob = completedJobs[0];
+             console.log('Design job recovery: Loading latest completed job', latestJob.id);
+             setCurrentJob(latestJob);
+             
+             // Restaurar datos del trabajo completado
+             if (latestJob.originalImageUrl) {
+               setReferencePreview(latestJob.originalImageUrl);
+               const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
+               setReferenceImage(fakeFile);
+             }
+             
+             if (latestJob.style) {
+               setPrompt(latestJob.style);
+             }
+           }
+         }
+       } catch (error) {
+         console.error('Error parsing localStorage:', error);
+       }
+     }
+   }, [user]); // Ejecutar cuando cambie el usuario
+ 
+   // NO usar updateJob para evitar loops - solo guardar directamente
+   useEffect(() => {
+-    if (!currentJob || currentJob.status !== 'processing') return;
++    if (!currentJob) return;
+     
+     const saveJobDirectly = () => {
+       const storageKey = 'tattoo-stencil-jobs';
+       const stored = localStorage.getItem(storageKey);
+       
+       try {
+         const jobs = stored ? JSON.parse(stored) : [];
+         const existingIndex = jobs.findIndex((j: any) => j.id === currentJob.id);
+         
+         if (existingIndex >= 0) {
+           // Actualizar trabajo existente
+           jobs[existingIndex] = currentJob;
+         } else {
+           // Agregar nuevo trabajo
+           jobs.push(currentJob);
+         }
+         
+         localStorage.setItem(storageKey, JSON.stringify(jobs));
+       } catch (error) {
+         console.error('Error saving job:', error);
+       }
+     };
+     
+     // Guardar solo una vez cuando cambia el ID o estado
+     const timeoutId = setTimeout(saveJobDirectly, 100);
