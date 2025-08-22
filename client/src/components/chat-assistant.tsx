@@ -728,9 +728,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           role: 'assistant',
           content: isCreditsError 
             ? (language === 'es' 
-              ? '⚠️ **Créditos insuficientes**\n\nNo tienes suficientes créditos para generar esta imagen.\n\n• Necesitas 3 créditos para cualquier generación\n\nContacta al administrador para obtener más créditos.'
-              : '⚠️ **Insufficient Credits**\n\nYou don\'t have enough credits to generate this image.\n\n• 3 credits needed for any generation\n\nContact admin to get more credits.')
-            : (language === 'es' 
+              ? '⚠️ No tienes créditos suficientes.'
+              : '⚠️ Insufficient credits.')
+            : (language === 'es'
               ? '❌ No se pudo generar la imagen. Por favor intenta de nuevo.'
               : '❌ Could not generate image. Please try again.'),
           timestamp: new Date()
@@ -739,15 +739,15 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         
         toast({
           title: isCreditsError 
-            ? (language === 'es' ? "⚠️ Créditos insuficientes" : "⚠️ Insufficient credits")
+            ? (language === 'es' ? "Créditos insuficientes" : "Insufficient credits")
             : (language === 'es' ? "Error al generar" : "Generation error"),
           description: isCreditsError
             ? (language === 'es' 
-              ? "No tienes suficientes créditos. Contacta al administrador."
-              : "You don't have enough credits. Contact admin.")
+              ? "No tienes créditos suficientes."
+              : "You don't have enough credits.")
             : (language === 'es' 
-              ? "No se pudo generar la imagen. Verifica la configuración."
-              : "Could not generate image. Check configuration."),
+              ? "No se pudo generar la imagen."
+              : "Could not generate image."),
           variant: "destructive"
         });
       } finally {
