@@ -520,6 +520,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       setMessages(prev => [...prev, assistantMessage]);
       
       // Read streaming response
+      let fullContent = '';
       while (reader) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -534,6 +535,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             
             try {
               const parsed = JSON.parse(data);
+              fullContent += parsed.content;
               // Update the last assistant message
               setMessages(prev => {
                 const newMessages = [...prev];
@@ -554,24 +556,18 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         }
       }
       
-      // Check if the response contains a technical prompt
-      const lastAssistantMessage = messages[messages.length - 1];
-      if (lastAssistantMessage && 
-          lastAssistantMessage.role === 'assistant' &&
-          (lastAssistantMessage.content.includes('maintaining') || 
-           lastAssistantMessage.content.includes('Change') ||
-           lastAssistantMessage.content.includes('Add') ||
-           lastAssistantMessage.content.includes('Remove'))) {
-        // Auto-apply the prompt if it looks like a technical prompt
+      // Check if the response is a prompt and auto-apply it
+      if (fullContent && isPromptMessage(fullContent)) {
+        // Auto-apply the prompt after a short delay to ensure UI updates
         setTimeout(() => {
-          onApplyPrompt(lastAssistantMessage.content);
+          applyPrompt(fullContent);
           toast({
-            title: language === 'es' ? "Prompt aplicado" : "Prompt applied",
+            title: language === 'es' ? "✨ Generando imagen..." : "✨ Generating image...",
             description: language === 'es' 
-              ? "El prompt se ha aplicado al campo de edición"
-              : "The prompt has been applied to the edit field"
+              ? "El prompt se aplicó automáticamente"
+              : "The prompt was applied automatically"
           });
-        }, 500);
+        }, 1000);
       }
     } catch (error) {
       console.error('Chat error:', error);
@@ -921,7 +917,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                     {msg.content}
                   </p>
                   {msg.role === 'assistant' && msg.content && !msg.isAnalyzing && isPromptMessage(msg.content) && (
-                    <div className="mt-3 flex gap-2 justify-end">
+                    <div className="mt-3 flex gap-2 justify-end items-center">
                       <Button
                         onClick={() => copyMessage(msg.content)}
                         variant="ghost"
@@ -932,23 +928,10 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       >
                         Copiar
                       </Button>
-                      <Button
-                        onClick={() => applyPrompt(msg.content)}
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 rounded-lg bg-white hover:bg-zinc-200 border border-zinc-300 text-xs text-black disabled:opacity-50 disabled:cursor-not-allowed"
-                        data-testid={`button-apply-message-${msg.id}`}
-                        disabled={isGeneratingImage}
-                      >
-                        {isGeneratingImage ? (
-                          <>
-                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                            {language === 'es' ? 'Generando...' : 'Generating...'}
-                          </>
-                        ) : (
-                          'Aplicar'
-                        )}
-                      </Button>
+                      <div className="flex items-center gap-1 text-xs text-zinc-400">
+                        <Sparkles className="h-3 w-3" />
+                        <span>{language === 'es' ? 'Se genera automáticamente' : 'Generates automatically'}</span>
+                      </div>
                     </div>
                   )}
                 </div>
