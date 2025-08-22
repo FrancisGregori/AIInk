@@ -997,15 +997,13 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             
             {/* Imagen miniatura - movida arriba */}
             {storedImage && (
-              <div className="mb-2 flex items-center gap-3 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={storedImage} 
-                    alt="Loaded image"
-                    className="h-8 w-8 object-cover rounded border border-zinc-700"
-                  />
-                  <span>{language === 'es' ? 'Imagen cargada para editar' : 'Image loaded for editing'}</span>
-                </div>
+              <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <img 
+                  src={storedImage} 
+                  alt="Loaded image"
+                  className="h-8 w-8 object-cover rounded border border-zinc-700"
+                />
+                <span>{language === 'es' ? 'Imagen cargada' : 'Image loaded'}</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1017,7 +1015,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       onImageUpload("", emptyFile);
                     }
                   }}
-                  className="h-6 w-6 p-0 hover:bg-zinc-800"
+                  className="h-6 w-6 p-0 hover:bg-zinc-800 ml-auto"
                 >
                   <X className="h-3 w-3" />
                 </Button>
