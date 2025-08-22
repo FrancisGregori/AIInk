@@ -610,10 +610,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         auth: replicateToken,
       });
 
-      // Configuración de entrada para FLUX Kontext Max
-      const input: any = {
-        prompt: prompt,
-      };
+      // Configuración de entrada basada en el modelo
+      let input: any = {};
+      
+      // Configuración específica para Qwen Image Edit
+      if (model === "qwen") {
+        input = {
+          prompt: prompt,
+          output_quality: 80,
+          watermark: false,
+          num_inference_steps: 50
+        };
+      } else {
+        // Configuración para FLUX Kontext
+        input = {
+          prompt: prompt,
+        };
+      }
 
       // Si hay imagen de entrada, la incluimos
       if (inputImageUrl) {
@@ -621,16 +634,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("URL type:", typeof inputImageUrl);
         console.log("URL length:", inputImageUrl.length);
         
+        // Para Qwen, el campo se llama "image", para Kontext es "input_image"
+        const imageField = model === "qwen" ? "image" : "input_image";
+        
         if (inputImageUrl.startsWith('data:')) {
           // Es una imagen base64, usarla directamente
-          input.input_image = inputImageUrl;
+          input[imageField] = inputImageUrl;
           console.log("Using base64 image data directly");
         } else {
           // Verificar si es una URL válida antes de enviar a Replicate
           try {
             new URL(inputImageUrl);
             // Es una URL válida, usarla directamente
-            input.input_image = inputImageUrl;
+            input[imageField] = inputImageUrl;
             console.log("Using external URL:", inputImageUrl);
           } catch {
             // No es una URL válida, reportar error
@@ -639,29 +655,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        if (aspectRatio && aspectRatio !== "match_input_image") {
+        // Solo para Kontext, manejar aspect ratio
+        if (model !== "qwen" && aspectRatio && aspectRatio !== "match_input_image") {
           input.aspect_ratio = aspectRatio;
         }
       } else {
-        // Para generación desde texto, usar dimensiones específicas
+        // Qwen requiere una imagen, no puede generar desde texto puro
+        if (model === "qwen") {
+          return res.status(400).json({ 
+            error: "Qwen Image Edit requires a reference image. Please upload an image first." 
+          });
+        }
+        // Para generación desde texto con Kontext, usar dimensiones específicas
         input.width = width;
         input.height = height;
       }
 
       console.log("Final input object for Replicate:", JSON.stringify(input, null, 2));
       
-      // Validación final: asegurar que input_image es válido si existe
-      if (input.input_image && typeof input.input_image === 'string') {
-        if (!input.input_image.startsWith('data:') && !input.input_image.startsWith('http')) {
-          console.error("CRITICAL: input_image is not a valid URI or base64:", input.input_image);
+      // Validación final: asegurar que la imagen es válida si existe
+      const imageField = model === "qwen" ? "image" : "input_image";
+      if (input[imageField] && typeof input[imageField] === 'string') {
+        if (!input[imageField].startsWith('data:') && !input[imageField].startsWith('http')) {
+          console.error(`CRITICAL: ${imageField} is not a valid URI or base64:`, input[imageField]);
           return res.status(400).json({ error: "Reference image format is invalid for Replicate API" });
         }
       }
 
       // Seleccionar el modelo basado en el parámetro
-      const modelName = model === "pro" 
-        ? "black-forest-labs/flux-kontext-pro" 
-        : "black-forest-labs/flux-kontext-max";
+      let modelName: string;
+      if (model === "qwen") {
+        modelName = "qwen/qwen-image-edit";
+      } else if (model === "pro") {
+        modelName = "black-forest-labs/flux-kontext-pro";
+      } else {
+        modelName = "black-forest-labs/flux-kontext-max";
+      }
       
       console.log(`Using model: ${modelName}`);
 

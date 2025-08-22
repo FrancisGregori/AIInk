@@ -462,6 +462,18 @@ function DesignEditor() {
       return;
     }
     
+    // Validate image requirement for Qwen model
+    if (modelVariant === 'qwen' && !referencePreview) {
+      toast({
+        title: language === 'es' ? "Imagen requerida" : "Image required",
+        description: language === 'es' 
+          ? "Qwen Image Edit necesita una imagen para editar. Por favor sube una imagen primero."
+          : "Qwen Image Edit requires an image to edit. Please upload an image first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!referencePreview) {
       toast({
         title: "Error", 
@@ -520,7 +532,7 @@ function DesignEditor() {
         body: JSON.stringify({
           prompt: prompt,
           inputImageUrl: referencePreview, // Changed from imageData to inputImageUrl like InkVision
-          model: modelVariant, // Just send 'pro' or 'max'
+          model: modelVariant, // Send 'pro', 'max', or 'qwen'
           aspectRatio: 'match_input_image'
         }),
       });
@@ -955,14 +967,18 @@ function DesignEditor() {
                     <div>
                       <Label>{txt.model}</Label>
                       <RadioGroup value={modelVariant} onValueChange={setModelVariant} className="mt-2">
-                        <div className="flex gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="pro" id="pro" />
-                            <Label htmlFor="pro">Pro</Label>
+                            <Label htmlFor="pro" className="text-xs">Kontext Pro</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="max" id="max" />
-                            <Label htmlFor="max">Max</Label>
+                            <Label htmlFor="max" className="text-xs">Kontext Max</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="qwen" id="qwen" />
+                            <Label htmlFor="qwen" className="text-xs">Qwen Edit</Label>
                           </div>
                         </div>
                       </RadioGroup>
