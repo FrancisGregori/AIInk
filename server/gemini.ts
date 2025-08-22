@@ -329,6 +329,33 @@ export async function getChatResponseGemini(
       const lastMessage = messages[messages.length - 1]?.content || "";
       console.log('Last message received:', lastMessage);
       
+      // Check if this is already a technical prompt (English or Spanish patterns)
+      const isTechnicalPrompt = 
+        // English patterns
+        lastMessage.includes('maintaining') || 
+        lastMessage.includes('Change the') ||
+        lastMessage.includes('Add ') ||
+        lastMessage.includes('Remove ') ||
+        lastMessage.includes('Transform to') ||
+        lastMessage.includes('Turn the') ||
+        lastMessage.includes('Rotate ') ||
+        lastMessage.includes('Replace ') ||
+        // Spanish patterns
+        lastMessage.includes('manteniendo') ||
+        lastMessage.includes('Cambiar el') ||
+        lastMessage.includes('Cambiar la') ||
+        lastMessage.includes('Agregar ') ||
+        lastMessage.includes('Añadir ') ||
+        lastMessage.includes('Quitar ') ||
+        lastMessage.includes('Eliminar ') ||
+        lastMessage.includes('Transformar a') ||
+        lastMessage.includes('Girar ') ||
+        lastMessage.includes('Rotar ') ||
+        lastMessage.includes('Reemplazar ') ||
+        // Common technical structure indicators
+        lastMessage.includes(', maintaining') ||
+        lastMessage.includes(', manteniendo');
+      
       // Check if this is a description request
       const isDescriptionRequest = lastMessage.toLowerCase().includes('describe') || 
                                    lastMessage.toLowerCase().includes('qué elementos') ||
@@ -340,10 +367,36 @@ export async function getChatResponseGemini(
       const isInitialAnalysis = messages.length === 0 || 
                                lastMessage.includes("Analiza esta imagen");
       
+      console.log('Is technical prompt:', isTechnicalPrompt);
       console.log('Is description request:', isDescriptionRequest);
       console.log('Is initial analysis:', isInitialAnalysis);
       
-      if (isDescriptionRequest || isInitialAnalysis) {
+      // Si el usuario ya envió un prompt técnico, aplicarlo directamente
+      if (isTechnicalPrompt) {
+        console.log('User provided technical prompt, applying directly');
+        // Si ya está en inglés con formato correcto, devolver tal cual
+        chatMessages = [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `The user provided this technical prompt: "${lastMessage}"
+
+If it's already in perfect English technical format, return it EXACTLY as is.
+If it's in another language or needs minor formatting, translate/adjust to English keeping the technical structure.
+
+OUTPUT ONLY THE TECHNICAL PROMPT (no explanations):`
+              },
+              {
+                inlineData: {
+                  data: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
+                  mimeType: "image/jpeg",
+                },
+              }
+            ]
+          }
+        ];
+      } else if (isDescriptionRequest || isInitialAnalysis) {
         // Pregunta directa sin descripción
         console.log('Creating direct question with image');
         chatMessages = [
