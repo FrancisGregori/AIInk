@@ -155,7 +155,7 @@ export default function Home() {
         
         <div className="relative max-w-7xl mx-auto text-center space-y-8">
           {/* Main Title with fade-in animation */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-fade-in">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight animate-fade-in">
             <span className="block">Revolutionize your Tattoo</span>
             <span className="block">Designs</span>
           </h1>
