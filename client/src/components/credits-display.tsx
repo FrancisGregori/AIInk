@@ -64,13 +64,9 @@ export function CreditsRequirement({ cost, action }: { cost: number; action: str
 
   const hasEnoughCredits = credits.available >= cost;
 
+  // Solo mostrar mensaje cuando NO hay suficientes créditos
   if (hasEnoughCredits) {
-    return (
-      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-        <Coins className="h-3 w-3" />
-        <span>{cost} credits per {action}</span>
-      </div>
-    );
+    return null;
   }
 
   return (
