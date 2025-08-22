@@ -1,0 +1,92 @@
+diff --git a/client/src/pages/stencil-tool.tsx b/client/src/pages/stencil-tool.tsx
+index 84b9728d489daa15bd0d0a25c9c6d524d0c0696e..17f2f019345af2a56019f784141220d92f9ad7ee 100644
+--- a/client/src/pages/stencil-tool.tsx
++++ b/client/src/pages/stencil-tool.tsx
+@@ -115,70 +115,84 @@ function StencilTool() {
+     queryKey: ["/api/stencil/styles"],
+   });
+ 
+   // Fetch user's recent jobs (gallery)
+   const { data: recentJobs = [] } = useQuery<StencilJob[]>({
+     queryKey: ["/api/stencil/gallery"],
+     refetchInterval: 3000, // Actualizar cada 3 segundos
+     refetchOnWindowFocus: true,
+     refetchOnMount: 'always',
+     staleTime: 5000, // Datos frescos por 5 segundos
+     gcTime: 5 * 60 * 1000, // Cache por 5 minutos
+   });
+ 
+   // Process image mutation
+   const processImageMutation = useMutation({
+     mutationFn: async (formData: FormData) => {
+       const response = await fetch("/api/stencil/process", {
+         method: "POST",
+         body: formData,
+       });
+       if (!response.ok) {
+         throw new Error('Failed to process image');
+       }
+       return response.json();
+     },
+-    onSuccess: (data: StencilJob) => {
++    onSuccess: async (data: StencilJob) => {
+       setCurrentJob(data);
+-      
++
+       // Register job in global context
+       addJob({
+         id: data.id,
+         status: data.status as 'processing' | 'completed' | 'failed',
+         type: 'stencil',
+         originalImageUrl: data.originalImageUrl || undefined,
+         processedImageUrl: data.processedImageUrl || undefined,
+         style: data.style || undefined,
+         startedAt: data.startedAt ? (typeof data.startedAt === 'string' ? data.startedAt : data.startedAt.toISOString()) : new Date().toISOString(),
+         completedAt: data.completedAt ? (typeof data.completedAt === 'string' ? data.completedAt : data.completedAt.toISOString()) : undefined,
+         errorMessage: data.errorMessage || undefined
+       });
+-      
++
+       // Only set processing to false if job is completed or failed
+       if (data.status === "completed" || data.status === "failed") {
+         setIsProcessing(false);
+       }
++
++      if (data.processedImageUrl) {
++        try {
++          await apiRequest('POST', '/api/gallery', {
++            imageUrl: data.processedImageUrl,
++            type: 'stencil',
++            title: `Stencil - ${data.style || selectedStyle}`,
++          });
++          queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
++        } catch (error) {
++          console.error('Failed to add image to gallery:', error);
++        }
++      }
++
+       queryClient.invalidateQueries({ queryKey: ["/api/stencil/gallery"] });
+     },
+     onError: () => {
+       setIsProcessing(false);
+     },
+   });
+   
+   // Poll for job status when processing
+   useEffect(() => {
+     if (!currentJob || (currentJob.status !== "processing" && currentJob.status !== "pending")) {
+       return;
+     }
+     
+     const interval = setInterval(async () => {
+       try {
+         const response = await fetch(`/api/stencil/jobs/${currentJob.id}`);
+         if (response.ok) {
+           const updatedJob = await response.json();
+           setCurrentJob(updatedJob);
+           
+           // Update job in global context
+           updateJob(updatedJob.id, {
+             status: updatedJob.status as 'processing' | 'completed' | 'failed',
+             processedImageUrl: updatedJob.processedImageUrl || undefined,
+             completedAt: updatedJob.completedAt ? (typeof updatedJob.completedAt === 'string' ? updatedJob.completedAt : updatedJob.completedAt.toISOString()) : undefined,

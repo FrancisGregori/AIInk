@@ -137,9 +137,9 @@ function StencilTool() {
       }
       return response.json();
     },
-    onSuccess: (data: StencilJob) => {
+    onSuccess: async (data: StencilJob) => {
       setCurrentJob(data);
-      
+
       // Register job in global context
       addJob({
         id: data.id,
@@ -152,13 +152,26 @@ function StencilTool() {
         completedAt: data.completedAt ? (typeof data.completedAt === 'string' ? data.completedAt : data.completedAt.toISOString()) : undefined,
         errorMessage: data.errorMessage || undefined
       });
-      
+
       // Only set processing to false if job is completed or failed
       if (data.status === "completed" || data.status === "failed") {
         setIsProcessing(false);
       }
+
+      if (data.processedImageUrl) {
+        try {
+          await apiRequest('POST', '/api/gallery', {
+            imageUrl: data.processedImageUrl,
+            type: 'stencil',
+            title: `Stencil - ${data.style || selectedStyle}`,
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+        } catch (error) {
+          console.error('Failed to add image to gallery:', error);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/stencil/gallery"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
     },
     onError: () => {
       setIsProcessing(false);
