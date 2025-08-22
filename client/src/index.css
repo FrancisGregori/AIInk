@@ -175,67 +175,50 @@
     background: #555;
   }
   
-  /* Fade-in animations */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-  
+  /* Fade-in animations - COMPLETELY INSTANT */
   .animate-fade-in {
-    animation: fadeIn 1s ease-out;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .animate-fade-in-delay-1 {
-    opacity: 0;
-    animation: fadeIn 1s ease-out 0.3s forwards;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .animate-fade-in-delay-2 {
-    opacity: 0;
-    animation: fadeIn 1s ease-out 0.6s forwards;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .animate-fade-in-delay-3 {
-    opacity: 0;
-    animation: fadeIn 1s ease-out 0.9s forwards;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .animate-card-in {
-    opacity: 0;
-    animation: fadeInScale 0.6s ease-out forwards;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .animate-card-in-1 {
-    animation-delay: 0.1s;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .animate-card-in-2 {
-    animation-delay: 0.2s;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .animate-card-in-3 {
-    animation-delay: 0.3s;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .animate-card-in-4 {
-    animation-delay: 0.4s;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   /* Card hover animations */

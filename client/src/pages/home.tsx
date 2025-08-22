@@ -77,10 +77,8 @@ const ToolCard = ({
   };
 
   return (
-    <motion.div
-      className="bg-gray-900 rounded-lg overflow-hidden flex flex-col border border-gray-800"
-      whileHover={{ scale: 1.05 }}
-      transition={{ type: "spring", stiffness: 300 }}
+    <div
+      className="bg-gray-900 rounded-lg overflow-hidden flex flex-col border border-gray-800 hover:scale-105 transition-transform duration-150"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
@@ -105,13 +103,10 @@ const ToolCard = ({
             className="w-full h-full object-cover"
           />
         )}
-        <div className={`absolute inset-0 bg-black ${isHovered || isPlaying ? 'bg-opacity-20' : 'bg-opacity-50'} flex items-center justify-center transition-opacity duration-300`}>
-          <motion.div
-            animate={{ rotate: isHovered ? 360 : 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Icon size={48} className={`text-white ${isHovered || isPlaying ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`} />
-          </motion.div>
+        <div className={`absolute inset-0 bg-black ${isHovered || isPlaying ? 'bg-opacity-20' : 'bg-opacity-50'} flex items-center justify-center transition-opacity`}>
+          <div className={`${isHovered ? 'rotate-180' : ''} transition-transform`}>
+            <Icon size={48} className={`text-white ${isHovered || isPlaying ? 'opacity-0' : 'opacity-100'} transition-opacity`} />
+          </div>
         </div>
       </div>
       <div className="p-6 flex-grow flex flex-col justify-between">
@@ -121,25 +116,23 @@ const ToolCard = ({
         </div>
         {isActive && href ? (
           <Link href={href}>
-            <motion.button
+            <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full mt-auto text-center transition-colors inline-block w-full font-semibold"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
             >
               Try Now
-            </motion.button>
+            </button>
           </Link>
         ) : (
-          <motion.button
+          <button
             className="bg-gray-600 text-white px-4 py-2 rounded-full mt-auto cursor-not-allowed"
             disabled
           >
             Coming Soon
-          </motion.button>
+          </button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
