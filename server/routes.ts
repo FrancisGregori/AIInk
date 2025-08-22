@@ -254,11 +254,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/temp-image/:id", (req, res) => {
     const { id } = req.params;
     
-    if (!global.tempImages || !global.tempImages.has(id)) {
+    if (!(global as any).tempImages || !(global as any).tempImages.has(id)) {
       return res.status(404).json({ error: "Image not found or expired" });
     }
     
-    const imageData = global.tempImages.get(id);
+    const imageData = (global as any).tempImages.get(id);
     res.set('Content-Type', imageData.mimeType);
     res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
     res.send(imageData.buffer);
@@ -739,7 +739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
           console.log(`Generating image (attempt ${attempt}/${retries}) with ${modelName}...`);
-          output = await replicate.run(modelName, { input });
+          output = await replicate.run(modelName as any, { input });
           break; // Éxito, salir del bucle
         } catch (error: any) {
           console.log(`Attempt ${attempt} failed:`, error.message);
@@ -860,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const modelAbbr = model === 'qwen' ? 'Q' : 
                        model === 'pro' ? 'P' : 
                        model === 'max' ? 'M' : 
-                       model.charAt(0).toUpperCase();
+                       (model as string).charAt(0).toUpperCase();
       
       // Subir imagen a Object Storage en lugar de guardar base64
       const objectStorage = new ObjectStorageService();
@@ -1104,14 +1104,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const updatedUser = await storage.updateUserCredits(userId, (user.credits || 0) + credits);
-      console.log(`[Admin] Added ${credits} credits to user ${userId}. New total: ${updatedUser.credits}`);
+      const updatedUser = await storage.updateUserCredits(userId, (user.monthlyCredits || 0) + credits);
+      console.log(`[Admin] Added ${credits} credits to user ${userId}. New total: ${updatedUser.monthlyCredits}`);
       
       res.json({ 
         success: true, 
         userId, 
         creditsAdded: credits, 
-        newTotal: updatedUser.credits 
+        newTotal: updatedUser.monthlyCredits 
       });
     } catch (error) {
       console.error("[Admin] Error adding credits:", error);
@@ -1139,7 +1139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const objectStorage = new ObjectStorageService();
-      const bucket = objectStorageClient.bucket(objectStorage.bucketName);
+      const bucket = objectStorageClient.bucket('repl-default-bucket');
       const file = bucket.file(filename);
       
       // Verificar que el archivo existe
