@@ -870,8 +870,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b bg-zinc-900">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-white" />
-              <h3 className="font-semibold text-white">InkVision - Asistente IA</h3>
+              <Sparkles className="h-4 w-4 text-zinc-400" />
+              <h3 className="text-sm text-zinc-400">InkVision - Asistente IA</h3>
             </div>
             {!embedded && (
               <Button
