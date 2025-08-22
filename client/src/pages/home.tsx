@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Palette, Sparkles, RotateCw, Wand2, ArrowRight } from "lucide-react";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
-import stencilExample1 from "@assets/image_1755821278668.png";
-import stencilExample2 from "@assets/image_1755821621512.png";
-import aiEditorImage from "@assets/image_1755821644613.png";
-import rotationImage from "@assets/image_1755822037806.png";
+import stencilExample1 from "@assets/Captura de pantalla 2025-08-21 224136_1755830647325.png";
+import stencilExample2 from "@assets/Captura de pantalla 2025-08-21 224155_1755830650041.png";
+import aiEditorImage from "@assets/Captura de pantalla 2025-08-21 224155_1755830656337.png";
+import rotationImage from "@assets/Captura de pantalla 2025-08-21 224136_1755830532129.png";
 
 const ToolCard = ({ 
   title, 
