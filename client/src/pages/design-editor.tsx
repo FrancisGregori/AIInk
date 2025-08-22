@@ -772,7 +772,6 @@ function DesignEditor() {
             </Button>
           </div>
           <p className="text-zinc-400">{txt.subtitle}</p>
-          <p className="text-sm text-zinc-500 mt-2">by Darwin Enriquez</p>
         </div>
 
 
