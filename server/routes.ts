@@ -1189,9 +1189,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Obtener el archivo y enviarlo
       const [buffer] = await file.download();
+      
+      // Headers correctos para mostrar imágenes
       res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Cache-Control', 'no-store');
-      res.send(buffer);
+      res.setHeader('Content-Length', buffer.length.toString());
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache de 1 hora
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      
+      res.end(buffer);
     } catch (error) {
       console.error('Error sirviendo imagen privada:', error);
       res.status(404).json({ message: "Imagen no encontrada" });
