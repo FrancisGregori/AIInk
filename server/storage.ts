@@ -26,64 +26,6 @@ import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
 
-// SISTEMA DE CACHÉ EN MEMORIA PARA GALERÍA INSTANTÁNEA
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-  ttl: number; // Time to live en ms
-}
-
-class MemoryCache {
-  private cache = new Map<string, CacheEntry<any>>();
-  private readonly DEFAULT_TTL = 60000; // 60 segundos por defecto
-  
-  set<T>(key: string, data: T, ttl?: number): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl: ttl || this.DEFAULT_TTL
-    });
-  }
-  
-  get<T>(key: string): T | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-    
-    // Verificar si expiró
-    if (Date.now() - entry.timestamp > entry.ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-    
-    return entry.data as T;
-  }
-  
-  invalidate(pattern?: string): void {
-    if (!pattern) {
-      this.cache.clear();
-      return;
-    }
-    
-    // Invalidar todas las keys que coincidan con el patrón
-    for (const key of this.cache.keys()) {
-      if (key.includes(pattern)) {
-        this.cache.delete(key);
-      }
-    }
-  }
-  
-  // Estadísticas del caché
-  getStats() {
-    return {
-      size: this.cache.size,
-      keys: Array.from(this.cache.keys())
-    };
-  }
-}
-
-// Instancia global del caché
-const galleryCache = new MemoryCache();
-
 // Interface for stencil processing
 export interface StencilProcessRequest {
   userId: string;
@@ -95,7 +37,7 @@ export interface StencilProcessRequest {
   };
 }
 
-// Modify the interface with required CRUD methods
+// Storage interface
 export interface IStorage {
   // User profile methods
   getUserProfile(id: string): Promise<UserProfile | undefined>;
@@ -145,544 +87,8 @@ export interface IStorage {
   toggleFavorite(id: string, userId: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private userProfiles: Map<string, UserProfile>;
-  private stencilStyles: Map<string, StencilStyle>;
-  private stencilJobs: Map<string, StencilJob>;
-  private fluxProjects: Map<string, FluxProject>;
-  private geminiChats: Map<string, GeminiChat>;
-  private usageTracking: Map<string, UsageTracking>;
-  private galleryItems: Map<string, GalleryItem>;
-
-  constructor() {
-    this.userProfiles = new Map();
-    this.stencilStyles = new Map();
-    this.stencilJobs = new Map();
-    this.fluxProjects = new Map();
-    this.geminiChats = new Map();
-    this.usageTracking = new Map();
-    this.galleryItems = new Map();
-    
-    this.initializeStencilStyles();
-    this.initializeSampleData();
-  }
-
-  // Initialize stencil styles (Steven, Makishi, Darwin, Adrian)
-  private initializeStencilStyles() {
-    const styles: StencilStyle[] = [
-      {
-        id: "steven",
-        name: "Steven",
-        description: "Estilo profesional con líneas definidas y sombreado detallado",
-        comfyDeployWorkflowId: "steven-stencil-workflow", // TODO: Replace with actual workflow ID
-        loraModel: "steven-lora-v1",
-        isActive: true,
-        displayOrder: 1,
-        previewImageUrl: "https://via.placeholder.com/200x200/000000/FFFFFF?text=Steven",
-      },
-      {
-        id: "makishi",
-        name: "Makishi",
-        description: "Estilo artístico japonés con trazos fluidos y elegantes",
-        comfyDeployWorkflowId: "makishi-stencil-workflow", // TODO: Replace with actual workflow ID
-        loraModel: "makishi-lora-v1",
-        isActive: true,
-        displayOrder: 2,
-        previewImageUrl: "https://via.placeholder.com/200x200/000000/FFFFFF?text=Makishi",
-      },
-      {
-        id: "darwin",
-        name: "Darwin",
-        description: "Estilo realista con alto contraste y detalles precisos",
-        comfyDeployWorkflowId: "darwin-stencil-workflow", // TODO: Replace with actual workflow ID
-        loraModel: "darwin-lora-v1",
-        isActive: true,
-        displayOrder: 3,
-        previewImageUrl: "https://via.placeholder.com/200x200/000000/FFFFFF?text=Darwin",
-      },
-      {
-        id: "adrian",
-        name: "Adrian",
-        description: "Estilo moderno con geometría y patrones abstractos",
-        comfyDeployWorkflowId: "adrian-stencil-workflow", // TODO: Replace with actual workflow ID
-        loraModel: "adrian-lora-v1",
-        isActive: true,
-        displayOrder: 4,
-        previewImageUrl: "https://via.placeholder.com/200x200/000000/FFFFFF?text=Adrian",
-      },
-    ];
-
-    styles.forEach(style => this.stencilStyles.set(style.id, style));
-  }
-
-  // Initialize sample data for demonstration
-  private initializeSampleData() {
-    // Sample user profile
-    const demoUser: UserProfile = {
-      id: "demo-user",
-      email: "demo@example.com",
-      displayName: "Usuario Demo",
-      avatarUrl: null,
-      subscriptionTier: "free",
-      monthlyCredits: 10,
-      creditsUsed: 3,
-      totalJobsProcessed: 5,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.userProfiles.set(demoUser.id, demoUser);
-
-    // Sample flux projects
-    const sampleProjects: FluxProject[] = [
-      {
-        id: randomUUID(),
-        userId: "demo-user",
-        name: "Logo Corporativo",
-        description: "Logo moderno para empresa de tecnología",
-        prompt: "Create a modern, minimalist logo for a tech company",
-        imageUrl: "https://via.placeholder.com/512x512/000000/FFFFFF?text=Logo",
-        settings: { style: "modern", colors: ["#000000", "#FFFFFF"] },
-        isPublic: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: randomUUID(),
-        userId: "demo-user",
-        name: "Poster Musical",
-        description: "Poster para evento de música electrónica",
-        prompt: "Design a vibrant poster for an electronic music event",
-        imageUrl: "https://via.placeholder.com/512x512/333333/FFFFFF?text=Music",
-        settings: { style: "vibrant", colors: ["#333333", "#CCCCCC"] },
-        isPublic: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ];
-
-    sampleProjects.forEach(project => this.fluxProjects.set(project.id, project));
-
-    // Sample completed stencil jobs
-    const sampleJobs: StencilJob[] = [
-      {
-        id: randomUUID(),
-        userId: "demo-user",
-        originalImageUrl: "https://via.placeholder.com/400x400/CCCCCC/000000?text=Original",
-        processedImageUrl: "https://via.placeholder.com/400x400/000000/FFFFFF?text=Stencil",
-        style: "steven",
-        status: "completed",
-        comfyDeployRunId: "run-001",
-        processingOptions: { quality: 90, transparentBg: false },
-        errorMessage: null,
-        startedAt: new Date(Date.now() - 120000),
-        completedAt: new Date(Date.now() - 60000),
-        createdAt: new Date(Date.now() - 120000),
-      },
-      {
-        id: randomUUID(),
-        userId: "demo-user",
-        originalImageUrl: "https://via.placeholder.com/400x400/EEEEEE/333333?text=Tattoo",
-        processedImageUrl: "https://via.placeholder.com/400x400/000000/FFFFFF?text=Darwin",
-        style: "darwin",
-        status: "completed",
-        comfyDeployRunId: "run-002",
-        processingOptions: { quality: 100, transparentBg: true },
-        errorMessage: null,
-        startedAt: new Date(Date.now() - 240000),
-        completedAt: new Date(Date.now() - 180000),
-        createdAt: new Date(Date.now() - 240000),
-      },
-    ];
-
-    sampleJobs.forEach(job => this.stencilJobs.set(job.id, job));
-  }
-
+export class DatabaseStorage implements IStorage {
   // User profile methods
-  async getUserProfile(id: string): Promise<UserProfile | undefined> {
-    return this.userProfiles.get(id);
-  }
-
-  async getUserProfileByEmail(email: string): Promise<UserProfile | undefined> {
-    return Array.from(this.userProfiles.values()).find(
-      (profile) => profile.email === email
-    );
-  }
-
-  async createUserProfile(insertProfile: InsertUserProfile): Promise<UserProfile> {
-    const profile: UserProfile = {
-      id: insertProfile.id,
-      email: insertProfile.email,
-      displayName: insertProfile.displayName || null,
-      avatarUrl: insertProfile.avatarUrl || null,
-      subscriptionTier: insertProfile.subscriptionTier || "free",
-      monthlyCredits: insertProfile.monthlyCredits || 10,
-      creditsUsed: insertProfile.creditsUsed || 0,
-      totalJobsProcessed: insertProfile.totalJobsProcessed || 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.userProfiles.set(profile.id, profile);
-    return profile;
-  }
-
-  async updateUserProfile(id: string, updates: Partial<UserProfile>): Promise<UserProfile | undefined> {
-    const profile = this.userProfiles.get(id);
-    if (!profile) return undefined;
-    
-    const updated = { ...profile, ...updates, updatedAt: new Date() };
-    this.userProfiles.set(id, updated);
-    return updated;
-  }
-
-  // Replit Auth required methods
-  async getUser(id: string): Promise<UserProfile | undefined> {
-    return this.getUserProfile(id);
-  }
-
-  async upsertUser(user: Partial<UserProfile>): Promise<UserProfile> {
-    const id = user.id || randomUUID();
-    const existing = await this.getUserProfile(id);
-    
-    if (existing) {
-      return await this.updateUserProfile(id, user) || existing;
-    } else {
-      return await this.createUserProfile({
-        ...user,
-        id,
-        email: user.email || "",
-      } as InsertUserProfile);
-    }
-  }
-
-  async getUserCredits(userId: string): Promise<number> {
-    const user = await this.getUserProfile(userId);
-    if (!user) return 0;
-    
-    // For now, just use monthly credits minus used (simplified for MemStorage)
-    const available = (user.monthlyCredits || 10) - (user.creditsUsed || 0);
-    return Math.max(0, available);
-  }
-
-  async deductCredits(userId: string, amount: number): Promise<boolean> {
-    const user = await this.getUserProfile(userId);
-    if (!user) return false;
-    
-    const availableCredits = await this.getUserCredits(userId);
-    if (availableCredits < amount) return false;
-    
-    // Update credits used
-    await this.updateUserProfile(userId, {
-      creditsUsed: (user.creditsUsed || 0) + amount
-    });
-    
-    return true;
-  }
-
-  async updateUserCredits(userId: string, newCredits: number): Promise<UserProfile> {
-    const user = await this.getUserProfile(userId);
-    if (!user) {
-      throw new Error(`User ${userId} not found`);
-    }
-    
-    // Update credits directly
-    const updated = await this.updateUserProfile(userId, {
-      credits: newCredits
-    });
-    
-    if (!updated) {
-      throw new Error(`Failed to update credits for user ${userId}`);
-    }
-    
-    return updated;
-  }
-
-  // Stencil methods
-  async getStencilStyles(): Promise<StencilStyle[]> {
-    return Array.from(this.stencilStyles.values())
-      .filter(style => style.isActive)
-      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-  }
-
-  async getStencilStyle(id: string): Promise<StencilStyle | undefined> {
-    return this.stencilStyles.get(id);
-  }
-
-  async createStencilJob(insertJob: InsertStencilJob): Promise<StencilJob> {
-    const id = randomUUID();
-    const job: StencilJob = {
-      id,
-      userId: insertJob.userId,
-      originalImageUrl: insertJob.originalImageUrl,
-      processedImageUrl: insertJob.processedImageUrl || null,
-      style: insertJob.style,
-      status: "pending",
-      comfyDeployRunId: insertJob.comfyDeployRunId || null,
-      processingOptions: insertJob.processingOptions || null,
-      errorMessage: null,
-      startedAt: null,
-      completedAt: null,
-      createdAt: new Date(),
-    };
-    this.stencilJobs.set(id, job);
-    return job;
-  }
-
-  async updateStencilJob(id: string, updates: Partial<StencilJob>): Promise<StencilJob | undefined> {
-    const job = this.stencilJobs.get(id);
-    if (!job) return undefined;
-    
-    const updated = { ...job, ...updates };
-    this.stencilJobs.set(id, updated);
-    return updated;
-  }
-
-  async getStencilJob(id: string): Promise<StencilJob | undefined> {
-    return this.stencilJobs.get(id);
-  }
-
-  async getStencilJobs(userId?: string): Promise<StencilJob[]> {
-    const jobs = Array.from(this.stencilJobs.values());
-    return userId 
-      ? jobs.filter(job => job.userId === userId)
-      : jobs;
-  }
-
-  async getGalleryStencils(userId?: string, limit: number = 20): Promise<StencilJob[]> {
-    const jobs = Array.from(this.stencilJobs.values())
-      .filter(job => job.status === "completed")
-      .sort((a, b) => (b.completedAt?.getTime() || 0) - (a.completedAt?.getTime() || 0));
-    
-    const filtered = userId 
-      ? jobs.filter(job => job.userId === userId)
-      : jobs;
-    
-    return filtered.slice(0, limit);
-  }
-
-  // Flux projects methods
-  async getFluxProjects(userId?: string): Promise<FluxProject[]> {
-    const projects = Array.from(this.fluxProjects.values());
-    return userId 
-      ? projects.filter(p => p.userId === userId)
-      : projects;
-  }
-
-  async createFluxProject(insertProject: InsertFluxProject): Promise<FluxProject> {
-    // Eliminado delay artificial que causaba lentitud
-    
-    const id = randomUUID();
-    const project: FluxProject = {
-      id,
-      name: insertProject.name,
-      description: insertProject.description || null,
-      userId: insertProject.userId,
-      prompt: insertProject.prompt || null,
-      imageUrl: insertProject.imageUrl || "https://via.placeholder.com/512x512/000080/FFFFFF?text=New+Design",
-      settings: insertProject.settings || null,
-      isPublic: insertProject.isPublic || false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    this.fluxProjects.set(id, project);
-    return project;
-  }
-
-  async updateFluxProject(id: string, updates: Partial<FluxProject>): Promise<FluxProject | undefined> {
-    const project = this.fluxProjects.get(id);
-    if (!project) return undefined;
-
-    const updatedProject = { 
-      ...project, 
-      ...updates, 
-      updatedAt: new Date() 
-    };
-    
-    this.fluxProjects.set(id, updatedProject);
-    return updatedProject;
-  }
-
-  async regenerateFluxProject(id: string): Promise<FluxProject | undefined> {
-    const project = this.fluxProjects.get(id);
-    if (!project) return undefined;
-
-    // Simulate regeneration with new image
-    const updatedProject = {
-      ...project,
-      imageUrl: `https://via.placeholder.com/512x512/${Math.floor(Math.random()*16777215).toString(16)}/FFFFFF?text=Regenerated`,
-      updatedAt: new Date(),
-    };
-
-    this.fluxProjects.set(id, updatedProject);
-    return updatedProject;
-  }
-
-  async deleteFluxProject(id: string): Promise<boolean> {
-    const existed = this.fluxProjects.has(id);
-    if (existed) {
-      this.fluxProjects.delete(id);
-    }
-    return existed;
-  }
-
-  // Gemini chat methods
-  async saveGeminiChat(insertChat: InsertGeminiChat): Promise<GeminiChat> {
-    const id = randomUUID();
-    const chat: GeminiChat = {
-      id,
-      userId: insertChat.userId,
-      role: insertChat.role,
-      message: insertChat.message,
-      projectId: insertChat.projectId || null,
-      response: insertChat.response || null,
-      createdAt: new Date(),
-    };
-
-    this.geminiChats.set(id, chat);
-    return chat;
-  }
-
-  async getGeminiChats(projectId?: string): Promise<GeminiChat[]> {
-    const chats = Array.from(this.geminiChats.values());
-    return projectId
-      ? chats.filter(chat => chat.projectId === projectId)
-      : chats;
-  }
-
-  // Usage tracking methods
-  async trackUsage(insertUsage: InsertUsageTracking): Promise<UsageTracking> {
-    const id = randomUUID();
-    const usage: UsageTracking = {
-      id,
-      userId: insertUsage.userId,
-      actionType: insertUsage.actionType,
-      metadata: insertUsage.metadata || null,
-      creditsUsed: insertUsage.creditsUsed || 1,
-      createdAt: new Date(),
-    };
-
-    this.usageTracking.set(id, usage);
-    
-    // Update user credits
-    const profile = await this.getUserProfile(insertUsage.userId);
-    if (profile && profile.creditsUsed !== null) {
-      await this.updateUserProfile(insertUsage.userId, {
-        creditsUsed: profile.creditsUsed + (insertUsage.creditsUsed || 1),
-      });
-    }
-    
-    return usage;
-  }
-
-  async getUserUsage(userId: string): Promise<UsageTracking[]> {
-    return Array.from(this.usageTracking.values())
-      .filter(usage => usage.userId === userId)
-      .sort((a, b) => {
-        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
-        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
-        return bTime - aTime;
-      });
-  }
-
-  // Gallery methods
-  async getUserGallery(userId: string, type?: string, limit?: number, offset?: number): Promise<GalleryItem[]> {
-    let items = Array.from(this.galleryItems.values())
-      .filter(item => item.userId === userId);
-    
-    if (type) {
-      items = items.filter(item => item.type === type);
-    }
-    
-    items.sort((a, b) => {
-      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
-      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
-      return bTime - aTime;
-    });
-    
-    const start = offset || 0;
-    const end = limit ? start + limit : items.length;
-    return items.slice(start, end);
-  }
-
-  async getGalleryItemCount(userId: string, type?: string): Promise<number> {
-    let items = Array.from(this.galleryItems.values())
-      .filter(item => item.userId === userId);
-    
-    if (type) {
-      items = items.filter(item => item.type === type);
-    }
-    
-    return items.length;
-  }
-
-  async addToGallery(insertItem: InsertGalleryItem): Promise<GalleryItem> {
-    const id = randomUUID();
-    const item: GalleryItem = {
-      id,
-      userId: insertItem.userId,
-      imageUrl: insertItem.imageUrl,
-      thumbnailUrl: insertItem.thumbnailUrl || null,
-      type: insertItem.type,
-      title: insertItem.title || null,
-      description: insertItem.description || null,
-      prompt: insertItem.prompt || null,
-      style: insertItem.style || null,
-      isFavorite: insertItem.isFavorite || false,
-      metadata: insertItem.metadata || null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    this.galleryItems.set(id, item);
-    return item;
-  }
-
-  async updateGalleryItem(id: string, updates: Partial<GalleryItem>, userId: string): Promise<GalleryItem | undefined> {
-    const item = this.galleryItems.get(id);
-    if (!item) return undefined;
-    
-    // VALIDACIÓN DE SEGURIDAD: Verificar que el item pertenece al usuario
-    if (item.userId !== userId) {
-      console.warn(`[SECURITY] User ${userId} attempted to update gallery item ${id} owned by ${item.userId}`);
-      return undefined;
-    }
-
-    const updatedItem = {
-      ...item,
-      ...updates,
-      updatedAt: new Date(),
-    };
-
-    this.galleryItems.set(id, updatedItem);
-    return updatedItem;
-  }
-
-  async deleteGalleryItem(id: string, userId: string): Promise<boolean> {
-    const item = this.galleryItems.get(id);
-    if (!item || item.userId !== userId) return false;
-
-    this.galleryItems.delete(id);
-    return true;
-  }
-
-  async toggleFavorite(id: string, userId: string): Promise<boolean> {
-    const item = this.galleryItems.get(id);
-    if (!item || item.userId !== userId) return false;
-
-    const updatedItem = {
-      ...item,
-      isFavorite: !item.isFavorite,
-      updatedAt: new Date(),
-    };
-
-    this.galleryItems.set(id, updatedItem);
-    return true;
-  }
-}
-
-// Database Storage Implementation
-class DatabaseStorage implements IStorage {
-  // User profile methods (for backward compatibility)
   async getUserProfile(id: string): Promise<UserProfile | undefined> {
     const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.id, id));
     return profile;
@@ -699,76 +105,44 @@ class DatabaseStorage implements IStorage {
   }
 
   async updateUserProfile(id: string, updates: Partial<UserProfile>): Promise<UserProfile | undefined> {
-    const safeUpdates = {
-      email: updates.email,
-      displayName: updates.displayName,
-      avatarUrl: updates.avatarUrl,
-      subscriptionTier: updates.subscriptionTier,
-      monthlyCredits: updates.monthlyCredits,
-      creditsUsed: updates.creditsUsed,
-      totalJobsProcessed: updates.totalJobsProcessed,
-      updatedAt: new Date()
-    };
-    
-    // Remove undefined values
-    Object.keys(safeUpdates).forEach((key) => {
-      if ((safeUpdates as any)[key] === undefined) {
-        delete (safeUpdates as any)[key];
-      }
-    });
-    
     const [updated] = await db.update(userProfiles)
-      .set(safeUpdates)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(userProfiles.id, id))
       .returning();
     return updated;
   }
 
-  // Replit Auth required methods
+  // Replit Auth methods
   async getUser(id: string): Promise<UserProfile | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    if (!user) return undefined;
-    
-    // Map from users table to UserProfile type
-    return {
-      id: user.id,
-      email: user.email || '',
-      displayName: user.firstName && user.lastName 
-        ? `${user.firstName} ${user.lastName}` 
-        : user.firstName || user.email || 'User',
-      avatarUrl: user.profileImageUrl || null,
-      subscriptionTier: user.subscriptionTier,
-      monthlyCredits: user.credits,
-      creditsUsed: 0,
-      totalJobsProcessed: 0,
-      createdAt: user.createdAt || new Date(),
-      updatedAt: user.updatedAt || new Date(),
-    };
+    return user as UserProfile;
   }
 
-  async upsertUser(userData: Partial<UserProfile>): Promise<UserProfile> {
-    const upsertData = {
-      id: userData.id!,
-      email: userData.email,
-      firstName: userData.displayName?.split(' ')[0],
-      lastName: userData.displayName?.split(' ').slice(1).join(' '),
-      profileImageUrl: userData.avatarUrl,
-      subscriptionTier: userData.subscriptionTier || 'free',
-      credits: userData.monthlyCredits || 100,
-    };
-
-    const [user] = await db.insert(users)
-      .values(upsertData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...upsertData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-
-    return this.getUser(user.id) as Promise<UserProfile>;
+  async upsertUser(user: Partial<UserProfile>): Promise<UserProfile> {
+    if (!user.id) {
+      throw new Error("User ID is required for upsert operation");
+    }
+    
+    const existingUser = await this.getUser(user.id);
+    
+    if (existingUser) {
+      const [updated] = await db.update(users)
+        .set({ ...user, updatedAt: new Date() })
+        .where(eq(users.id, user.id))
+        .returning();
+      return updated as UserProfile;
+    } else {
+      const [newUser] = await db.insert(users).values({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      return newUser as UserProfile;
+    }
   }
 
   // Credit system methods
@@ -778,11 +152,17 @@ class DatabaseStorage implements IStorage {
   }
 
   async deductCredits(userId: string, amount: number): Promise<boolean> {
-    const credits = await this.getUserCredits(userId);
-    if (credits < amount) return false;
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || user.credits < amount) {
+      return false;
+    }
 
     await db.update(users)
-      .set({ credits: sql`${users.credits} - ${amount}` })
+      .set({ 
+        credits: user.credits - amount,
+        creditsUsed: (user.creditsUsed || 0) + amount,
+        updatedAt: new Date() 
+      })
       .where(eq(users.id, userId));
     
     return true;
@@ -794,7 +174,7 @@ class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     
-    return this.getUser(updated.id) as Promise<UserProfile>;
+    return updated as UserProfile;
   }
 
   // Stencil methods
@@ -818,12 +198,6 @@ class DatabaseStorage implements IStorage {
       .where(eq(stencilJobs.id, id))
       .returning();
     
-    // Si el job se completó, invalidar caché de stencils
-    if (updated && updates.status === 'completed') {
-      galleryCache.invalidate(`stencils:${updated.userId}`);
-      console.log(`[CACHE] Invalidated stencil cache for user ${updated.userId}`);
-    }
-    
     return updated;
   }
 
@@ -842,20 +216,7 @@ class DatabaseStorage implements IStorage {
   }
 
   async getGalleryStencils(userId?: string, limit?: number): Promise<StencilJob[]> {
-    // Optimización: limitar por defecto a 30 items más recientes
     const defaultLimit = limit || 30;
-    
-    // Crear clave de caché única para stencils
-    const cacheKey = `stencils:${userId || 'all'}:${defaultLimit}`;
-    
-    // Intentar obtener del caché primero
-    const cachedData = galleryCache.get<StencilJob[]>(cacheKey);
-    if (cachedData) {
-      console.log(`[CACHE HIT] Stencil gallery served from cache for ${cacheKey}`);
-      return cachedData;
-    }
-    
-    console.log(`[CACHE MISS] Fetching stencil gallery from DB for ${cacheKey}`);
     
     let baseQuery = userId 
       ? db.select().from(stencilJobs)
@@ -869,9 +230,6 @@ class DatabaseStorage implements IStorage {
     const result = await baseQuery
       .orderBy(desc(stencilJobs.createdAt))
       .limit(defaultLimit);
-    
-    // Guardar en caché con TTL de 5 minutos
-    galleryCache.set(cacheKey, result, 300000);
     
     return result;
   }
@@ -891,13 +249,6 @@ class DatabaseStorage implements IStorage {
     return newProject;
   }
 
-  async getFluxProject(id: string): Promise<FluxProject | undefined> {
-    const [project] = await db.select().from(fluxProjects)
-      .where(eq(fluxProjects.id, id))
-      .limit(1);
-    return project;
-  }
-
   async updateFluxProject(id: string, updates: Partial<FluxProject>): Promise<FluxProject | undefined> {
     const [updated] = await db.update(fluxProjects)
       .set({ ...updates, updatedAt: new Date() })
@@ -911,8 +262,8 @@ class DatabaseStorage implements IStorage {
   }
 
   async deleteFluxProject(id: string): Promise<boolean> {
-    const result = await db.delete(fluxProjects).where(eq(fluxProjects.id, id));
-    return true; // If no error thrown, assume success
+    await db.delete(fluxProjects).where(eq(fluxProjects.id, id));
+    return true;
   }
 
   // Gemini chat methods
@@ -942,95 +293,50 @@ class DatabaseStorage implements IStorage {
       .orderBy(desc(usageTracking.createdAt));
   }
 
-  // Gallery methods
+  // Gallery methods - SIMPLIFICADOS PARA MEJOR PERFORMANCE
   async getUserGallery(userId: string, type?: string, limit?: number, offset?: number): Promise<GalleryItem[]> {
     const defaultLimit = limit || 100;
     const defaultOffset = offset || 0;
     
-    // Crear clave de caché única con offset
-    const cacheKey = `gallery:${userId}:${type || 'all'}:${defaultLimit}:${defaultOffset}`;
+    console.log(`[DB] Fetching gallery data for user ${userId}, type: ${type || 'all'}, limit: ${defaultLimit}`);
     
-    // Intentar obtener del caché primero
-    const cachedData = galleryCache.get<GalleryItem[]>(cacheKey);
-    if (cachedData) {
-      console.log(`[CACHE HIT] Gallery data served from cache for ${cacheKey}`);
-      return cachedData;
+    const startTime = Date.now();
+    
+    let query = db.select().from(userGallery).where(eq(userGallery.userId, userId));
+    
+    if (type && type !== 'all') {
+      query = query.where(eq(userGallery.type, type));
     }
     
-    console.log(`[CACHE MISS] Fetching gallery data from DB for ${cacheKey}`);
+    const result = await query
+      .orderBy(desc(userGallery.createdAt))
+      .limit(defaultLimit)
+      .offset(defaultOffset);
     
-    // Query con filtros optimizados y paginación
-    let result: GalleryItem[];
-    if (type) {
-      result = await db
-        .select()
-        .from(userGallery)
-        .where(and(
-          eq(userGallery.userId, userId),
-          eq(userGallery.type, type)
-        ))
-        .orderBy(desc(userGallery.createdAt))
-        .limit(defaultLimit)
-        .offset(defaultOffset);
-    } else {
-      result = await db
-        .select()
-        .from(userGallery)
-        .where(eq(userGallery.userId, userId))
-        .orderBy(desc(userGallery.createdAt))
-        .limit(defaultLimit)
-        .offset(defaultOffset);
-    }
-    
-    // Guardar en caché con TTL de 5 minutos
-    galleryCache.set(cacheKey, result, 300000);
+    const duration = Date.now() - startTime;
+    console.log(`Gallery query took ${duration}ms for ${result.length} items`);
     
     return result;
   }
 
   async getGalleryItemCount(userId: string, type?: string): Promise<number> {
-    const cacheKey = `gallery-count:${userId}:${type || 'all'}`;
-    
-    // Intentar obtener del caché primero
-    const cachedCount = galleryCache.get<number>(cacheKey);
-    if (cachedCount !== undefined) {
-      return cachedCount;
-    }
-    
-    // Query para contar items
     let query = db.select({ count: sql<number>`count(*)` }).from(userGallery)
       .where(eq(userGallery.userId, userId));
     
-    if (type) {
-      query = db.select({ count: sql<number>`count(*)` }).from(userGallery)
-        .where(and(
-          eq(userGallery.userId, userId),
-          eq(userGallery.type, type)
-        ));
+    if (type && type !== 'all') {
+      query = query.where(eq(userGallery.type, type));
     }
     
     const [result] = await query;
-    const count = Number(result.count);
-    
-    // Guardar en caché con TTL de 5 minutos
-    galleryCache.set(cacheKey, count, 300000);
-    
-    return count;
+    return Number(result.count);
   }
 
   async addToGallery(item: InsertGalleryItem): Promise<GalleryItem> {
     const [newItem] = await db.insert(userGallery).values(item).returning();
-    
-    // INVALIDAR TODO EL CACHÉ del usuario cuando se agrega un nuevo item
-    // Usar el método invalidate existente que limpia por patrón
-    galleryCache.invalidate(item.userId);
-    console.log(`[CACHE] Invalidated all gallery caches for user ${item.userId}`);
-    
     return newItem;
   }
 
   async updateGalleryItem(id: string, updates: Partial<GalleryItem>, userId: string): Promise<GalleryItem | undefined> {
-    // VALIDACIÓN DE SEGURIDAD: Primero verificar que el item existe y pertenece al usuario
     const [existing] = await db.select().from(userGallery)
       .where(and(
         eq(userGallery.id, id),
@@ -1059,12 +365,7 @@ class DatabaseStorage implements IStorage {
         eq(userGallery.userId, userId)
       ));
     
-    // INVALIDAR TODO EL CACHÉ del usuario cuando se elimina un item
-    // Usar el método invalidate existente que limpia por patrón
-    galleryCache.invalidate(userId);
-    console.log(`[CACHE] Invalidated all gallery caches for user ${userId} after deletion`);
-    
-    return true; // If no error thrown, assume success
+    return true;
   }
 
   async toggleFavorite(id: string, userId: string): Promise<boolean> {

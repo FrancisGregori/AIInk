@@ -83,7 +83,7 @@ export const userProfiles = pgTable("user_profiles", {
 // Stencil jobs table (for tracking image processing)
 export const stencilJobs = pgTable("stencil_jobs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   originalImageUrl: text("original_image_url").notNull(),
   processedImageUrl: text("processed_image_url"),
   style: varchar("style").notNull(), // Steven, Makishi, Darwin, Adrian
@@ -111,7 +111,7 @@ export const stencilStyles = pgTable("stencil_styles", {
 // Flux projects table (for design editor)
 export const fluxProjects = pgTable("flux_projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text("name").notNull(),
   description: text("description"),
   prompt: text("prompt"),
@@ -125,7 +125,7 @@ export const fluxProjects = pgTable("flux_projects", {
 // Gemini chat messages table
 export const geminiChats = pgTable("gemini_chats", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   projectId: varchar("project_id").references(() => fluxProjects.id),
   role: text("role").notNull(), // 'user' | 'assistant'
   message: text("message").notNull(),
@@ -136,7 +136,7 @@ export const geminiChats = pgTable("gemini_chats", {
 // Usage tracking table
 export const usageTracking = pgTable("usage_tracking", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   actionType: varchar("action_type").notNull(), // stencil_conversion, flux_generation, gemini_chat
   creditsUsed: integer("credits_used").default(1),
   metadata: jsonb("metadata"),

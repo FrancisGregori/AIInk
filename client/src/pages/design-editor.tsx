@@ -620,17 +620,16 @@ function DesignEditor() {
       
       // Don't clear the job - keep it visible until next generation
       
-      // Gallery entry is created by the generate endpoint.
-      // If manual registration is needed, send:
-      // await apiRequest("POST", "/api/gallery", {
-      //   imageUrl,
-      //   thumbnailUrl,
-      //   type: "design",
-      //   title: prompt.slice(0, 50),
-      //   description: prompt,
-      //   prompt,
-      //   style: modelVariant,
-      // });
+      // Save to gallery
+      await apiRequest("POST", "/api/gallery", {
+        imageUrl,
+        thumbnailUrl,
+        type: "design",
+        title: prompt.slice(0, 50),
+        description: prompt,
+        prompt,
+        style: modelVariant,
+      });
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
