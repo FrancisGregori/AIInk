@@ -649,9 +649,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           const generatedMessage: Message = {
             id: `generated-${Date.now()}`,
             role: 'assistant',
-            content: language === 'es' 
-              ? '✨ Aquí está tu imagen editada:'
-              : '✨ Here\'s your edited image:',
+            content: '', // No text, just the image with actions
             image: result.imageUrl,
             timestamp: new Date()
           };
@@ -873,45 +871,50 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   }`}
                 >
                   {msg.image && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <img 
-                          src={msg.image} 
-                          alt="Uploaded" 
-                          className="max-w-full h-auto rounded mb-2 max-h-40 object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                          data-testid={`img-chat-${msg.id}`}
-                        />
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[90vh] p-2">
-                        <div className="relative">
-                          <img
-                            src={msg.image}
-                            alt="Full size image"
-                            className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                    <>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <img 
+                            src={msg.image} 
+                            alt="Generated" 
+                            className="max-w-full h-auto rounded mb-2 max-h-40 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                            data-testid={`img-chat-${msg.id}`}
                           />
-                          <div className="absolute top-2 right-2 flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="bg-amber-500/30 backdrop-blur-sm text-white hover:bg-amber-500/50"
-                              onClick={() => handleUseAsReference(msg.image!)}
-                              data-testid={`button-use-as-reference-chat-${msg.id}`}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              {language === 'es' ? 'Editar imagen' : 'Edit image'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => downloadImage(msg.image!, `inkvision-${msg.id}.png`)}
-                              data-testid={`button-download-chat-${msg.id}`}
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              {language === 'es' ? 'Descargar' : 'Download'}
-                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+                          <div className="relative">
+                            <img
+                              src={msg.image}
+                              alt="Full size image"
+                              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+                            />
                           </div>
+                        </DialogContent>
+                      </Dialog>
+                      {/* Action buttons below the image */}
+                      {msg.role === 'assistant' && (
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white border-0"
+                            onClick={() => handleUseAsReference(msg.image!)}
+                            data-testid={`button-edit-chat-${msg.id}`}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-zinc-600 hover:bg-zinc-800"
+                            onClick={() => downloadImage(msg.image!, `inkvision-${msg.id}.png`)}
+                            data-testid={`button-download-chat-${msg.id}`}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </DialogContent>
-                    </Dialog>
+                      )}
+                    </>
                   )}
                   <p className={`text-sm whitespace-pre-wrap ${msg.isAnalyzing ? 'animate-pulse' : ''}`}>
                     {msg.content}
