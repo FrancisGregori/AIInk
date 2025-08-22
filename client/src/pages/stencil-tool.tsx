@@ -54,6 +54,7 @@ function StencilTool() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentJob, setCurrentJob] = useState<StencilJob | null>(null);
   const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
+  const [showFullGallery, setShowFullGallery] = useState(false);
   const [processingOptions, setProcessingOptions] = useState<ProcessingOptions>({
     removeBackground: true,
     lineColor: "black"
@@ -481,18 +482,28 @@ Press and hold the stencil image above and select "Copy", then paste it directly
 
           {/* Right Column - Gallery */}
           <div className="xl:col-span-1 lg:col-span-1">
-            {/* Recent Gallery - Portrait Style, Only 2 Items */}
+            {/* Gallery Header with Toggle */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Últimos Trabajos
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Galería de Stencils
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFullGallery(!showFullGallery)}
+                    className="text-xs"
+                  >
+                    {showFullGallery ? 'Ver menos' : `Ver todos (${recentJobs.length})`}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {recentJobs.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-3">
-                    {recentJobs.slice(0, 2).map((job) => {
+                  <div className={`grid ${showFullGallery ? 'grid-cols-2 max-h-[600px] overflow-y-auto custom-scrollbar' : 'grid-cols-1'} gap-3`}>
+                    {(showFullGallery ? recentJobs : recentJobs.slice(0, 2)).map((job) => {
                       const isDisabled = isProcessing || (currentJob && currentJob.status === 'processing');
                       return (
                       <div
