@@ -260,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     const imageData = (global as any).tempImages.get(id);
     res.set('Content-Type', imageData.mimeType);
-    res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.set('Cache-Control', 'no-store');
     res.send(imageData.buffer);
   });
 
@@ -611,7 +611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set headers for SSE
       res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Cache-Control', 'no-store');
       res.setHeader('Connection', 'keep-alive');
       res.setHeader('Access-Control-Allow-Origin', '*');
       
@@ -1013,7 +1013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Cache y metadata de paginación
       const totalCount = totalItems || 0;
       res.set({
-        'Cache-Control': 'private, max-age=60, immutable',
+        'Cache-Control': 'no-store',
         'X-Total-Count': totalCount.toString(),
         'X-Page': requestedPage.toString(),
         'X-Page-Size': requestedLimit.toString(),
@@ -1190,7 +1190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Obtener el archivo y enviarlo
       const [buffer] = await file.download();
       res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por 1 hora
+      res.setHeader('Cache-Control', 'no-store');
       res.send(buffer);
     } catch (error) {
       console.error('Error sirviendo imagen privada:', error);

@@ -1,0 +1,213 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index c134267365ed979fc507d37b7d8a965fbb346ac6..4b3c5d6bd9418c4ebf9c74e2d291796d572d97f0 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -238,51 +238,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
+   app.get("/api/stencil/gallery", isAuthenticated, async (req, res) => {
+     try {
+       const userId = (req as any).user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+       const limit = parseInt(req.query.limit as string) || 20;
+       const stencils = await storage.getGalleryStencils(userId, limit);
+       res.json(stencils);
+     } catch (error) {
+       console.error("Error fetching gallery:", error);
+       res.status(500).json({ error: "Internal server error" });
+     }
+   });
+ 
+   // Serve temporary images for ComfyDeploy
+   app.get("/api/temp-image/:id", (req, res) => {
+     const { id } = req.params;
+     
+     if (!global.tempImages || !global.tempImages.has(id)) {
+       return res.status(404).json({ error: "Image not found or expired" });
+     }
+     
+     const imageData = global.tempImages.get(id);
+     res.set('Content-Type', imageData.mimeType);
+-    res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
++    res.set('Cache-Control', 'no-store');
+     res.send(imageData.buffer);
+   });
+ 
+   // Process stencil with ComfyDeploy
+   app.post("/api/stencil/process", isAuthenticated, upload.single('image'), async (req, res) => {
+     try {
+       if (!req.file) {
+         return res.status(400).json({ error: "No image file provided" });
+       }
+ 
+       // Get authenticated user ID
+       const authenticatedUserId = (req as any).user?.claims?.sub;
+       if (!authenticatedUserId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+ 
+       const { style = "steven", processingOptions } = req.body;
+       const userId = authenticatedUserId;
+       
+       // Check if user has enough credits (5 credits for stencil)
+       const STENCIL_COST = 5;
+       const availableCredits = await storage.getUserCredits(userId);
+       
+       if (availableCredits < STENCIL_COST) {
+         return res.status(402).json({ 
+diff --git a/server/routes.ts b/server/routes.ts
+index c134267365ed979fc507d37b7d8a965fbb346ac6..4b3c5d6bd9418c4ebf9c74e2d291796d572d97f0 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -547,51 +547,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
+       res.json(result);
+     } catch (error) {
+       console.error("Error in InkVision chat:", error);
+       const { language = "es" } = req.body;
+       res.status(500).json({ 
+         error: "Error processing chat message",
+         response: language === "es" 
+           ? "Disculpa, no pude procesar tu mensaje. ¿Podrías reformularlo?"
+           : "Sorry, I couldn't process your message. Could you rephrase it?",
+         suggestions: []
+       });
+     }
+   });
+ 
+   // Chat streaming endpoint for InkVision assistant
+   app.post("/api/chat/stream", async (req, res) => {
+     try {
+       const { messages, image } = req.body;
+       
+       console.log('Chat stream request received');
+       console.log('Messages count:', messages?.length || 0);
+       console.log('Has image:', !!image);
+       
+       // Set headers for SSE
+       res.setHeader('Content-Type', 'text/event-stream');
+-      res.setHeader('Cache-Control', 'no-cache');
++      res.setHeader('Cache-Control', 'no-store');
+       res.setHeader('Connection', 'keep-alive');
+       res.setHeader('Access-Control-Allow-Origin', '*');
+       
+       // Get streaming response from Gemini
+       const stream = await streamChatResponseGemini(messages, image);
+       const reader = stream.getReader();
+       
+       // Process and send chunks
+       while (true) {
+         const { done, value } = await reader.read();
+         if (done) break;
+         
+         // Send the chunk directly to the client
+         res.write(value);
+       }
+       
+       res.end();
+     } catch (error) {
+       console.error("Error in chat stream:", error);
+       res.write(`data: ${JSON.stringify({ error: "Failed to process chat" })}\n\n`);
+       res.end();
+     }
+   });
+ 
+   // Replicate FLUX Kontext endpoint - Exact implementation from your original
+diff --git a/server/routes.ts b/server/routes.ts
+index c134267365ed979fc507d37b7d8a965fbb346ac6..4b3c5d6bd9418c4ebf9c74e2d291796d572d97f0 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -949,51 +949,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
+       const { type, limit, page } = req.query;
+       // Paginación: 50 items por página por defecto, máximo 100
+       const requestedLimit = limit ? Math.min(parseInt(limit as string), 100) : 50;
+       const requestedPage = page ? Math.max(parseInt(page as string), 1) : 1;
+       const offset = (requestedPage - 1) * requestedLimit;
+       
+       // Iniciar timer para medir performance
+       const startTime = Date.now();
+       
+       const galleryItems = await storage.getUserGallery(
+         userId, 
+         type as string | undefined,
+         requestedLimit,
+         offset
+       );
+       
+       // Obtener el total de items para calcular páginas
+       const totalItems = await storage.getGalleryItemCount(userId, type as string | undefined);
+       
+       const queryTime = Date.now() - startTime;
+       console.log(`Gallery query took ${queryTime}ms for ${galleryItems.length} items`);
+       
+       // Cache y metadata de paginación
+       const totalCount = totalItems || 0;
+       res.set({
+-        'Cache-Control': 'private, max-age=60, immutable',
++        'Cache-Control': 'no-store',
+         'X-Total-Count': totalCount.toString(),
+         'X-Page': requestedPage.toString(),
+         'X-Page-Size': requestedLimit.toString(),
+         'X-Total-Pages': Math.ceil(totalCount / requestedLimit).toString(),
+         'X-Query-Time': queryTime.toString()
+       });
+       
+       res.json(galleryItems);
+     } catch (error) {
+       console.error("Error fetching gallery:", error);
+       res.status(500).json({ error: "Failed to fetch gallery" });
+     }
+   });
+   
+   // Add item to gallery (this will be called automatically when generating)
+   app.post("/api/gallery", isAuthenticated, async (req: any, res) => {
+     try {
+       const userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+       
+       const { imageUrl, type, title, description, prompt, style, metadata } = req.body;
+       
+       if (!imageUrl || !type) {
+diff --git a/server/routes.ts b/server/routes.ts
+index c134267365ed979fc507d37b7d8a965fbb346ac6..4b3c5d6bd9418c4ebf9c74e2d291796d572d97f0 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1126,36 +1126,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
+       const userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ message: "Usuario no autenticado" });
+       }
+       
+       // Verificar que el archivo pertenece al usuario
+       // (las imágenes incluyen el userId en la ruta)
+       if (!filename.includes(`/${userId}/`)) {
+         console.warn(`Usuario ${userId} intentó acceder a imagen no autorizada: ${filename}`);
+         return res.status(403).json({ message: "No autorizado para ver esta imagen" });
+       }
+       
+       const objectStorage = new ObjectStorageService();
+       const bucket = objectStorageClient.bucket(objectStorage.bucketName);
+       const file = bucket.file(filename);
+       
+       // Verificar que el archivo existe
+       const [exists] = await file.exists();
+       if (!exists) {
+         return res.status(404).json({ message: "Imagen no encontrada" });
+       }
+       
+       // Obtener el archivo y enviarlo
+       const [buffer] = await file.download();
+       res.setHeader('Content-Type', 'image/png');
+-      res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por 1 hora
++      res.setHeader('Cache-Control', 'no-store');
+       res.send(buffer);
+     } catch (error) {
+       console.error('Error sirviendo imagen privada:', error);
+       res.status(404).json({ message: "Imagen no encontrada" });
+     }
+   });
+ 
+   const httpServer = createServer(app);
+   return httpServer;
+ }
