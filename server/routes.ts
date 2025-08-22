@@ -840,8 +840,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        model === 'max' ? 'M' : 
                        model.charAt(0).toUpperCase();
       
+      // LOG: Mostrar detalles de guardado
+      console.log('=== GUARDANDO IMAGEN EN GALERÍA ===');
+      console.log('Usuario:', userId);
+      console.log('URL de imagen:', imageUrl);
+      console.log('Tipo de URL:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
+      console.log('Tamaño de URL:', imageUrl.length, 'caracteres');
+      console.log('Título:', `${prompt.slice(0, 45)} (${modelAbbr})`);
+      console.log('Modelo:', modelName);
+      
       // Save to gallery
-      await storage.addToGallery({
+      const savedItem = await storage.addToGallery({
         userId,
         imageUrl,
         type: 'design',
@@ -853,6 +862,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           inputImageUrl: inputImageUrl
         }
       });
+      
+      console.log('=== IMAGEN GUARDADA ===');
+      console.log('ID de galería:', savedItem.id);
+      console.log('Fecha de creación:', savedItem.createdAt);
       
       res.json({
         imageUrl,

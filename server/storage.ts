@@ -467,8 +467,7 @@ export class MemStorage implements IStorage {
   }
 
   async createFluxProject(insertProject: InsertFluxProject): Promise<FluxProject> {
-    // Simulate project creation delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Eliminado delay artificial que causaba lentitud
     
     const id = randomUUID();
     const project: FluxProject = {
