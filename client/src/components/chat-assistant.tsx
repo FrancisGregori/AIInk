@@ -437,17 +437,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         }
       }
       
-      // After analysis is complete, add the follow-up question
-      const followUpMessage: Message = {
-        id: `followup-${Date.now()}`,
-        role: 'assistant',
-        content: language === 'es'
-          ? '¿Qué te gustaría cambiar o modificar en esta imagen?'
-          : 'What would you like to change or modify in this image?',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, followUpMessage]);
+      // The backend already provides a contextual question, so we don't need to add another one
       
     } catch (error) {
       console.error('Image analysis error:', error);
