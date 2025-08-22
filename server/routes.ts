@@ -382,9 +382,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Flux Kontext Routes
-  app.get("/api/flux/projects", async (req, res) => {
+  app.get("/api/flux/projects", isAuthenticated, async (req: any, res) => {
     try {
-      const projects = await storage.getFluxProjects();
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      // Solo devolver proyectos del usuario autenticado
+      const projects = await storage.getFluxProjects(userId);
       res.json(projects);
     } catch (error) {
       console.error("Error fetching flux projects:", error);
@@ -392,14 +399,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/flux/create", async (req, res) => {
+  app.post("/api/flux/create", isAuthenticated, async (req: any, res) => {
     try {
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
       const validation = insertFluxProjectSchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({ error: "Invalid project data", details: validation.error });
       }
 
-      const project = await storage.createFluxProject(validation.data);
+      // Asegurar que el proyecto se asocia al usuario autenticado
+      const projectData = { ...validation.data, userId };
+      const project = await storage.createFluxProject(projectData);
       res.json(project);
     } catch (error) {
       console.error("Error creating flux project:", error);
@@ -407,15 +422,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/flux/projects/:id", async (req, res) => {
+  app.patch("/api/flux/projects/:id", isAuthenticated, async (req: any, res) => {
     try {
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
       const { id } = req.params;
-      const project = await storage.updateFluxProject(id, req.body);
       
-      if (!project) {
+      // Verificar que el proyecto pertenece al usuario
+      const existingProject = await storage.getFluxProject(id);
+      if (!existingProject || existingProject.userId !== userId) {
         return res.status(404).json({ error: "Project not found" });
       }
       
+      const project = await storage.updateFluxProject(id, req.body);
       res.json(project);
     } catch (error) {
       console.error("Error updating flux project:", error);
@@ -423,15 +446,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/flux/projects/:id/regenerate", async (req, res) => {
+  app.post("/api/flux/projects/:id/regenerate", isAuthenticated, async (req: any, res) => {
     try {
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
       const { id } = req.params;
-      const project = await storage.regenerateFluxProject(id);
       
-      if (!project) {
+      // Verificar que el proyecto pertenece al usuario
+      const existingProject = await storage.getFluxProject(id);
+      if (!existingProject || existingProject.userId !== userId) {
         return res.status(404).json({ error: "Project not found" });
       }
       
+      const project = await storage.regenerateFluxProject(id);
       res.json(project);
     } catch (error) {
       console.error("Error regenerating flux project:", error);
@@ -440,15 +471,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete flux project
-  app.delete("/api/flux/projects/:id", async (req, res) => {
+  app.delete("/api/flux/projects/:id", isAuthenticated, async (req: any, res) => {
     try {
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
       const { id } = req.params;
-      const deleted = await storage.deleteFluxProject(id);
       
-      if (!deleted) {
+      // Verificar que el proyecto pertenece al usuario
+      const existingProject = await storage.getFluxProject(id);
+      if (!existingProject || existingProject.userId !== userId) {
         return res.status(404).json({ error: "Project not found" });
       }
       
+      const deleted = await storage.deleteFluxProject(id);
       res.json({ success: true, message: "Project deleted successfully" });
     } catch (error) {
       console.error("Error deleting flux project:", error);

@@ -891,6 +891,13 @@ class DatabaseStorage implements IStorage {
     return newProject;
   }
 
+  async getFluxProject(id: string): Promise<FluxProject | undefined> {
+    const [project] = await db.select().from(fluxProjects)
+      .where(eq(fluxProjects.id, id))
+      .limit(1);
+    return project;
+  }
+
   async updateFluxProject(id: string, updates: Partial<FluxProject>): Promise<FluxProject | undefined> {
     const [updated] = await db.update(fluxProjects)
       .set({ ...updates, updatedAt: new Date() })
