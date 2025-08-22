@@ -925,7 +925,7 @@ function DesignEditor() {
                 />
               </CardContent>
               
-              <CardFooter className="space-y-3">
+              <CardFooter className="flex flex-col gap-3">
                 {prompt.trim() && <CreditsRequirement cost={3} action="design" />}
                 <Button
                   onClick={handleGenerate}
