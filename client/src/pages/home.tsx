@@ -1,9 +1,158 @@
 import { Link } from "wouter";
+import { useState, useRef, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Palette, Image, RotateCw, Sparkles, ArrowRight } from "lucide-react";
+import { Palette, Sparkles, RotateCw, Wand2, ArrowRight } from "lucide-react";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
+import stencilExample1 from "@assets/image_1755821278668.png";
+import stencilExample2 from "@assets/image_1755821621512.png";
+import aiEditorImage from "@assets/image_1755821644613.png";
+import rotationImage from "@assets/image_1755822037806.png";
+
+const ToolCard = ({ 
+  title, 
+  description, 
+  icon: Icon, 
+  imageUrl, 
+  videoUrl, 
+  href, 
+  isActive = false 
+}: {
+  title: string;
+  description: string;
+  icon: any;
+  imageUrl?: string;
+  videoUrl?: string;
+  href?: string;
+  isActive?: boolean;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    // Auto-play video when component mounts
+    if (videoUrl && videoRef.current) {
+      const playVideo = async () => {
+        try {
+          await videoRef.current?.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.log('Autoplay prevented:', error);
+        }
+      };
+      playVideo();
+    }
+  }, [videoUrl]);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (videoUrl && videoRef.current) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    // Don't pause video, let it continue playing
+  };
+
+  return (
+    <Card 
+      className={`group relative bg-gradient-to-b from-gray-900/90 to-gray-950/90 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-300 ${isActive ? 'card-hover-lift' : ''} animate-card-in`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      }}
+    >
+      <div className="relative h-[350px] overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
+        {videoUrl ? (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            loop
+            muted
+            playsInline
+            autoPlay
+            className="w-full h-full object-cover"
+            poster={imageUrl}
+          />
+        ) : imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <>
+            {/* Default gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
+            {/* Icon Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className={`w-20 h-20 ${isActive ? 'bg-white/20' : 'bg-gray-500/20'} rounded-full flex items-center justify-center backdrop-blur-sm`}>
+                <Icon className={`w-10 h-10 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+              </div>
+            </div>
+          </>
+        )}
+        
+        {/* Overlay gradient for better visibility */}
+        <div className={`absolute inset-0 bg-black ${isHovered || isPlaying ? 'bg-opacity-10' : 'bg-opacity-40'} transition-opacity duration-300`} />
+        
+        {/* Icon on hover */}
+        {!isHovered && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div 
+              className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-300"
+              style={{
+                transform: isHovered ? 'rotate(360deg)' : 'rotate(0deg)',
+              }}
+            >
+              <Icon className="w-10 h-10 text-white" />
+            </div>
+          </div>
+        )}
+        
+        {/* Coming Soon Badge */}
+        {!isActive && (
+          <div className="absolute top-4 right-4 bg-gray-800 px-3 py-1 rounded-full">
+            <span className="text-xs text-gray-400">Coming Soon</span>
+          </div>
+        )}
+      </div>
+      
+      <div className="p-8 space-y-4">
+        <h3 className="text-2xl font-bold text-white">{title}</h3>
+        <p className="text-gray-400">
+          {description}
+        </p>
+        {isActive && href ? (
+          <Link href={href}>
+            <Button 
+              className="w-full bg-white text-black hover:bg-gray-100 py-6 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105"
+              style={{
+                transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+              }}
+            >
+              Try Now
+            </Button>
+          </Link>
+        ) : (
+          <Button 
+            className="w-full bg-gray-700 text-gray-400 py-6 text-lg font-semibold rounded-full cursor-not-allowed"
+            disabled
+          >
+            Coming Soon
+          </Button>
+        )}
+      </div>
+    </Card>
+  );
+};
 
 export default function Home() {
   return (
@@ -66,7 +215,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           {/* Section Title */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-blue-500 mb-4">TOOLS</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">TOOLS</h2>
             <p className="text-xl text-gray-400">Advanced tools for tattoo artists</p>
           </div>
           
@@ -74,138 +223,50 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             
             {/* Stencil Generator Card */}
-            <Card className="group relative bg-gradient-to-b from-gray-900/90 to-gray-950/90 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-300 card-hover-lift animate-card-in animate-card-in-1">
-              <div className="relative h-[300px] overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
-                {/* Icon Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                    <Palette className="w-10 h-10 text-blue-400" />
-                  </div>
-                </div>
-                {/* Decorative image background */}
-                <div className="absolute inset-0 opacity-20">
-                  <img 
-                    src={logoPath}
-                    alt="Stencil Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-8 space-y-4">
-                <h3 className="text-2xl font-bold">Stencil Generator</h3>
-                <p className="text-gray-400">
-                  Convert designs into hand-drawn style stencils
-                </p>
-                <Link href="/stencil-tool">
-                  <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105"
-                    data-testid="button-stencil-generator"
-                  >
-                    Try Now
-                  </Button>
-                </Link>
-              </div>
-            </Card>
+            <div className="animate-card-in animate-card-in-1">
+              <ToolCard
+                title="Stencil Generator"
+                description="Convert designs into hand-drawn style stencils"
+                icon={Palette}
+                imageUrl={stencilExample1}
+                href="/stencil-tool"
+                isActive={true}
+              />
+            </div>
 
             {/* AI Image Editor Card */}
-            <Card className="group relative bg-gradient-to-b from-gray-900/90 to-gray-950/90 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-300 card-hover-lift animate-card-in animate-card-in-2">
-              <div className="relative h-[300px] overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
-                {/* Icon Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                    <Sparkles className="w-10 h-10 text-blue-400" />
-                  </div>
-                </div>
-                {/* Decorative image background */}
-                <div className="absolute inset-0 opacity-20">
-                  <img 
-                    src={logoPath}
-                    alt="AI Editor Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-8 space-y-4">
-                <h3 className="text-2xl font-bold">AI Image Editor</h3>
-                <p className="text-gray-400">
-                  Advanced AI-powered tattoo generator and image editor
-                </p>
-                <Link href="/design-editor">
-                  <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105"
-                    data-testid="button-ai-editor"
-                  >
-                    Try Now
-                  </Button>
-                </Link>
-              </div>
-            </Card>
+            <div className="animate-card-in animate-card-in-2">
+              <ToolCard
+                title="AI Image Editor"
+                description="Advanced AI-powered tattoo generator and image editor"
+                icon={Sparkles}
+                imageUrl={aiEditorImage}
+                href="/design-editor"
+                isActive={true}
+              />
+            </div>
 
-            {/* Angle and Rotation Modifier Card (Coming Soon) */}
-            <Card className="group relative bg-gradient-to-b from-gray-900/90 to-gray-950/90 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-300 opacity-60 card-hover-lift animate-card-in animate-card-in-3">
-              <div className="relative h-[300px] overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
-                {/* Icon Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 bg-gray-500/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                    <RotateCw className="w-10 h-10 text-gray-400" />
-                  </div>
-                </div>
-                {/* Coming Soon Badge */}
-                <div className="absolute top-4 right-4 bg-gray-800 px-3 py-1 rounded-full">
-                  <span className="text-xs text-gray-400">Coming Soon</span>
-                </div>
-                {/* Decorative image background */}
-                <div className="absolute inset-0 opacity-10">
-                  <img 
-                    src={logoPath}
-                    alt="Rotation Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-              
-              <div className="p-8 space-y-4">
-                <h3 className="text-2xl font-bold">Angle and Rotation Modifier</h3>
-                <p className="text-gray-400">
-                  Transform the perspective of your 2D designs into any angle
-                </p>
-                <Button 
-                  className="w-full bg-gray-700 text-gray-400 py-6 text-lg font-semibold rounded-full cursor-not-allowed"
-                  disabled
-                >
-                  Coming Soon
-                </Button>
-              </div>
-            </Card>
+            {/* Angle and Rotation Modifier Card */}
+            <div className="animate-card-in animate-card-in-3">
+              <ToolCard
+                title="Angle and Rotation Modifier"
+                description="Transform the perspective of your 2D designs into any angle"
+                icon={RotateCw}
+                imageUrl={rotationImage}
+                isActive={false}
+              />
+            </div>
 
-            {/* More Tools Coming Card */}
-            <Card className="group relative bg-gradient-to-b from-gray-900/90 to-gray-950/90 border-gray-800 overflow-hidden hover:border-gray-700 transition-all duration-300 card-hover-lift animate-card-in animate-card-in-4">
-              <div className="relative h-[300px] overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="flex justify-center space-x-2">
-                    <div className="w-12 h-12 bg-gray-700 rounded-full animate-pulse" />
-                    <div className="w-12 h-12 bg-gray-700 rounded-full animate-pulse delay-75" />
-                    <div className="w-12 h-12 bg-gray-700 rounded-full animate-pulse delay-150" />
-                  </div>
-                  <p className="text-gray-500 text-lg">More tools in development</p>
-                </div>
-              </div>
-              
-              <div className="p-8 space-y-4">
-                <h3 className="text-2xl font-bold">More Coming Soon</h3>
-                <p className="text-gray-400">
-                  We're constantly developing new AI tools for tattoo artists
-                </p>
-                <Button 
-                  className="w-full bg-gray-700 text-gray-400 py-6 text-lg font-semibold rounded-full cursor-not-allowed"
-                  disabled
-                >
-                  Stay Tuned
-                </Button>
-              </div>
-            </Card>
+            {/* Expression Modifier Card */}
+            <div className="animate-card-in animate-card-in-4">
+              <ToolCard
+                title="Expression Modifier"
+                description="Adjust facial expressions and positions"
+                icon={Wand2}
+                imageUrl={stencilExample2}
+                isActive={false}
+              />
+            </div>
             
           </div>
         </div>
@@ -220,9 +281,9 @@ export default function Home() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
-                <Sparkles className="w-8 h-8 text-blue-400" />
+            <div className="text-center space-y-4 animate-fade-in">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto">
+                <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold">AI-Powered</h3>
               <p className="text-gray-400">
@@ -230,9 +291,9 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
-                <Image className="w-8 h-8 text-blue-400" />
+            <div className="text-center space-y-4 animate-fade-in-delay-1">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto">
+                <Palette className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold">High Resolution</h3>
               <p className="text-gray-400">
@@ -240,9 +301,9 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
-                <Palette className="w-8 h-8 text-blue-400" />
+            <div className="text-center space-y-4 animate-fade-in-delay-2">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto">
+                <Wand2 className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold">Multiple Styles</h3>
               <p className="text-gray-400">
