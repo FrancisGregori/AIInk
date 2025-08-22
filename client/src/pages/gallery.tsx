@@ -26,6 +26,8 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { apiRequest } from '@/lib/queryClient';
 import { Link } from 'wouter';
@@ -390,38 +392,48 @@ export default function Gallery() {
                           )}
                         </div>
                       </DialogTrigger>
-                      <DialogContent className="max-w-5xl">
-                        <div className="space-y-4">
-                          <div className={`${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} rounded-lg p-4`}>
+                      <DialogContent className="sm:max-w-fit p-0 bg-zinc-900 border-zinc-800 overflow-hidden">
+                        <DialogTitle className="sr-only">Vista de Imagen</DialogTitle>
+                        <DialogDescription className="sr-only">
+                          Vista ampliada de tu {item.type === 'stencil' ? 'stencil' : 'diseño'}
+                        </DialogDescription>
+                        
+                        <div className="flex flex-col">
+                          {/* Imagen principal - tamaño compacto */}
+                          <div className={`relative ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} flex items-center justify-center p-3`}>
                             <img
                               src={item.imageUrl}
                               alt={item.title || 'Diseño'}
-                              className="w-full h-auto max-h-[80vh] object-contain"
+                              className="max-w-[400px] max-h-[55vh] w-auto h-auto object-contain"
                             />
                           </div>
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <h3 className="text-lg font-semibold">{item.title || 'Sin título'}</h3>
-                              {item.style && (
-                                <p className="text-sm text-muted-foreground">Estilo: {item.style}</p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => favoriteMutation.mutate(item.id)}
-                              >
-                                <Heart className={`w-4 h-4 mr-1 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
-                                Favorito
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleDownload(item.imageUrl, item.title)}
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                Descargar
-                              </Button>
+                          
+                          {/* Footer con información y acciones */}
+                          <div className="bg-zinc-900 p-3 border-t border-zinc-800">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
+                                {item.style && (
+                                  <p className="text-xs text-zinc-400">Estilo: {item.style}</p>
+                                )}
+                              </div>
+                              <div className="flex gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="h-8 w-8"
+                                  onClick={() => favoriteMutation.mutate(item.id)}
+                                >
+                                  <Heart className={`w-3 h-3 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                                </Button>
+                                <Button
+                                  onClick={() => handleDownload(item.imageUrl, item.title)}
+                                  className="bg-white text-black hover:bg-zinc-200 h-8 px-3 text-sm"
+                                >
+                                  <Download className="mr-1 h-3 w-3" />
+                                  Descargar
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -478,13 +490,38 @@ export default function Gallery() {
                             className="w-20 h-20 object-cover rounded cursor-pointer"
                           />
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <div className={`${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} rounded-lg p-4`}>
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title || 'Diseño'}
-                              className="w-full h-auto"
-                            />
+                        <DialogContent className="sm:max-w-fit p-0 bg-zinc-900 border-zinc-800 overflow-hidden">
+                          <DialogTitle className="sr-only">Vista de Imagen</DialogTitle>
+                          <DialogDescription className="sr-only">
+                            Vista ampliada de tu {item.type === 'stencil' ? 'stencil' : 'diseño'}
+                          </DialogDescription>
+                          
+                          <div className="flex flex-col">
+                            <div className={`relative ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} flex items-center justify-center p-3`}>
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title || 'Diseño'}
+                                className="max-w-[400px] max-h-[55vh] w-auto h-auto object-contain"
+                              />
+                            </div>
+                            
+                            <div className="bg-zinc-900 p-3 border-t border-zinc-800">
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
+                                  {item.style && (
+                                    <p className="text-xs text-zinc-400">Estilo: {item.style}</p>
+                                  )}
+                                </div>
+                                <Button
+                                  onClick={() => handleDownload(item.imageUrl, item.title)}
+                                  className="bg-white text-black hover:bg-zinc-200 h-8 px-3 text-sm"
+                                >
+                                  <Download className="mr-1 h-3 w-3" />
+                                  Descargar
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         </DialogContent>
                       </Dialog>
