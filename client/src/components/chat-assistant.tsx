@@ -24,6 +24,7 @@ interface ChatAssistantProps {
   onImageGenerated?: (imageUrl: string, prompt: string) => void;
   isAuthenticated?: boolean;
   onAuthRequired?: () => void;
+  modelVariant?: string;
 }
 
 export interface ChatAssistantRef {
@@ -31,7 +32,7 @@ export interface ChatAssistantRef {
   addImageMessage: (imageUrl: string) => void;
 }
 
-const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload, onImageGenerated, isAuthenticated = false, onAuthRequired }, ref) => {
+const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload, onImageGenerated, isAuthenticated = false, onAuthRequired, modelVariant = "pro" }, ref) => {
   const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastImageAnalyzed, setLastImageAnalyzed] = useState<string>("");
@@ -628,7 +629,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           body: JSON.stringify({
             prompt: content,
             inputImageUrl: storedImage, // Send current image as base64
-            model: 'pro', // Use professional model
+            model: modelVariant, // Use selected model variant
             aspectRatio: 'match_input_image'
           }),
         });

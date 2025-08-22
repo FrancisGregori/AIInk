@@ -880,6 +880,7 @@ function DesignEditor() {
                   embedded={true}
                   isAuthenticated={isAuthenticated}
                   onAuthRequired={() => setShowAuthDialog(true)}
+                  modelVariant={modelVariant}
                   onImageUpload={(imageUrl, file) => {
                     // Manejar carga de imagen desde el chat
                     setReferenceImage(file);

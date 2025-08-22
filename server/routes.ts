@@ -748,8 +748,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Qwen returns an array of File objects with url() method
         const file = output[0];
         if (file && typeof file.url === 'function') {
-          imageUrl = file.url();
-          console.log("Qwen output URL (from file.url()):", imageUrl);
+          const urlObject = file.url();
+          // Convert URL object to string
+          imageUrl = urlObject.href || urlObject.toString();
+          console.log("Qwen output URL object:", urlObject);
+          console.log("Qwen final URL string:", imageUrl);
         } else if (typeof file === 'string') {
           // Fallback si ya es string
           imageUrl = file;
