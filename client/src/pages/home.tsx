@@ -180,12 +180,17 @@ export default function Home() {
           <div className="relative max-w-5xl mx-auto mt-12 animate-fade-in-delay-2">
             <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-800">
               {/* Video Background */}
-              {/* Use image instead of video for now */}
-              <img 
-                src={stencilExample1}
-                alt="Tattoo Design Preview"
-                className="w-full h-[600px] object-cover animate-fade-in"
-              />
+              <video 
+                className="w-full h-[600px] object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster={stencilExample1}
+              >
+                <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_9606-7wXjUza5iHfO4woAkktUJemkhAYzvt.MP4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
               
               {/* Overlay gradient for better text readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
