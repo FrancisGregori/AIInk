@@ -392,11 +392,13 @@ export default function Gallery() {
                       </DialogTrigger>
                       <DialogContent className="max-w-5xl">
                         <div className="space-y-4">
-                          <img
-                            src={item.imageUrl}
-                            alt={item.title || 'Diseño'}
-                            className="w-full h-auto max-h-[80vh] object-contain"
-                          />
+                          <div className={`${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} rounded-lg p-4`}>
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title || 'Diseño'}
+                              className="w-full h-auto max-h-[80vh] object-contain"
+                            />
+                          </div>
                           <div className="flex justify-between items-center">
                             <div>
                               <h3 className="text-lg font-semibold">{item.title || 'Sin título'}</h3>
@@ -477,11 +479,13 @@ export default function Gallery() {
                           />
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl">
-                          <img
-                            src={item.imageUrl}
-                            alt={item.title || 'Diseño'}
-                            className="w-full h-auto"
-                          />
+                          <div className={`${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} rounded-lg p-4`}>
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title || 'Diseño'}
+                              className="w-full h-auto"
+                            />
+                          </div>
                         </DialogContent>
                       </Dialog>
                       <div className="flex-1">
