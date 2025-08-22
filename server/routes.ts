@@ -672,6 +672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("Final input object for Replicate:", JSON.stringify(input, null, 2));
+      console.log("Model being used:", modelName);
       
       // Validación final: asegurar que la imagen es válida si existe
       const imageField = model === "qwen" ? "image" : "input_image";
@@ -683,6 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Seleccionar el modelo basado en el parámetro
+      console.log("Model parameter received:", model);
       let modelName: string;
       if (model === "qwen") {
         modelName = "qwen/qwen-image-edit";
@@ -722,12 +724,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Replicate output received:", output);
       
-      // Manejar diferentes formatos de output de FLUX Kontext Max - Exacto del repositorio original
+      // Manejar diferentes formatos de output según el modelo
       let imageUrl: string;
       let optimizedImageBase64: string = "";
       let thumbnailBase64: string = "";
       
-      if (typeof output === 'string') {
+      // Qwen devuelve un array de File objects con método .url()
+      if (model === "qwen" && Array.isArray(output) && output.length > 0) {
+        // Qwen returns an array of File objects with url() method
+        const file = output[0];
+        if (file && typeof file.url === 'function') {
+          imageUrl = file.url();
+          console.log("Qwen output URL:", imageUrl);
+        } else if (typeof file === 'string') {
+          imageUrl = file;
+        } else {
+          throw new Error("Unexpected Qwen output format");
+        }
+      } else if (typeof output === 'string') {
         imageUrl = output;
       } else if (Array.isArray(output) && output.length > 0) {
         imageUrl = output[0];
