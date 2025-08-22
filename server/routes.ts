@@ -727,18 +727,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let optimizedImageBase64: string = "";
       let thumbnailBase64: string = "";
       
-      // Qwen devuelve un array de File objects con método .url()
+      // Qwen devuelve un array de URIs según su documentación
       if (model === "qwen" && Array.isArray(output) && output.length > 0) {
-        // Qwen returns an array of File objects with url() method
-        const file = output[0];
-        if (file && typeof file.url === 'function') {
-          imageUrl = file.url();
-          console.log("Qwen output URL:", imageUrl);
-        } else if (typeof file === 'string') {
-          imageUrl = file;
-        } else {
-          throw new Error("Unexpected Qwen output format");
-        }
+        // Qwen returns an array of URIs
+        imageUrl = output[0];
+        console.log("Qwen output URL:", imageUrl);
       } else if (typeof output === 'string') {
         imageUrl = output;
       } else if (Array.isArray(output) && output.length > 0) {
