@@ -139,7 +139,7 @@ export interface IStorage {
   // Gallery methods
   getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]>;
   addToGallery(item: InsertGalleryItem): Promise<GalleryItem>;
-  updateGalleryItem(id: string, updates: Partial<GalleryItem>): Promise<GalleryItem | undefined>;
+  updateGalleryItem(id: string, updates: Partial<GalleryItem>, userId: string): Promise<GalleryItem | undefined>;
   deleteGalleryItem(id: string, userId: string): Promise<boolean>;
   toggleFavorite(id: string, userId: string): Promise<boolean>;
 }
@@ -623,9 +623,15 @@ export class MemStorage implements IStorage {
     return item;
   }
 
-  async updateGalleryItem(id: string, updates: Partial<GalleryItem>): Promise<GalleryItem | undefined> {
+  async updateGalleryItem(id: string, updates: Partial<GalleryItem>, userId: string): Promise<GalleryItem | undefined> {
     const item = this.galleryItems.get(id);
     if (!item) return undefined;
+    
+    // VALIDACIÓN DE SEGURIDAD: Verificar que el item pertenece al usuario
+    if (item.userId !== userId) {
+      console.warn(`[SECURITY] User ${userId} attempted to update gallery item ${id} owned by ${item.userId}`);
+      return undefined;
+    }
 
     const updatedItem = {
       ...item,
@@ -969,10 +975,25 @@ class DatabaseStorage implements IStorage {
     return newItem;
   }
 
-  async updateGalleryItem(id: string, updates: Partial<GalleryItem>): Promise<GalleryItem | undefined> {
+  async updateGalleryItem(id: string, updates: Partial<GalleryItem>, userId: string): Promise<GalleryItem | undefined> {
+    // VALIDACIÓN DE SEGURIDAD: Primero verificar que el item existe y pertenece al usuario
+    const [existing] = await db.select().from(userGallery)
+      .where(and(
+        eq(userGallery.id, id),
+        eq(userGallery.userId, userId)
+      ));
+    
+    if (!existing) {
+      console.warn(`[SECURITY] User ${userId} attempted to update gallery item ${id} they don't own`);
+      return undefined;
+    }
+    
     const [updated] = await db.update(userGallery)
       .set({ ...updates, updatedAt: new Date() })
-      .where(eq(userGallery.id, id))
+      .where(and(
+        eq(userGallery.id, id),
+        eq(userGallery.userId, userId)
+      ))
       .returning();
     return updated;
   }

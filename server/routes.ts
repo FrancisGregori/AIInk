@@ -95,9 +95,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a new stencil job
-  app.post("/api/stencil/jobs", upload.single('image'), async (req, res) => {
+  // Create a new stencil job - PROTEGIDO CON AUTENTICACIÓN
+  app.post("/api/stencil/jobs", isAuthenticated, upload.single('image'), async (req: any, res) => {
     try {
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided" });
       }
@@ -108,9 +114,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In production, this would upload to Supabase Storage
       const originalImageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
       
-      // Create the stencil job
+      // Create the stencil job - usando el userId real
       const job = await storage.createStencilJob({
-        userId: "demo-user", // In production, get from auth session
+        userId, // SEGURIDAD: Usar el ID del usuario autenticado
         originalImageUrl,
         style,
         processingOptions: {
@@ -126,12 +132,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get stencil job status
-  app.get("/api/stencil/jobs/:id", async (req, res) => {
+  // Get stencil job status - PROTEGIDO CON AUTENTICACIÓN
+  app.get("/api/stencil/jobs/:id", isAuthenticated, async (req: any, res) => {
     try {
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
       const job = await storage.getStencilJob(req.params.id);
       if (!job) {
         return res.status(404).json({ error: "Job not found" });
+      }
+      
+      // SEGURIDAD: Verificar que el job pertenece al usuario
+      if (job.userId !== userId) {
+        console.warn(`[SECURITY] User ${userId} attempted to access job ${job.id} owned by ${job.userId}`);
+        return res.status(403).json({ error: "Not authorized to access this job" });
       }
       
       // If job has a ComfyDeploy run ID and is still processing, check status
@@ -1001,9 +1019,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const updates = req.body;
       
-      const updatedItem = await storage.updateGalleryItem(id, updates);
+      // SEGURIDAD: Pasar userId para validar propiedad
+      const updatedItem = await storage.updateGalleryItem(id, updates, userId);
       if (!updatedItem) {
-        return res.status(404).json({ error: "Gallery item not found" });
+        return res.status(404).json({ error: "Gallery item not found or not authorized" });
       }
       
       res.json(updatedItem);
