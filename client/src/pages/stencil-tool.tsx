@@ -38,6 +38,7 @@ import PreviewArea from "@/components/preview-area";
 import StyleSelector from "@/components/style-selector";
 import ImageUploader from "@/components/image-uploader";
 import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { StencilJob, StencilStyle } from "@shared/schema";
 
 interface ProcessingOptions {
@@ -59,6 +60,12 @@ function StencilTool() {
     removeBackground: true,
     lineColor: "black"
   });
+  // Estado para el modal de galería
+  const [galleryModal, setGalleryModal] = useState<{
+    open: boolean;
+    job: StencilJob | null;
+  }>({ open: false, job: null });
+  
   const queryClient = useQueryClient();
   const { addJob, updateJob, getJob } = useJobs();
   const { activeJobsOfType } = useJobRecovery('stencil');
@@ -280,19 +287,24 @@ Press and hold the stencil image above and select "Copy", then paste it directly
     navigator.clipboard.writeText(instructions);
   };
 
-  // Load job from gallery - NO permitir si hay proceso en curso
-  const loadFromGallery = (job: StencilJob) => {
-    // Prevenir cargar de galería si hay un trabajo procesando
+  // Abrir modal de galería
+  const openGalleryModal = (job: StencilJob) => {
+    // Prevenir abrir modal si hay un trabajo procesando
     if (isProcessing || (currentJob && currentJob.status === 'processing')) {
       return; // Ignorar la acción silenciosamente
     }
     
-    setCurrentJob(job);
-    setSelectedStyle(job.style);
-    setRecoveredImageUrl(null); // Limpiar imagen recuperada
-    // Set a fake file to enable preview
-    const fakeFile = new File([""], "loaded-image.png", { type: "image/png" });
-    setSelectedFile(fakeFile);
+    setGalleryModal({ open: true, job });
+  };
+  
+  // Descargar imagen desde modal
+  const handleDownloadFromModal = (job: StencilJob) => {
+    if (!job?.processedImageUrl) return;
+    
+    const link = document.createElement("a");
+    link.href = job.processedImageUrl;
+    link.download = `stencil-${job.style}-${Date.now()}.png`;
+    link.click();
   };
 
   return (
@@ -511,7 +523,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                       <div
                         key={job.id}
                         className={`group ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                        onClick={() => !isDisabled && loadFromGallery(job)}
+                        onClick={() => !isDisabled && openGalleryModal(job)}
                       >
                         <div className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]">
                           <img
@@ -555,6 +567,67 @@ Press and hold the stencil image above and select "Copy", then paste it directly
         language="es"
         toolType="stencil"
       />
+      
+      {/* Modal para ver imágenes de la galería */}
+      <Dialog 
+        open={galleryModal.open} 
+        onOpenChange={(open) => setGalleryModal({ open, job: open ? galleryModal.job : null })}
+      >
+        <DialogContent className="max-w-3xl bg-zinc-900 border-zinc-800">
+          <DialogTitle className="sr-only">Stencil Gallery Preview</DialogTitle>
+          <DialogDescription className="sr-only">
+            Preview of your completed stencil from the gallery
+          </DialogDescription>
+          
+          {galleryModal.job && (
+            <div className="space-y-4">
+              {/* Imagen principal */}
+              <div className="relative bg-[#f5f5f5] rounded-lg overflow-hidden">
+                <img
+                  src={galleryModal.job.processedImageUrl || galleryModal.job.originalImageUrl}
+                  alt={`Stencil ${galleryModal.job.style}`}
+                  className="w-full h-auto max-h-[60vh] object-contain"
+                />
+              </div>
+              
+              {/* Información del stencil */}
+              <div className="flex items-center justify-between px-2">
+                <div>
+                  <h3 className="text-lg font-semibold capitalize text-white">
+                    {galleryModal.job.style} Style
+                  </h3>
+                  <p className="text-sm text-zinc-400">
+                    {new Date(galleryModal.job.createdAt || "").toLocaleString('es-ES', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                
+                {/* Botón de descarga */}
+                <Button
+                  onClick={() => handleDownloadFromModal(galleryModal.job!)}
+                  className="bg-white text-black hover:bg-zinc-200"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Descargar PNG
+                </Button>
+              </div>
+              
+              {/* Instrucciones para Procreate */}
+              <div className="bg-zinc-800 rounded-lg p-3">
+                <p className="text-xs text-zinc-400">
+                  <strong>Para Procreate:</strong> Mantén presionada la imagen y selecciona "Copiar", 
+                  luego pégala directamente en Procreate.
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
