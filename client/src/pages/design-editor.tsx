@@ -577,10 +577,11 @@ function DesignEditor() {
 
       const data = await response.json();
       console.log('Generated image data:', data);
-      
+      const { imageUrl, thumbnailUrl } = data;
+
       // Update chat assistant with the generated image
-      if (chatAssistantRef.current && data.imageUrl) {
-        chatAssistantRef.current.addImageMessage(data.imageUrl);
+      if (chatAssistantRef.current && imageUrl) {
+        chatAssistantRef.current.addImageMessage(imageUrl);
       }
       
       // Create project entry for history
@@ -595,20 +596,20 @@ function DesignEditor() {
           height,
           referenceImage: referencePreview,
           matchInput,
+          thumbnailUrl,
         },
         userId: (user as any)?.id || "anonymous",
-        imageUrl: data.imageUrl
+        imageUrl
       };
       
-      const projectResponse = await apiRequest("POST", "/api/flux/create", projectData);
-      const project = await projectResponse.json();
+      await apiRequest("POST", "/api/flux/create", projectData);
       
       // Update job status with the processed image URL
       const completedJob = {
         ...tempJob,
         status: 'completed' as const,
         completedAt: new Date().toISOString(),
-        processedImageUrl: data.imageUrl,
+        processedImageUrl: imageUrl,
         originalImageUrl: referencePreview, // Mantener la imagen original
         startedAt: typeof tempJob.startedAt === 'string' ? tempJob.startedAt : new Date().toISOString(), // Ensure startedAt is string
         errorMessage: tempJob.errorMessage || undefined // Convert null to undefined
@@ -619,30 +620,17 @@ function DesignEditor() {
       
       // Don't clear the job - keep it visible until next generation
       
-      // Save to gallery
-      try {
-        await apiRequest("POST", "/api/gallery", {
-          imageUrl: data.imageUrl,
-          thumbnailUrl: data.imageUrl,
-          type: "design",
-          title: prompt.slice(0, 50),
-          description: prompt,
-          prompt: prompt,
-          style: modelVariant,
-          metadata: {
-            projectId: project.id,
-            aspectRatio,
-            modelVariant,
-            width,
-            height,
-            referenceImage: referencePreview
-          }
-        });
-        console.log("Design saved to gallery");
-      } catch (galleryError) {
-        console.error("Error saving to gallery:", galleryError);
-        // Don't fail the whole operation if gallery save fails
-      }
+      // Gallery entry is created by the generate endpoint.
+      // If manual registration is needed, send:
+      // await apiRequest("POST", "/api/gallery", {
+      //   imageUrl,
+      //   thumbnailUrl,
+      //   type: "design",
+      //   title: prompt.slice(0, 50),
+      //   description: prompt,
+      //   prompt,
+      //   style: modelVariant,
+      // });
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
