@@ -946,9 +946,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User not authenticated" });
       }
       
-      const { type, limit } = req.query;
-      // ULTRA OPTIMIZACIÓN: Máximo 15 items
-      const requestedLimit = limit ? Math.min(parseInt(limit as string), 15) : 15;
+      const { type, limit, page } = req.query;
+      // Paginación: 15 items por página por defecto, máximo 50
+      const requestedLimit = limit ? Math.min(parseInt(limit as string), 50) : 15;
+      const requestedPage = page ? Math.max(parseInt(page as string), 1) : 1;
+      const offset = (requestedPage - 1) * requestedLimit;
       
       // Iniciar timer para medir performance
       const startTime = Date.now();
@@ -956,16 +958,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const galleryItems = await storage.getUserGallery(
         userId, 
         type as string | undefined,
-        requestedLimit
+        requestedLimit,
+        offset
       );
+      
+      // Obtener el total de items para calcular páginas
+      const totalItems = await storage.getGalleryItemCount(userId, type as string | undefined);
       
       const queryTime = Date.now() - startTime;
       console.log(`Gallery query took ${queryTime}ms for ${galleryItems.length} items`);
       
-      // Cache AGRESIVO para respuesta instantánea
+      // Cache y metadata de paginación
       res.set({
         'Cache-Control': 'private, max-age=60, immutable',
-        'X-Total-Count': galleryItems.length.toString(),
+        'X-Total-Count': totalItems.toString(),
+        'X-Page': requestedPage.toString(),
+        'X-Page-Size': requestedLimit.toString(),
+        'X-Total-Pages': Math.ceil(totalItems / requestedLimit).toString(),
         'X-Query-Time': queryTime.toString()
       });
       

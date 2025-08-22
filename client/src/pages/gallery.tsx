@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent } from '@/components/ui/card';
@@ -39,13 +39,27 @@ export default function Gallery() {
   const [imageSize, setImageSize] = useState<'small' | 'medium' | 'large'>('small'); // Por defecto pequeño
   const [selectedType, setSelectedType] = useState<'all' | 'stencil' | 'design'>('all');
   const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allLoadedItems, setAllLoadedItems] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const itemsPerPage = 15;
 
-  // Fetch gallery items - ULTRA OPTIMIZADO
-  const { data: allGalleryItems = [], isLoading, refetch } = useQuery({
-    queryKey: ['/api/gallery'],
+  // Fetch gallery items con paginación
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ['/api/gallery', currentPage, selectedType],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/gallery?limit=15');
-      return response.json();
+      const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
+      const response = await apiRequest('GET', `/api/gallery?limit=${itemsPerPage}&page=${currentPage}${typeParam}`);
+      const totalCount = response.headers.get('X-Total-Count');
+      const totalPages = response.headers.get('X-Total-Pages');
+      const items = await response.json();
+      
+      // Actualizar estado de paginación
+      if (totalPages && currentPage >= parseInt(totalPages)) {
+        setHasMore(false);
+      }
+      
+      return items;
     },
     // MÁXIMA OPTIMIZACIÓN DE CACHE
     refetchOnMount: 'always', // Siempre refrescar para datos actualizados
@@ -55,6 +69,26 @@ export default function Gallery() {
     refetchInterval: false, // NO actualizar automáticamente
     enabled: true // Siempre habilitado
   });
+
+  // Actualizar items cuando cambia la data
+  React.useEffect(() => {
+    if (data) {
+      if (currentPage === 1) {
+        setAllLoadedItems(data);
+      } else {
+        setAllLoadedItems(prev => [...prev, ...data]);
+      }
+    }
+  }, [data, currentPage]);
+
+  // Resetear paginación cuando cambia el tipo
+  React.useEffect(() => {
+    setCurrentPage(1);
+    setAllLoadedItems([]);
+    setHasMore(true);
+  }, [selectedType]);
+
+  const allGalleryItems = allLoadedItems;
 
   // Filter items based on selected type
   const galleryItems = selectedType === 'all' 
@@ -583,6 +617,38 @@ export default function Gallery() {
             )}
           </div>
         ))}
+        
+        {/* Botón Cargar Más */}
+        {hasMore && !isLoading && allLoadedItems.length > 0 && (
+          <div className="flex justify-center mt-8 mb-4">
+            <Button
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={isFetching}
+              size="lg"
+              variant="outline"
+              className="min-w-[200px]"
+            >
+              {isFetching ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Cargando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Cargar más
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+        
+        {/* Mensaje cuando no hay más elementos */}
+        {!hasMore && allLoadedItems.length > 0 && (
+          <div className="text-center text-muted-foreground py-4">
+            No hay más elementos para mostrar
+          </div>
+        )}
       </div>
     </div>
   );

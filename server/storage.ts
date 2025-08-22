@@ -137,7 +137,8 @@ export interface IStorage {
   getUserUsage(userId: string): Promise<UsageTracking[]>;
   
   // Gallery methods
-  getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]>;
+  getUserGallery(userId: string, type?: string, limit?: number, offset?: number): Promise<GalleryItem[]>;
+  getGalleryItemCount(userId: string, type?: string): Promise<number>;
   addToGallery(item: InsertGalleryItem): Promise<GalleryItem>;
   updateGalleryItem(id: string, updates: Partial<GalleryItem>, userId: string): Promise<GalleryItem | undefined>;
   deleteGalleryItem(id: string, userId: string): Promise<boolean>;
@@ -584,7 +585,7 @@ export class MemStorage implements IStorage {
   }
 
   // Gallery methods
-  async getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]> {
+  async getUserGallery(userId: string, type?: string, limit?: number, offset?: number): Promise<GalleryItem[]> {
     let items = Array.from(this.galleryItems.values())
       .filter(item => item.userId === userId);
     
@@ -598,7 +599,20 @@ export class MemStorage implements IStorage {
       return bTime - aTime;
     });
     
-    return limit ? items.slice(0, limit) : items;
+    const start = offset || 0;
+    const end = limit ? start + limit : items.length;
+    return items.slice(start, end);
+  }
+
+  async getGalleryItemCount(userId: string, type?: string): Promise<number> {
+    let items = Array.from(this.galleryItems.values())
+      .filter(item => item.userId === userId);
+    
+    if (type) {
+      items = items.filter(item => item.type === type);
+    }
+    
+    return items.length;
   }
 
   async addToGallery(insertItem: InsertGalleryItem): Promise<GalleryItem> {
@@ -922,12 +936,12 @@ class DatabaseStorage implements IStorage {
   }
 
   // Gallery methods
-  async getUserGallery(userId: string, type?: string, limit?: number): Promise<GalleryItem[]> {
-    // ULTRA OPTIMIZACIÓN: Solo 15 items por defecto
+  async getUserGallery(userId: string, type?: string, limit?: number, offset?: number): Promise<GalleryItem[]> {
     const defaultLimit = limit || 15;
+    const defaultOffset = offset || 0;
     
-    // Crear clave de caché única
-    const cacheKey = `gallery:${userId}:${type || 'all'}:${defaultLimit}`;
+    // Crear clave de caché única con offset
+    const cacheKey = `gallery:${userId}:${type || 'all'}:${defaultLimit}:${defaultOffset}`;
     
     // Intentar obtener del caché primero
     const cachedData = galleryCache.get<GalleryItem[]>(cacheKey);
@@ -938,7 +952,7 @@ class DatabaseStorage implements IStorage {
     
     console.log(`[CACHE MISS] Fetching gallery data from DB for ${cacheKey}`);
     
-    // Query con filtros optimizados
+    // Query con filtros optimizados y paginación
     let result: GalleryItem[];
     if (type) {
       result = await db
@@ -949,20 +963,52 @@ class DatabaseStorage implements IStorage {
           eq(userGallery.type, type)
         ))
         .orderBy(desc(userGallery.createdAt))
-        .limit(defaultLimit);
+        .limit(defaultLimit)
+        .offset(defaultOffset);
     } else {
       result = await db
         .select()
         .from(userGallery)
         .where(eq(userGallery.userId, userId))
         .orderBy(desc(userGallery.createdAt))
-        .limit(defaultLimit);
+        .limit(defaultLimit)
+        .offset(defaultOffset);
     }
     
     // Guardar en caché con TTL de 5 minutos
     galleryCache.set(cacheKey, result, 300000);
     
     return result;
+  }
+
+  async getGalleryItemCount(userId: string, type?: string): Promise<number> {
+    const cacheKey = `gallery-count:${userId}:${type || 'all'}`;
+    
+    // Intentar obtener del caché primero
+    const cachedCount = galleryCache.get<number>(cacheKey);
+    if (cachedCount !== undefined) {
+      return cachedCount;
+    }
+    
+    // Query para contar items
+    let query = db.select({ count: sql<number>`count(*)` }).from(userGallery)
+      .where(eq(userGallery.userId, userId));
+    
+    if (type) {
+      query = db.select({ count: sql<number>`count(*)` }).from(userGallery)
+        .where(and(
+          eq(userGallery.userId, userId),
+          eq(userGallery.type, type)
+        ));
+    }
+    
+    const [result] = await query;
+    const count = Number(result.count);
+    
+    // Guardar en caché con TTL de 5 minutos
+    galleryCache.set(cacheKey, count, 300000);
+    
+    return count;
   }
 
   async addToGallery(item: InsertGalleryItem): Promise<GalleryItem> {
