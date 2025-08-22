@@ -569,61 +569,49 @@ Press and hold the stencil image above and select "Copy", then paste it directly
         open={galleryModal.open} 
         onOpenChange={(open) => setGalleryModal({ open, job: open ? galleryModal.job : null })}
       >
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-zinc-900 border-zinc-800 overflow-hidden">
+        <DialogContent className="sm:max-w-fit p-0 bg-zinc-900 border-zinc-800 overflow-hidden">
           <DialogTitle className="sr-only">Stencil Gallery Preview</DialogTitle>
           <DialogDescription className="sr-only">
             Preview of your completed stencil from the gallery
           </DialogDescription>
           
           {galleryModal.job && (
-            <div className="flex flex-col h-full">
-              {/* Imagen principal - adaptable al formato */}
-              <div className="relative bg-[#f5f5f5] flex-1 flex items-center justify-center p-4">
+            <div className="flex flex-col">
+              {/* Imagen principal - tamaño compacto */}
+              <div className="relative bg-[#f5f5f5] flex items-center justify-center p-3">
                 <img
                   src={galleryModal.job.processedImageUrl || galleryModal.job.originalImageUrl}
                   alt={`Stencil ${galleryModal.job.style}`}
-                  className="max-w-full max-h-[70vh] w-auto h-auto object-contain"
-                  style={{
-                    aspectRatio: 'auto'
-                  }}
+                  className="max-w-[400px] max-h-[55vh] w-auto h-auto object-contain"
                 />
               </div>
               
               {/* Footer con información y acciones */}
-              <div className="bg-zinc-900 p-4 border-t border-zinc-800">
-                {/* Información del stencil */}
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="text-lg font-semibold capitalize text-white">
+              <div className="bg-zinc-900 p-3 border-t border-zinc-800">
+                {/* Información compacta */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold capitalize text-white truncate">
                       {galleryModal.job.style} Style
                     </h3>
-                    <p className="text-sm text-zinc-400">
+                    <p className="text-xs text-zinc-400">
                       {new Date(galleryModal.job.createdAt || "").toLocaleString('es-ES', {
                         day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
+                        month: 'short',
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
                     </p>
                   </div>
                   
-                  {/* Botón de descarga */}
+                  {/* Botón de descarga compacto */}
                   <Button
                     onClick={() => handleDownloadFromModal(galleryModal.job!)}
-                    className="bg-white text-black hover:bg-zinc-200"
+                    className="bg-white text-black hover:bg-zinc-200 h-8 px-3 text-sm"
                   >
-                    <Download className="mr-2 h-4 w-4" />
-                    Descargar PNG
+                    <Download className="mr-1 h-3 w-3" />
+                    Descargar
                   </Button>
-                </div>
-                
-                {/* Instrucciones para Procreate */}
-                <div className="bg-zinc-800 rounded-lg p-2">
-                  <p className="text-xs text-zinc-400">
-                    <strong>Para Procreate:</strong> Mantén presionada la imagen y selecciona "Copiar", 
-                    luego pégala directamente en Procreate.
-                  </p>
                 </div>
               </div>
             </div>
