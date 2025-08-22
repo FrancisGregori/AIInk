@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await storage.addToGallery({
                 userId: job.userId,
                 imageUrl: status.outputUrl,
-                thumbnailUrl: job.originalImageUrl,
+                thumbnailUrl: null, // No guardar imagen original
                 type: 'stencil',
                 title: `Stencil - ${job.style}`,
                 style: job.style,
