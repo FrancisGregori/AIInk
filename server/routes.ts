@@ -679,6 +679,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Seleccionar el modelo basado en el parámetro
       console.log("Model parameter received:", model);
+      console.log("Model type:", typeof model);
+      console.log("Model === 'qwen':", model === "qwen");
+      console.log("Model === 'pro':", model === "pro");
+      console.log("Model === 'max':", model === "max");
+      
       let modelName: string;
       if (model === "qwen") {
         modelName = "qwen/qwen-image-edit";
