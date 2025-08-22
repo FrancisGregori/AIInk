@@ -578,7 +578,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Replicate FLUX Kontext endpoint - Exact implementation from your original
   app.post("/api/generate", isAuthenticated, async (req: any, res) => {
     try {
+      console.log("Raw request body:", JSON.stringify(req.body, null, 2));
       const { prompt, inputImageUrl, width, height, aspectRatio, model } = generateImageSchema.parse(req.body);
+      console.log("Parsed model value:", model);
       
       // Get authenticated user ID
       const userId = req.user?.claims?.sub;
