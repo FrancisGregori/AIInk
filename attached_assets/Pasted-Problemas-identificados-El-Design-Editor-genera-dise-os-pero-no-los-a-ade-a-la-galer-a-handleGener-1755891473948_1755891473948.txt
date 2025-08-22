@@ -1,0 +1,96 @@
+Problemas identificados
+El Design Editor genera diseños pero no los añade a la galería
+handleGenerate sólo crea un proyecto Flux y actualiza el trabajo en memoria; nunca llama al endpoint /api/gallery, por lo que las imágenes generadas no se persisten ni aparecen en “Mi Galería”.
+
+Suggested task
+Guardar diseños generados en la galería
+
+Start task
+La galería depende de un almacenamiento en memoria, por lo que los stencils se pierden tras reiniciar
+server/storage.ts implementa MemStorage con un Map para galleryItems; cualquier reinicio del servidor elimina las imágenes guardadas, lo que puede dar la impresión de que no se almacenan.
+
+Suggested task
+Persistir la galería en un almacenamiento duradero
+
+Start task
+El endpoint de galería y la vista limitan a 15 elementos, ocultando imágenes recientes
+/api/gallery fuerza un límite máximo de 15 y el cliente consulta con limit=15, por lo que diseños adicionales no aparecen y pueden parecer “no guardados”.
+
+Suggested task
+Soportar más elementos mediante paginación o carga incremental
+
+Start task
+como deberia funcionar correctamente ya que esta app es para que cada ususario vea su galeria privada en cada parte vea  sus imagnes tanto en stencil tool comno desing editor y en el menu mi galeria puedan ver todo
+Copy
+Para que cada usuario tenga una experiencia coherente y privada, el flujo ideal de la aplicación debería ser:
+
+Generación de imágenes (Stencil Tool y Design Editor)
+
+Cada vez que el usuario genera o modifica una imagen, la vista correspondiente envía una petición POST /api/gallery con la información del diseño (URL, tipo, título) asociada al ID del usuario autenticado.
+
+Si el diseño corresponde a un proyecto Flux, se registra también en el listado de proyectos personales del usuario.
+
+El componente (Stencil o Design Editor) añade inmediatamente esa imagen al historial local para que el usuario la vea sin recargar.
+
+Persistencia en el servidor
+
+El servidor guarda la información en un almacenamiento duradero (BD o archivo), no en memoria, de modo que las imágenes siguen disponibles tras reinicios.
+
+Cada entrada se marca con el ID del usuario, de modo que sólo él puede consultarla.
+
+Galería unificada
+
+La página “Mi Galería” realiza una petición autenticada GET /api/gallery (con paginación/carga incremental) para obtener todos los ítems del usuario.
+
+Las imágenes guardadas desde ambos módulos (Stencil y Design Editor) aparecen aquí, sin límites rígidos de 15 elementos.
+
+Historial dentro de cada herramienta
+
+Al abrir Stencil o Design Editor, el cliente recupera los diseños previos del usuario (guardados en la galería o en proyectos Flux) y muestra las miniaturas, iniciando el listado desde el primer elemento generado.
+
+Las imágenes completadas o fallidas se conservan en localStorage como respaldo, y se sincronizan al cargar la página.
+
+Tareas sugeridas
+Salvar imágenes generadas a la galería
+
+Suggested task
+Guardar diseños del Design Editor en la galería
+
+Start task
+Usar el ID real del usuario
+
+Suggested task
+Asociar proyectos Flux al usuario autenticado
+
+Start task
+Persistir los datos en el backend
+
+Suggested task
+Migrar almacenamiento en memoria a persistente
+
+Start task
+Eliminar el límite fijo de 15 y añadir paginación
+
+Suggested task
+Soportar paginación en la galería
+
+Start task
+Mostrar correctamente el historial en Design Editor
+
+Suggested task
+Incluir el primer proyecto en el historial
+
+Start task
+Persistir y recuperar trabajos completados
+
+Suggested task
+Guardar trabajos completados en localStorage
+
+Start task
+Unificar Stencil Tool con la galería
+
+Suggested task
+Registrar las imágenes del Stencil Tool en la galería
+
+Start task
+Con estos ajustes, cada usuario verá sus imágenes generadas desde cualquier sección y tendrá un historial completo y persistente en la galería.
