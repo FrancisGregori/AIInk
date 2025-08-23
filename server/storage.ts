@@ -50,6 +50,7 @@ export interface IStorage {
   getUserCredits(userId: string): Promise<number>;
   deductCredits(userId: string, amount: number): Promise<boolean>;
   updateUserCredits(userId: string, newCredits: number): Promise<User>;
+  addCredits(userId: string, amount: number): Promise<User>;
   
   // Stencil methods
   getStencilStyles(): Promise<StencilStyle[]>;
@@ -161,6 +162,7 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
+  // Update available credits (not monthly allowance)
   async updateUserCredits(userId: string, newCredits: number): Promise<User> {
     const [updated] = await db.update(users)
       .set({ credits: newCredits, updatedAt: new Date() })
@@ -168,6 +170,17 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updated;
+  }
+
+  // Add credits to current available balance 
+  async addCredits(userId: string, amount: number): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    const newTotal = (user.credits || 0) + amount;
+    return this.updateUserCredits(userId, newTotal);
   }
 
   // Stencil methods
