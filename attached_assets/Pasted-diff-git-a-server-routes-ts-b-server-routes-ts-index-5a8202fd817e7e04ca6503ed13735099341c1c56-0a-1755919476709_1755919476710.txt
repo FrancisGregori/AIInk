@@ -1,0 +1,149 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index 5a8202fd817e7e04ca6503ed13735099341c1c56..0ac800b765a6e153ea0d50e34b6e95c31155fd89 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1,37 +1,68 @@
+ import type { Express } from "express";
+ import { createServer, type Server } from "http";
+ import multer from "multer";
+ import { storage } from "./storage";
+ import { setupAuth, isAuthenticated } from "./replitAuth";
+ import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
+ import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
+ import ComfyDeployService from "./comfydeploy";
+ import Replicate from "replicate";
+ import { z } from "zod";
+ import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
+ 
++// Temporary image cache with TTL
++interface TempImage {
++  buffer: Buffer;
++  mimeType: string;
++  expiresAt: number;
++}
++
++const TEMP_IMAGE_TTL = 1000 * 60 * 5; // 5 minutes
++const tempImages: Map<string, TempImage> = (global as any).tempImages || new Map();
++(global as any).tempImages = tempImages;
++
++// Helper to store images with TTL
++(global as any).storeTempImage = (id: string, buffer: Buffer, mimeType: string) => {
++  tempImages.set(id, {
++    buffer,
++    mimeType,
++    expiresAt: Date.now() + TEMP_IMAGE_TTL,
++  });
++};
++
++// Periodic cleanup for expired images
++setInterval(() => {
++  const now = Date.now();
++  tempImages.forEach((data, id) => {
++    if (data.expiresAt <= now) {
++      tempImages.delete(id);
++      console.log(`[tempImages] evicted ${id} due to TTL`);
++    }
++  });
++}, 60_000).unref();
++
+ // Configure multer for file uploads
+ const upload = multer({
+   storage: multer.memoryStorage(),
+   limits: {
+     fileSize: 10 * 1024 * 1024, // 10MB limit
+   },
+   fileFilter: (req, file, cb) => {
+     if (file.mimetype.startsWith('image/')) {
+       cb(null, true);
+     } else {
+       cb(new Error('Only image files are allowed'));
+     }
+   },
+ });
+ 
+ // Validation schema for Replicate generation
+ const generateImageSchema = z.object({
+   prompt: z.string().min(1, "Prompt is required"),
+   inputImageUrl: z.string().optional().refine((val) => {
+     if (!val || val === "") return true; // Allow empty string
+     try {
+       new URL(val);
+       return true;
+     } catch {
+       // Allow internal API paths and static file paths
+diff --git a/server/routes.ts b/server/routes.ts
+index 5a8202fd817e7e04ca6503ed13735099341c1c56..0ac800b765a6e153ea0d50e34b6e95c31155fd89 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -231,59 +262,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
+     } catch (error) {
+       console.error("Error fetching stencil jobs:", error);
+       res.status(500).json({ error: "Internal server error" });
+     }
+   });
+ 
+   // Get gallery stencils
+   app.get("/api/stencil/gallery", isAuthenticated, async (req, res) => {
+     try {
+       const userId = (req as any).user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+       const limit = parseInt(req.query.limit as string) || 20;
+       const stencils = await storage.getGalleryStencils(userId, limit);
+       res.json(stencils);
+     } catch (error) {
+       console.error("Error fetching gallery:", error);
+       res.status(500).json({ error: "Internal server error" });
+     }
+   });
+ 
+   // Serve temporary images for ComfyDeploy
+   app.get("/api/temp-image/:id", (req, res) => {
+     const { id } = req.params;
+-    
++
+     if (!(global as any).tempImages || !(global as any).tempImages.has(id)) {
+       return res.status(404).json({ error: "Image not found or expired" });
+     }
+-    
+-    const imageData = (global as any).tempImages.get(id);
++
++    const imageData = (global as any).tempImages.get(id) as TempImage;
++    if (imageData.expiresAt <= Date.now()) {
++      (global as any).tempImages.delete(id);
++      console.log(`[tempImages] evicted ${id} due to TTL`);
++      return res.status(404).json({ error: "Image not found or expired" });
++    }
++
+     res.set('Content-Type', imageData.mimeType);
+     res.set('Cache-Control', 'no-store');
+     res.send(imageData.buffer);
++
++    (global as any).tempImages.delete(id);
++    console.log(`[tempImages] served and evicted ${id}`);
+   });
+ 
+   // Process stencil with ComfyDeploy
+   app.post("/api/stencil/process", isAuthenticated, upload.single('image'), async (req, res) => {
+     try {
+       if (!req.file) {
+         return res.status(400).json({ error: "No image file provided" });
+       }
+ 
+       // Get authenticated user ID
+       const authenticatedUserId = (req as any).user?.claims?.sub;
+       if (!authenticatedUserId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+ 
+       const { style = "steven", processingOptions } = req.body;
+       const userId = authenticatedUserId;
+       
+       // Check if user has enough credits (5 credits for stencil)
+       const STENCIL_COST = 5;
+       const availableCredits = await storage.getUserCredits(userId);
+       
+       if (availableCredits < STENCIL_COST) {
+         return res.status(402).json({ 
+           error: "Insufficient credits",

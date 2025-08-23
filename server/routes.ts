@@ -85,13 +85,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const credits = await storage.getUserCredits(userId);
-      const profile = await storage.getUserProfile(userId);
       
       res.json({
         available: credits,
-        monthlyAllowance: profile?.monthlyCredits || 10,
-        used: profile?.creditsUsed || 0,
-        subscriptionTier: profile?.subscriptionTier || 'free'
+        monthlyAllowance: 10, // Default monthly allowance
+        used: 0, // Placeholder for credits used
+        subscriptionTier: 'free' // Default tier
       });
     } catch (error) {
       console.error("Error fetching credits:", error);
@@ -348,8 +347,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert file to base64 URL for processing
       let publicImageUrl;
       try {
-        // Convert buffer to base64 data URL (ComfyDeploy accepts this)
-        const base64 = req.file.buffer.toString('base64');
+        // Read file from disk and convert to base64 data URL (ComfyDeploy accepts this)
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const base64 = fileBuffer.toString('base64');
         const mimeType = req.file.mimetype || 'image/png';
         publicImageUrl = `data:${mimeType};base64,${base64}`;
         console.log("Image prepared for processing");
