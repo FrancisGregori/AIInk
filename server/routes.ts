@@ -1137,13 +1137,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ADMIN ENDPOINT DISABLED - SECURITY VULNERABILITY
-  // TODO: Implement proper admin role verification before re-enabling
-  /*
-  app.post("/api/admin/add-credits", isAuthenticated, async (req: any, res) => {
-    return res.status(403).json({ error: "Admin functionality temporarily disabled" });
-  });
-  */
+  // ADMIN ROUTES COMPLETELY REMOVED FOR SECURITY
+  // Any admin functionality requires proper role-based access control implementation
 
   // Endpoint seguro para servir imágenes privadas con autenticación
   app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
