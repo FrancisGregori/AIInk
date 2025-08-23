@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2, ImageIcon, Settings, Monitor } from "lucide-react";
+import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2, ImageIcon, Settings, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -1111,7 +1111,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                         className="h-6 w-6 p-0 flex items-center justify-center"
                         data-testid="button-aspect-dropdown"
                       >
-                        <Monitor className="h-3 w-3" />
+                        <Layers className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-32">
