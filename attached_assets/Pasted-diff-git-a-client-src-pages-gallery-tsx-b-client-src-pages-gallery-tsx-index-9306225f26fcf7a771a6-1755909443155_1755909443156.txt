@@ -1,0 +1,203 @@
+diff --git a/client/src/pages/gallery.tsx b/client/src/pages/gallery.tsx
+index 9306225f26fcf7a771a6e7f7fecc79558b11fbce..a561fa59ab127d24d45a626330aef296fe798dab 100644
+--- a/client/src/pages/gallery.tsx
++++ b/client/src/pages/gallery.tsx
+@@ -1,27 +1,27 @@
+ import React, { useState } from 'react';
+-import { useQuery, useMutation } from '@tanstack/react-query';
++import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query';
+ import { queryClient } from '@/lib/queryClient';
+ import { Card, CardContent } from '@/components/ui/card';
+ import { Button } from '@/components/ui/button';
+ import { Input } from '@/components/ui/input';
+ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+ import { Badge } from '@/components/ui/badge';
+ import { useToast } from '@/hooks/use-toast';
+ import { 
+   Search, 
+   Filter, 
+   Heart, 
+   Download, 
+   Trash2, 
+   Grid3x3, 
+   List,
+   Image as ImageIcon,
+   Clock,
+   Star,
+   ArrowLeft,
+   X,
+   RefreshCw
+ } from 'lucide-react';
+ import {
+   Dialog,
+   DialogContent,
+diff --git a/client/src/pages/gallery.tsx b/client/src/pages/gallery.tsx
+index 9306225f26fcf7a771a6e7f7fecc79558b11fbce..a561fa59ab127d24d45a626330aef296fe798dab 100644
+--- a/client/src/pages/gallery.tsx
++++ b/client/src/pages/gallery.tsx
+@@ -39,50 +39,51 @@ export default function Gallery() {
+   const [imageSize, setImageSize] = useState<'small' | 'medium' | 'large'>('small'); // Por defecto pequeño
+   const [selectedType, setSelectedType] = useState<'all' | 'stencil' | 'design'>('all');
+   const [selectedImage, setSelectedImage] = useState<any>(null);
+   const [currentPage, setCurrentPage] = useState(1);
+   const [allLoadedItems, setAllLoadedItems] = useState<any[]>([]);
+   const [hasMore, setHasMore] = useState(true);
+   const itemsPerPage = 50; // Increased from 15 to show more items
+ 
+   // Fetch gallery items con paginación
+   const { data, isLoading, refetch, isFetching } = useQuery({
+     queryKey: ['/api/gallery', currentPage, selectedType],
+     queryFn: async () => {
+       const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
+       const response = await apiRequest('GET', `/api/gallery?limit=${itemsPerPage}&page=${currentPage}${typeParam}`);
+       const totalCount = response.headers.get('X-Total-Count');
+       const totalPages = response.headers.get('X-Total-Pages');
+       const items = await response.json();
+       
+       // Actualizar estado de paginación
+       if (totalPages && currentPage >= parseInt(totalPages)) {
+         setHasMore(false);
+       }
+       
+       return items;
+     },
++    placeholderData: keepPreviousData,
+     // MÁXIMA OPTIMIZACIÓN DE CACHE
+     refetchOnMount: 'always', // Siempre refrescar para datos actualizados
+     refetchOnWindowFocus: false, // NO refrescar al cambiar de ventana
+     staleTime: 60000, // Datos frescos por 1 minuto
+     gcTime: 10 * 60 * 1000, // Mantener en cache por 10 minutos
+     refetchInterval: false, // NO actualizar automáticamente
+     enabled: true // Siempre habilitado
+   });
+ 
+   // Actualizar items cuando cambia la data
+   React.useEffect(() => {
+     if (data && Array.isArray(data)) {
+       if (currentPage === 1) {
+         setAllLoadedItems(data);
+       } else {
+         setAllLoadedItems(prev => [...prev, ...data]);
+       }
+     } else if (data === null || data === undefined) {
+       // Si no hay datos, asegurarse de que la galería muestre vacía
+       if (currentPage === 1) {
+         setAllLoadedItems([]);
+       }
+     }
+   }, [data, currentPage]);
+ 
+diff --git a/client/src/pages/gallery.tsx b/client/src/pages/gallery.tsx
+index 9306225f26fcf7a771a6e7f7fecc79558b11fbce..a561fa59ab127d24d45a626330aef296fe798dab 100644
+--- a/client/src/pages/gallery.tsx
++++ b/client/src/pages/gallery.tsx
+@@ -159,51 +160,51 @@ export default function Gallery() {
+     try {
+       const response = await fetch(imageUrl);
+       const blob = await response.blob();
+       const url = window.URL.createObjectURL(blob);
+       const a = document.createElement('a');
+       a.href = url;
+       a.download = title ? `${title}.png` : 'design.png';
+       document.body.appendChild(a);
+       a.click();
+       document.body.removeChild(a);
+       window.URL.revokeObjectURL(url);
+       
+       toast({
+         title: "Descargado",
+         description: "El diseño ha sido descargado exitosamente",
+       });
+     } catch (error) {
+       toast({
+         title: "Error",
+         description: "No se pudo descargar el diseño",
+         variant: "destructive",
+       });
+     }
+   };
+ 
+-  if (isLoading) {
++  if (isLoading || (isFetching && allLoadedItems.length === 0)) {
+     return (
+       <div className="min-h-screen flex items-center justify-center">
+         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+       </div>
+     );
+   }
+ 
+   return (
+     <div className="min-h-screen py-20 px-4">
+       <div className="max-w-7xl mx-auto">
+         {/* Navigation */}
+         <div className="mb-6 flex items-center justify-between">
+           <Link href="/">
+             <Button variant="ghost" className="flex items-center gap-2">
+               <ArrowLeft className="h-4 w-4" />
+               Volver al Inicio
+             </Button>
+           </Link>
+           <Button 
+             variant="ghost" 
+             size="icon"
+             onClick={() => window.history.back()}
+             className="lg:hidden"
+           >
+             <X className="h-5 w-5" />
+diff --git a/client/src/pages/gallery.tsx b/client/src/pages/gallery.tsx
+index 9306225f26fcf7a771a6e7f7fecc79558b11fbce..a561fa59ab127d24d45a626330aef296fe798dab 100644
+--- a/client/src/pages/gallery.tsx
++++ b/client/src/pages/gallery.tsx
+@@ -322,51 +323,51 @@ export default function Gallery() {
+                   onClick={() => setViewMode('list')}
+                 >
+                   <List className="w-4 h-4" />
+                 </Button>
+               </div>
+             </div>
+           </div>
+ 
+           {/* Type filter tabs */}
+           <Tabs value={selectedType} onValueChange={(value: any) => setSelectedType(value)}>
+             <TabsList className="w-full sm:w-auto">
+               <TabsTrigger value="all">
+                 Todos ({allGalleryItems.length})
+               </TabsTrigger>
+               <TabsTrigger value="stencil">
+                 Stencils ({allGalleryItems.filter((i: any) => i.type === 'stencil').length})
+               </TabsTrigger>
+               <TabsTrigger value="design">
+                 Diseños ({allGalleryItems.filter((i: any) => i.type === 'design').length})
+               </TabsTrigger>
+             </TabsList>
+           </Tabs>
+         </div>
+ 
+         {/* Empty state */}
+-        {filteredItems.length === 0 && (
++        {filteredItems.length === 0 && !isFetching && (
+           <div className="text-center py-20">
+             <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+             <h3 className="text-xl font-semibold mb-2">
+               {searchTerm ? 'No se encontraron resultados' : 'Tu galería está vacía'}
+             </h3>
+             <p className="text-muted-foreground">
+               {searchTerm 
+                 ? 'Intenta con otros términos de búsqueda' 
+                 : 'Comienza generando tu primer diseño o stencil'}
+             </p>
+           </div>
+         )}
+ 
+         {/* Gallery content - Organized by day */}
+         {Object.entries(groupedItems).map(([date, items]: [string, any]) => (
+           <div key={date} className="mb-10">
+             {/* Date header with improved styling */}
+             <div className="flex items-center gap-3 mb-6">
+               <div className="h-px bg-border flex-1" />
+               <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-full border">
+                 <Clock className="w-4 h-4 text-muted-foreground" />
+                 <span className="text-sm font-semibold">{date}</span>
+                 <Badge variant="secondary" className="ml-2">
+                   {items.length} {items.length === 1 ? 'diseño' : 'diseños'}
+                 </Badge>
