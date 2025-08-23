@@ -1266,7 +1266,7 @@ function DesignEditor() {
             
             {/* Removed Latest Design section per user request */}
 
-            {/* History - Portrait Style, Only 2 Items */}
+            {/* History - Mobile Optimized Gallery */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
@@ -1275,8 +1275,10 @@ function DesignEditor() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 gap-3">
-                  {projects.slice(0, 5).map((project) => (
+                <div className="space-y-4">
+                  {/* Mobile: 2 columns, Desktop: 2 columns */}
+                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
+                    {projects.slice(0, 4).map((project) => (
                     <Dialog key={project.id}>
                       <DialogTrigger asChild>
                         <div className="relative group cursor-pointer">
@@ -1285,8 +1287,8 @@ function DesignEditor() {
                             alt={project.name}
                             className="w-full aspect-[3/4] rounded-lg object-cover hover:opacity-90 transition-opacity"
                           />
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3 rounded-b-lg">
-                            <p className="text-sm font-semibold text-white">{project.name}</p>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 lg:p-3 rounded-b-lg">
+                            <p className="text-xs lg:text-sm font-semibold text-white truncate">{project.name}</p>
                             <p className="text-xs text-white/70">
                               {new Date(project.createdAt || "").toLocaleString('es-ES', {
                                 day: 'numeric',
@@ -1350,6 +1352,23 @@ function DesignEditor() {
                       </Dialog>
                     ))}
                   </div>
+                  
+                  {/* Load More Button - show when there are more than 4 projects */}
+                  {projects.length > 4 && (
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          // Navigate to main gallery to see all projects
+                          window.location.href = '/gallery';
+                        }}
+                        className="text-sm"
+                      >
+                        Ver todos ({projects.length} diseños)
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
