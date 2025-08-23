@@ -242,34 +242,41 @@ export class DatabaseStorage implements IStorage {
     
     let result;
     if (userId) {
-      // OPTIMIZACIÓN: Excluir campo settings que es muy pesado para historial
-      const queryResult = await db.execute(sql`
-        SELECT id, user_id, name, description, prompt, image_url, is_public, created_at, updated_at
-        FROM flux_projects 
-        WHERE user_id = ${userId} 
-        ORDER BY created_at DESC 
-        LIMIT 50
-      `);
-      result = queryResult.rows.map(row => ({
-        ...row,
-        settings: null // Excluir settings pesado del historial
-      })) as FluxProject[];
+      // OPTIMIZACIÓN: Excluir campo settings que es muy pesado (5.6MB por registro)
+      result = await db.select({
+        id: fluxProjects.id,
+        userId: fluxProjects.userId,
+        name: fluxProjects.name,
+        description: fluxProjects.description,
+        prompt: fluxProjects.prompt,
+        imageUrl: fluxProjects.imageUrl,
+        isPublic: fluxProjects.isPublic,
+        createdAt: fluxProjects.createdAt,
+        updatedAt: fluxProjects.updatedAt,
+        // Excluir settings para el historial
+      }).from(fluxProjects)
+        .where(eq(fluxProjects.userId, userId))
+        .orderBy(desc(fluxProjects.createdAt))
+        .limit(50);
     } else {
-      const queryResult = await db.execute(sql`
-        SELECT id, user_id, name, description, prompt, image_url, is_public, created_at, updated_at
-        FROM flux_projects 
-        ORDER BY created_at DESC 
-        LIMIT 50
-      `);
-      result = queryResult.rows.map(row => ({
-        ...row,
-        settings: null
-      })) as FluxProject[];
+      result = await db.select({
+        id: fluxProjects.id,
+        userId: fluxProjects.userId,
+        name: fluxProjects.name,
+        description: fluxProjects.description,
+        prompt: fluxProjects.prompt,
+        imageUrl: fluxProjects.imageUrl,
+        isPublic: fluxProjects.isPublic,
+        createdAt: fluxProjects.createdAt,
+        updatedAt: fluxProjects.updatedAt,
+      }).from(fluxProjects)
+        .orderBy(desc(fluxProjects.createdAt))
+        .limit(50);
     }
     
     const endTime = Date.now();
     console.log(`[STORAGE] DB query completed in ${endTime - startTime}ms, returning ${result.length} items`);
-    return result;
+    return result.map(item => ({ ...item, settings: null })) as FluxProject[];
   }
 
   async createFluxProject(project: InsertFluxProject): Promise<FluxProject> {
