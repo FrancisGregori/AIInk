@@ -193,68 +193,66 @@ export default function Navigation() {
         {/* Mobile menu */}
         {isOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-black border-t border-dark-gray">
-              {location === "/" ? (
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-black border-t border-gray-800">
+              <Link href="/" onClick={() => setIsOpen(false)}>
+                <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-home">
+                  Home
+                </span>
+              </Link>
+              <Link href="/stencil-tool" onClick={() => setIsOpen(false)}>
+                <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-stencil">
+                  Stencil Tool
+                </span>
+              </Link>
+              <Link href="/design-editor" onClick={() => setIsOpen(false)}>
+                <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-design">
+                  Design Editor
+                </span>
+              </Link>
+              {isAuthenticated && (
+                <Link href="/gallery" onClick={() => setIsOpen(false)}>
+                  <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-gallery">
+                    Mi Galería
+                  </span>
+                </Link>
+              )}
+              <Link href="/pricing" onClick={() => setIsOpen(false)}>
+                <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-pricing">
+                  Pricing
+                </span>
+              </Link>
+              
+              {/* User Menu for Mobile */}
+              {isAuthenticated && user ? (
                 <>
+                  <div className="border-t border-gray-800 mt-2 pt-2">
+                    <div className="px-3 py-2">
+                      <p className="text-sm font-medium text-white">{user.firstName || user.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "User"}</p>
+                      <p className="text-xs text-gray-400">{user.email}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Créditos: {user.credits || 0}
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/profile" onClick={() => setIsOpen(false)}>
+                    <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-profile">
+                      Perfil
+                    </span>
+                  </Link>
                   <button 
-                    onClick={() => scrollToSection("inicio")} 
-                    className="block px-3 py-2 text-light-gray hover:text-white transition-colors"
-                    data-testid="button-mobile-nav-inicio"
+                    onClick={() => { setIsOpen(false); window.location.href = '/api/logout'; }}
+                    className="block w-full text-left px-3 py-2 text-red-400 hover:text-red-300 transition-colors"
+                    data-testid="button-mobile-nav-logout"
                   >
-                    Home
-                  </button>
-                  <button 
-                    onClick={() => scrollToSection("stencil")} 
-                    className="block px-3 py-2 text-light-gray hover:text-white transition-colors"
-                    data-testid="button-mobile-nav-stencil"
-                  >
-                    Stencil Tool
-                  </button>
-                  <button 
-                    onClick={() => scrollToSection("flux")} 
-                    className="block px-3 py-2 text-light-gray hover:text-white transition-colors"
-                    data-testid="button-mobile-nav-design"
-                  >
-                    Design Editor
-                  </button>
-                  <button 
-                    onClick={() => scrollToSection("contacto")} 
-                    className="block px-3 py-2 text-light-gray hover:text-white transition-colors"
-                    data-testid="button-mobile-nav-contacto"
-                  >
-                    Contact
+                    Cerrar Sesión
                   </button>
                 </>
               ) : (
-                <>
-                  <Link href="/">
-                    <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-home">
-                      Home
-                    </span>
-                  </Link>
-                  <Link href="/stencil-tool">
-                    <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-stencil">
-                      Stencil Tool
-                    </span>
-                  </Link>
-                  <Link href="/design-editor">
-                    <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-design">
-                      Design Editor
-                    </span>
-                  </Link>
-                  {isAuthenticated && (
-                    <Link href="/gallery">
-                      <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-gallery">
-                        Mi Galería
-                      </span>
-                    </Link>
-                  )}
-                  <Link href="/pricing">
-                    <span className="block px-3 py-2 text-light-gray hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-pricing">
-                      Pricing
-                    </span>
-                  </Link>
-                </>
+                <Link href="/login" onClick={() => setIsOpen(false)}>
+                  <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-login">
+                    Iniciar Sesión
+                  </span>
+                </Link>
               )}
             </div>
           </div>
