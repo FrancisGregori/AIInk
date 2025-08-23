@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,7 @@ export default function Gallery() {
       
       return items;
     },
+    placeholderData: keepPreviousData,
     // MÁXIMA OPTIMIZACIÓN DE CACHE
     refetchOnMount: 'always', // Siempre refrescar para datos actualizados
     refetchOnWindowFocus: false, // NO refrescar al cambiar de ventana
@@ -181,7 +182,7 @@ export default function Gallery() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || (isFetching && allLoadedItems.length === 0)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -344,7 +345,7 @@ export default function Gallery() {
         </div>
 
         {/* Empty state */}
-        {filteredItems.length === 0 && (
+        {filteredItems.length === 0 && !isFetching && (
           <div className="text-center py-20">
             <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">
