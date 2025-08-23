@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { apiRequest } from '@/lib/queryClient';
 import { isUnauthorizedError } from '@/lib/authUtils';
+import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 import { Link, useLocation } from 'wouter';
 
 export default function Gallery() {
@@ -411,10 +412,9 @@ export default function Gallery() {
                             ? 'aspect-[3/4]'
                             : 'aspect-[3/4]'
                         } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
-                          <img
+                          <AuthenticatedImage
                             src={item.thumbnailUrl || item.imageUrl} 
                             alt={item.title || 'Diseño'}
-                            loading="lazy"
                             className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
                           />
                           {/* Overlay on hover - solo mostrar en tamaños medianos y grandes */}
