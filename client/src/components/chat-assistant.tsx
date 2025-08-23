@@ -1066,13 +1066,13 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               </div>
               
               {/* Options chips/badges */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 {/* Upload button first */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-3 py-2 h-auto"
+                  className="flex items-center gap-2 px-3 py-1.5 h-8"
                   data-testid="button-upload-image"
                 >
                   <ImageIcon className="h-4 w-4" />
@@ -1087,7 +1087,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-6 w-6 p-0 flex items-center justify-center"
+                      className="h-8 w-8 p-0 flex items-center justify-center"
                       data-testid="button-model-dropdown"
                     >
                       <Bot className="h-3 w-3" />
@@ -1121,7 +1121,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-6 w-6 p-0 flex items-center justify-center"
+                      className="h-8 w-8 p-0 flex items-center justify-center"
                       data-testid="button-aspect-dropdown"
                     >
                       <Square className="h-3 w-3" />
