@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {
@@ -1067,47 +1068,68 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                 
                 {/* Options chips/badges */}
                 <div className="flex flex-wrap gap-2">
-                  {/* Model Selection */}
-                  <div className="flex items-center gap-1">
-                    <Settings className="h-3 w-3 text-zinc-400" />
-                    <div className="flex gap-1">
-                      {[
-                        { value: "pro", label: "Kontext Pro" },
-                        { value: "max", label: "Kontext Max" }, 
-                        { value: "qwen", label: "Qwen Edit" }
-                      ].map((model) => (
-                        <Button
-                          key={model.value}
-                          variant={modelVariant === model.value ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => onModelChange?.(model.value)}
-                          className="h-6 px-2 text-xs"
-                          data-testid={`button-model-${model.value}`}
-                        >
-                          {model.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Model Selection Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-xs flex items-center gap-1"
+                        data-testid="button-model-dropdown"
+                      >
+                        <Settings className="h-3 w-3" />
+                        {modelVariant === "pro" && "Pro"}
+                        {modelVariant === "max" && "Max"} 
+                        {modelVariant === "qwen" && "Qwen"}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-40">
+                      <DropdownMenuItem 
+                        onClick={() => onModelChange?.("pro")}
+                        className={modelVariant === "pro" ? "bg-zinc-800" : ""}
+                      >
+                        Kontext Pro
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => onModelChange?.("max")}
+                        className={modelVariant === "max" ? "bg-zinc-800" : ""}
+                      >
+                        Kontext Max
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => onModelChange?.("qwen")}
+                        className={modelVariant === "qwen" ? "bg-zinc-800" : ""}
+                      >
+                        Qwen Edit
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   
-                  {/* Aspect Ratio Selection */}
-                  <div className="flex items-center gap-1">
-                    <Monitor className="h-3 w-3 text-zinc-400" />
-                    <div className="flex gap-1">
+                  {/* Aspect Ratio Selection Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-xs flex items-center gap-1"
+                        data-testid="button-aspect-dropdown"
+                      >
+                        <Monitor className="h-3 w-3" />
+                        {aspectRatio}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-32">
                       {["Match Input", "1:1", "2:3", "3:2", "16:9"].map((ratio) => (
-                        <Button
+                        <DropdownMenuItem 
                           key={ratio}
-                          variant={aspectRatio === ratio ? "default" : "outline"}
-                          size="sm"
                           onClick={() => onAspectRatioChange?.(ratio)}
-                          className="h-6 px-2 text-xs"
-                          data-testid={`button-aspect-${ratio.replace(/[:\s]/g, '-')}`}
+                          className={aspectRatio === ratio ? "bg-zinc-800" : ""}
                         >
                           {ratio}
-                        </Button>
+                        </DropdownMenuItem>
                       ))}
-                    </div>
-                  </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
               
