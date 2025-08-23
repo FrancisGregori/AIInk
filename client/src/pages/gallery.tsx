@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 import { apiRequest } from '@/lib/queryClient';
+import Navigation from '@/components/Navigation';
 
 export default function Gallery() {
   const { toast } = useToast();
@@ -145,7 +146,8 @@ export default function Gallery() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6">
+      <Navigation />
+      <div className="container mx-auto p-6 pt-24">
         {/* Header */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="flex-1">
