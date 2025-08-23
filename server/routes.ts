@@ -1190,12 +1190,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Obtener el archivo y enviarlo
       const [buffer] = await file.download();
       
-      // Headers correctos para mostrar imágenes
+      // Headers correctos para mostrar imágenes con credenciales
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Content-Length', buffer.length.toString());
-      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache de 1 hora
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
       
       res.end(buffer);
     } catch (error) {

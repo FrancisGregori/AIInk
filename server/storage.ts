@@ -66,6 +66,7 @@ export interface IStorage {
   // Flux Kontext methods
   getFluxProjects(userId?: string): Promise<FluxProject[]>;
   createFluxProject(project: InsertFluxProject): Promise<FluxProject>;
+  getFluxProject(id: string): Promise<FluxProject | undefined>;
   updateFluxProject(id: string, updates: Partial<FluxProject>): Promise<FluxProject | undefined>;
   regenerateFluxProject(id: string): Promise<FluxProject | undefined>;
   deleteFluxProject(id: string): Promise<boolean>;
@@ -247,6 +248,13 @@ export class DatabaseStorage implements IStorage {
   async createFluxProject(project: InsertFluxProject): Promise<FluxProject> {
     const [newProject] = await db.insert(fluxProjects).values(project).returning();
     return newProject;
+  }
+
+  async getFluxProject(id: string): Promise<FluxProject | undefined> {
+    const [project] = await db.select().from(fluxProjects)
+      .where(eq(fluxProjects.id, id))
+      .limit(1);
+    return project;
   }
 
   async updateFluxProject(id: string, updates: Partial<FluxProject>): Promise<FluxProject | undefined> {
