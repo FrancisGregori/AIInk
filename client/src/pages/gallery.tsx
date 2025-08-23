@@ -14,7 +14,9 @@ import {
   Filter,
   ChevronDown,
   Info,
-  Loader2
+  Loader2,
+  Square,
+  RectangleHorizontal
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -181,16 +183,36 @@ export default function Gallery() {
               </SelectContent>
             </Select>
 
-            <Select value={imageSize} onValueChange={(value: any) => setImageSize(value)}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="small">Pequeño</SelectItem>
-                <SelectItem value="medium">Mediano</SelectItem>
-                <SelectItem value="large">Grande</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Size selector with icons */}
+            <div className="flex items-center gap-1 p-1 bg-card border rounded-lg">
+              <Button
+                variant={imageSize === 'small' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setImageSize('small')}
+                className="h-8 w-8 p-0"
+                data-testid="button-size-small"
+              >
+                <Square className="h-3 w-3" />
+              </Button>
+              <Button
+                variant={imageSize === 'medium' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setImageSize('medium')}
+                className="h-8 w-8 p-0"
+                data-testid="button-size-medium"
+              >
+                <Square className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={imageSize === 'large' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setImageSize('large')}
+                className="h-8 w-8 p-0"
+                data-testid="button-size-large"
+              >
+                <Square className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
 
