@@ -384,7 +384,15 @@ function DesignEditor() {
     queryKey: ["/api/flux/projects"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     initialData: [],
+    enabled: isAuthenticated, // evita petición antes de autenticarse
+    staleTime: 0,              // permite refetch inmediato tras login
   });
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+    }
+  }, [isAuthenticated, queryClient]);
 
   // Verificar automáticamente cuando se actualiza la lista de proyectos
   useEffect(() => {
