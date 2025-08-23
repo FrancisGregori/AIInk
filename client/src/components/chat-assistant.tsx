@@ -801,7 +801,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       'cambiar', 'convertir', 'transformar', 'aplicar',
       'que se vea', 'mas ', 'más ', 'realista', 'detallado',
       'agregar', 'eliminar', 'mejorar', 'aumentar',
-      'quiero', 'necesito', 'deseo', 'pon ', 'coloca',
       // Colors and styles
       'blanco', 'negro', 'color', 'estilo', 'fondo',
       'black', 'white', 'style', 'background'
