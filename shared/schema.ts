@@ -123,6 +123,7 @@ export const fluxProjects = pgTable("flux_projects", {
 }, (table) => [
   index("flux_projects_user_id_idx").on(table.userId),
   index("flux_projects_created_at_idx").on(table.createdAt),
+  index("flux_projects_user_created_idx").on(table.userId, table.createdAt),
 ]);
 
 // Gemini chat messages table
