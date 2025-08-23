@@ -334,16 +334,22 @@ export async function getChatResponseGemini(
         // English patterns
         lastMessage.includes('maintaining') || 
         lastMessage.includes('Change the') ||
+        lastMessage.includes('Change ') ||
+        lastMessage.includes(' to ') || // Detecta "Change X to Y"
         lastMessage.includes('Add ') ||
         lastMessage.includes('Remove ') ||
         lastMessage.includes('Transform to') ||
         lastMessage.includes('Turn the') ||
         lastMessage.includes('Rotate ') ||
         lastMessage.includes('Replace ') ||
+        lastMessage.includes('Make ') ||
+        lastMessage.includes('Create ') ||
         // Spanish patterns
         lastMessage.includes('manteniendo') ||
         lastMessage.includes('Cambiar el') ||
         lastMessage.includes('Cambiar la') ||
+        lastMessage.includes('Cambiar ') ||
+        lastMessage.includes(' a ') || // Detecta "Cambiar X a Y"
         lastMessage.includes('Agregar ') ||
         lastMessage.includes('Añadir ') ||
         lastMessage.includes('Quitar ') ||
@@ -352,6 +358,8 @@ export async function getChatResponseGemini(
         lastMessage.includes('Girar ') ||
         lastMessage.includes('Rotar ') ||
         lastMessage.includes('Reemplazar ') ||
+        lastMessage.includes('Hacer ') ||
+        lastMessage.includes('Crear ') ||
         // Common technical structure indicators
         lastMessage.includes(', maintaining') ||
         lastMessage.includes(', manteniendo');

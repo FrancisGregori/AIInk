@@ -963,6 +963,16 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       >
                         Copiar
                       </Button>
+                      <Button
+                        onClick={() => applyPrompt(msg.content)}
+                        variant="default"
+                        size="sm"
+                        className="h-7 px-3 rounded-lg bg-white text-black hover:bg-gray-100 text-xs font-medium"
+                        data-testid={`button-apply-message-${msg.id}`}
+                        disabled={isGeneratingImage || !storedImage}
+                      >
+                        {language === 'es' ? 'Generar' : 'Generate'}
+                      </Button>
                       {isGeneratingImage && (
                         <div className="flex items-center gap-1 text-xs text-white bg-zinc-800 px-2 py-1 rounded-lg">
                           <Loader2 className="h-3 w-3 animate-spin" />
