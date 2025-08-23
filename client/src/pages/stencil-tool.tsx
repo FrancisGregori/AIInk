@@ -494,29 +494,6 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               </CardFooter>
             </Card>
 
-            {/* Usage Info - Compact */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  Your Usage
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-400">Credits used</span>
-                    <Badge variant="secondary" className="text-xs">12 / 50</Badge>
-                  </div>
-                  <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                    <div className="bg-white h-1.5 rounded-full" style={{ width: "24%" }} />
-                  </div>
-                  <p className="text-xs text-zinc-500">
-                    38 credits remaining
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Middle Column - Preview (Adaptive) */}
