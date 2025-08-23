@@ -83,6 +83,8 @@ function StencilTool() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/stencil/gallery'] });
       queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Stencil eliminado",
         description: "El stencil se ha eliminado correctamente."
@@ -195,12 +197,16 @@ function StencilTool() {
             title: `Stencil - ${data.style || selectedStyle}`,
           });
           queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+          queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
         } catch (error) {
           console.error('Failed to add image to gallery:', error);
         }
       }
 
       queryClient.invalidateQueries({ queryKey: ["/api/stencil/gallery"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
     onError: () => {
       setIsProcessing(false);
@@ -232,6 +238,8 @@ function StencilTool() {
             setIsProcessing(false);
             queryClient.invalidateQueries({ queryKey: ["/api/stencil/gallery"] });
             queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
             clearInterval(interval);
           }
         }

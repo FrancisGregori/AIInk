@@ -299,8 +299,10 @@ function DesignEditor() {
         }
       }
       
-      // También invalidar queries para actualizar el historial
+      // También invalidar queries para actualizar el historial y créditos
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     };
 
     const checkInterval = setInterval(checkJobStatus, 1000); // Verificar cada 1 segundo para actualización más rápida
@@ -654,6 +656,8 @@ function DesignEditor() {
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
       toast({
         title: language === 'es' ? "¡Diseño generado!" : "Design generated!",

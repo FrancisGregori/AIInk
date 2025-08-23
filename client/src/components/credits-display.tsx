@@ -9,7 +9,7 @@ export function CreditsDisplay() {
   const { data: credits, isLoading } = useQuery<CreditsData>({
     queryKey: ["/api/credits"],
     retry: false,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 5000, // Refresh every 5 seconds
   });
 
   if (isLoading) {
