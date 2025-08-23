@@ -1137,35 +1137,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes (temporary for testing)
+  // ADMIN ENDPOINT DISABLED - SECURITY VULNERABILITY
+  // TODO: Implement proper admin role verification before re-enabling
+  /*
   app.post("/api/admin/add-credits", isAuthenticated, async (req: any, res) => {
-    const { userId, credits } = req.body;
-    
-    if (!userId || !credits || credits <= 0) {
-      return res.status(400).json({ error: "Invalid userId or credits amount" });
-    }
-
-    try {
-      // Add credits to the user
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      const updatedUser = await storage.updateUserCredits(userId, (user.monthlyCredits || 0) + credits);
-      console.log(`[Admin] Added ${credits} credits to user ${userId}. New total: ${updatedUser.monthlyCredits}`);
-      
-      res.json({ 
-        success: true, 
-        userId, 
-        creditsAdded: credits, 
-        newTotal: updatedUser.monthlyCredits 
-      });
-    } catch (error) {
-      console.error("[Admin] Error adding credits:", error);
-      res.status(500).json({ error: "Failed to add credits" });
-    }
+    return res.status(403).json({ error: "Admin functionality temporarily disabled" });
   });
+  */
 
   // Endpoint seguro para servir imágenes privadas con autenticación
   app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
