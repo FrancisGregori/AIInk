@@ -124,7 +124,19 @@ function DesignEditor() {
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      localStorage.removeItem('tattoo-stencil-jobs');
+      // SOLO limpiar trabajos de Design Editor, no todo el localStorage
+      const storageKey = 'tattoo-stencil-jobs';
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          const jobs = JSON.parse(stored);
+          // Mantener trabajos de Stencil Tool, eliminar solo los de Design Editor
+          const filteredJobs = jobs.filter((job: any) => job.type !== 'design');
+          localStorage.setItem(storageKey, JSON.stringify(filteredJobs));
+        } catch (error) {
+          console.error('Error filtering jobs:', error);
+        }
+      }
       return;
     }
     // IMPORTANTE: Solo cargar el historial si el usuario está autenticado
