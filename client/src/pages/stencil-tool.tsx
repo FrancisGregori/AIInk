@@ -31,7 +31,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import PreviewArea from "@/components/preview-area";
@@ -69,6 +70,34 @@ function StencilTool() {
   const queryClient = useQueryClient();
   const { addJob, updateJob, getJob } = useJobs();
   const { activeJobsOfType } = useJobRecovery('stencil');
+
+  // Delete stencil mutation (uses gallery API since stencils are saved there)
+  const deleteStencilMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest('DELETE', `/api/gallery/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to delete stencil');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/stencil/gallery'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      toast({
+        title: "Stencil eliminado",
+        description: "El stencil se ha eliminado correctamente."
+      });
+      // Close modal if open
+      setGalleryModal({ open: false, job: null });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el stencil",
+        variant: "destructive"
+      });
+    },
+  });
 
   // Recuperar trabajo en progreso - CARGA INSTANTÁNEA desde localStorage
   useEffect(() => {
@@ -535,16 +564,33 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                         return (
                         <div
                           key={job.id}
-                          className="group cursor-pointer"
-                          onClick={() => openGalleryModal(job)}
+                          className="group cursor-pointer relative"
                         >
-                          <div className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]">
+                          <div 
+                            className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]"
+                            onClick={() => openGalleryModal(job)}
+                          >
                             <img
                               src={job.processedImageUrl || job.originalImageUrl}
                               alt={`Stencil ${job.style}`}
                               className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                             />
                           </div>
+                          {/* Delete button overlay */}
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm('¿Estás seguro de que quieres eliminar este stencil?')) {
+                                deleteStencilMutation.mutate(job.id);
+                              }
+                            }}
+                            data-testid={`button-delete-stencil-${job.id}`}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </div>
                         );
                       })}
@@ -621,14 +667,30 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                     </p>
                   </div>
                   
-                  {/* Botón de descarga compacto */}
-                  <Button
-                    onClick={() => handleDownloadFromModal(galleryModal.job!)}
-                    className="bg-white text-black hover:bg-zinc-200 h-8 px-3 text-sm"
-                  >
-                    <Download className="mr-1 h-3 w-3" />
-                    Descargar
-                  </Button>
+                  {/* Botones de acción compactos */}
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleDownloadFromModal(galleryModal.job!)}
+                      className="bg-white text-black hover:bg-zinc-200 h-8 px-3 text-sm"
+                    >
+                      <Download className="mr-1 h-3 w-3" />
+                      Descargar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 px-3 text-sm"
+                      onClick={() => {
+                        if (confirm('¿Estás seguro de que quieres eliminar este stencil?')) {
+                          deleteStencilMutation.mutate(galleryModal.job!.id);
+                        }
+                      }}
+                      data-testid={`button-delete-modal-${galleryModal.job?.id}`}
+                    >
+                      <Trash2 className="mr-1 h-3 w-3" />
+                      Eliminar
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
