@@ -410,10 +410,10 @@ export default function Gallery() {
             {viewMode === 'grid' ? (
               <div className={`grid gap-3 sm:gap-4 ${
                 imageSize === 'small' 
-                  ? 'grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8' 
+                  ? 'grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-1 lg:grid-flow-col lg:auto-cols-max lg:overflow-x-auto' 
                   : imageSize === 'medium'
-                  ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
-                  : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+                  ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-1 lg:grid-flow-col lg:auto-cols-max lg:overflow-x-auto'
+                  : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-1 lg:grid-flow-col lg:auto-cols-max lg:overflow-x-auto'
               }`}>
                 {items.map((item: any) => (
                   <Card key={item.id} className="overflow-hidden group hover:shadow-xl transition-all">
@@ -421,32 +421,16 @@ export default function Gallery() {
                       <DialogTrigger asChild>
                         <div className={`relative cursor-pointer ${
                           imageSize === 'small' 
-                            ? 'aspect-square' 
+                            ? 'aspect-square lg:w-64 lg:h-64' 
                             : imageSize === 'medium'
-                            ? 'aspect-[3/4]'
-                            : 'aspect-[3/4]'
+                            ? 'aspect-[3/4] lg:w-80 lg:h-96'
+                            : 'aspect-[3/4] lg:w-96 lg:h-[32rem]'
                         } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
                           <AuthenticatedImage
                             src={item.thumbnailUrl || item.imageUrl} 
                             alt={item.title || 'Diseño'}
                             className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
                           />
-                          {/* Overlay on hover - responsive text sizes */}
-                          {imageSize !== 'small' && (
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
-                                <p className="text-white text-xs sm:text-sm font-semibold truncate">
-                                  {item.title || 'Sin título'}
-                                </p>
-                                <p className="text-white/70 text-xs">
-                                  {new Date(item.createdAt).toLocaleTimeString('es-ES', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                          )}
                           {/* Badges - mobile optimized */}
                           {item.isFavorite && imageSize !== 'small' && (
                             <Heart className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-3 h-3 sm:w-4 sm:h-4 text-red-500 fill-red-500 drop-shadow-lg" />
