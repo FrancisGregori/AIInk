@@ -30,10 +30,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { apiRequest } from '@/lib/queryClient';
-import { Link } from 'wouter';
+import { isUnauthorizedError } from '@/lib/authUtils';
+import { Link, useLocation } from 'wouter';
 
 export default function Gallery() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imageSize, setImageSize] = useState<'small' | 'medium' | 'large'>('small'); // Por defecto pequeño
@@ -45,7 +47,7 @@ export default function Gallery() {
   const itemsPerPage = 50; // Increased from 15 to show more items
 
   // Fetch gallery items con paginación
-  const { data, isLoading, refetch, isFetching } = useQuery({
+  const { data, error, isError, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['/api/gallery', currentPage, selectedType],
     queryFn: async () => {
       const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
@@ -73,6 +75,7 @@ export default function Gallery() {
 
   // Actualizar items cuando cambia la data
   React.useEffect(() => {
+    if (isError) return;
     if (data && Array.isArray(data)) {
       if (currentPage === 1) {
         setAllLoadedItems(data);
@@ -85,7 +88,21 @@ export default function Gallery() {
         setAllLoadedItems([]);
       }
     }
-  }, [data, currentPage]);
+  }, [data, currentPage, isError]);
+
+  React.useEffect(() => {
+    if (isError) {
+      if (error instanceof Error && isUnauthorizedError(error)) {
+        setLocation('/login');
+      } else {
+        toast({
+          title: 'Error',
+          description: 'No se pudo cargar la galería',
+          variant: 'destructive',
+        });
+      }
+    }
+  }, [isError, error, setLocation, toast]);
 
   // Resetear paginación cuando cambia el tipo
   React.useEffect(() => {

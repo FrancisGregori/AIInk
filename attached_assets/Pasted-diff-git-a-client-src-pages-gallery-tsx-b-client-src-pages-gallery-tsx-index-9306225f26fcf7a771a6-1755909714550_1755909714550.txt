@@ -1,0 +1,130 @@
+diff --git a/client/src/pages/gallery.tsx b/client/src/pages/gallery.tsx
+index 9306225f26fcf7a771a6e7f7fecc79558b11fbce..55f35b9975896340e80c7b29ce39dec6a6538817 100644
+--- a/client/src/pages/gallery.tsx
++++ b/client/src/pages/gallery.tsx
+@@ -8,105 +8,122 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+ import { Badge } from '@/components/ui/badge';
+ import { useToast } from '@/hooks/use-toast';
+ import { 
+   Search, 
+   Filter, 
+   Heart, 
+   Download, 
+   Trash2, 
+   Grid3x3, 
+   List,
+   Image as ImageIcon,
+   Clock,
+   Star,
+   ArrowLeft,
+   X,
+   RefreshCw
+ } from 'lucide-react';
+ import {
+   Dialog,
+   DialogContent,
+   DialogTrigger,
+   DialogTitle,
+   DialogDescription,
+ } from "@/components/ui/dialog";
+ import { apiRequest } from '@/lib/queryClient';
+-import { Link } from 'wouter';
++import { isUnauthorizedError } from '@/lib/authUtils';
++import { Link, useLocation } from 'wouter';
+ 
+ export default function Gallery() {
+   const { toast } = useToast();
++  const [, setLocation] = useLocation();
+   const [searchTerm, setSearchTerm] = useState('');
+   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+   const [imageSize, setImageSize] = useState<'small' | 'medium' | 'large'>('small'); // Por defecto pequeño
+   const [selectedType, setSelectedType] = useState<'all' | 'stencil' | 'design'>('all');
+   const [selectedImage, setSelectedImage] = useState<any>(null);
+   const [currentPage, setCurrentPage] = useState(1);
+   const [allLoadedItems, setAllLoadedItems] = useState<any[]>([]);
+   const [hasMore, setHasMore] = useState(true);
+   const itemsPerPage = 50; // Increased from 15 to show more items
+ 
+   // Fetch gallery items con paginación
+-  const { data, isLoading, refetch, isFetching } = useQuery({
++  const { data, error, isError, isLoading, refetch, isFetching } = useQuery({
+     queryKey: ['/api/gallery', currentPage, selectedType],
+     queryFn: async () => {
+       const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
+       const response = await apiRequest('GET', `/api/gallery?limit=${itemsPerPage}&page=${currentPage}${typeParam}`);
+       const totalCount = response.headers.get('X-Total-Count');
+       const totalPages = response.headers.get('X-Total-Pages');
+       const items = await response.json();
+       
+       // Actualizar estado de paginación
+       if (totalPages && currentPage >= parseInt(totalPages)) {
+         setHasMore(false);
+       }
+       
+       return items;
+     },
+     // MÁXIMA OPTIMIZACIÓN DE CACHE
+     refetchOnMount: 'always', // Siempre refrescar para datos actualizados
+     refetchOnWindowFocus: false, // NO refrescar al cambiar de ventana
+     staleTime: 60000, // Datos frescos por 1 minuto
+     gcTime: 10 * 60 * 1000, // Mantener en cache por 10 minutos
+     refetchInterval: false, // NO actualizar automáticamente
+     enabled: true // Siempre habilitado
+   });
+ 
+   // Actualizar items cuando cambia la data
+   React.useEffect(() => {
++    if (isError) return;
+     if (data && Array.isArray(data)) {
+       if (currentPage === 1) {
+         setAllLoadedItems(data);
+       } else {
+         setAllLoadedItems(prev => [...prev, ...data]);
+       }
+     } else if (data === null || data === undefined) {
+       // Si no hay datos, asegurarse de que la galería muestre vacía
+       if (currentPage === 1) {
+         setAllLoadedItems([]);
+       }
+     }
+-  }, [data, currentPage]);
++  }, [data, currentPage, isError]);
++
++  React.useEffect(() => {
++    if (isError) {
++      if (error instanceof Error && isUnauthorizedError(error)) {
++        setLocation('/login');
++      } else {
++        toast({
++          title: 'Error',
++          description: 'No se pudo cargar la galería',
++          variant: 'destructive',
++        });
++      }
++    }
++  }, [isError, error, setLocation, toast]);
+ 
+   // Resetear paginación cuando cambia el tipo
+   React.useEffect(() => {
+     setCurrentPage(1);
+     setAllLoadedItems([]);
+     setHasMore(true);
+   }, [selectedType]);
+ 
+   const allGalleryItems = allLoadedItems;
+ 
+   // Items already filtered by server, no need to filter again
+   const galleryItems = allGalleryItems;
+ 
+   // Delete mutation
+   const deleteMutation = useMutation({
+     mutationFn: async (id: string) => {
+       return apiRequest('DELETE', `/api/gallery/${id}`);
+     },
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+       toast({
+         title: "Eliminado",
+         description: "El diseño ha sido eliminado de tu galería",
+       });
+     },
