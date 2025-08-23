@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { AuthenticatedImage } from '@/components/authenticated-image';
+import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 import { apiRequest } from '@/lib/queryClient';
 
 export default function Gallery() {
