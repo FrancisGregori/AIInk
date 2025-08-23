@@ -62,8 +62,7 @@ function DesignEditor() {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [compareMode, setCompareMode] = useState<boolean>(false);
   const [comparePosition, setComparePosition] = useState<number>(50);
-  const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
-  const [isPromptOpen, setIsPromptOpen] = useState<boolean>(false); // Inicialmente cerrado
+  // Removed isConfigOpen and isPromptOpen - no longer needed
   const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true for Match Input
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -951,6 +950,12 @@ function DesignEditor() {
                   isAuthenticated={isAuthenticated}
                   onAuthRequired={() => setShowAuthDialog(true)}
                   modelVariant={modelVariant}
+                  aspectRatio={aspectRatio}
+                  onModelChange={setModelVariant}
+                  onAspectRatioChange={(ratio) => {
+                    setAspectRatio(ratio);
+                    setMatchInput(ratio === "Match Input");
+                  }}
                   onImageUpload={(imageUrl, file) => {
                     // Manejar carga de imagen desde el chat
                     setReferenceImage(file);
@@ -981,140 +986,9 @@ function DesignEditor() {
               </CardContent>
             </Card>
 
-            {/* Description Section */}
-            <Card>
-              <Collapsible open={isPromptOpen} onOpenChange={setIsPromptOpen}>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-zinc-900/50 transition-colors">
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Edit className="h-5 w-5" />
-                        {txt.prompt}
-                      </div>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isPromptOpen ? 'rotate-180' : ''}`} />
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="space-y-4">
-                    <Textarea
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      placeholder={txt.promptPlaceholder}
-                      className="min-h-32"
-                    />
-                  </CardContent>
-                  
-                  <CardFooter className="flex flex-col gap-3">
-                    {prompt.trim() && <CreditsRequirement cost={3} action="design" />}
-                    <Button
-                      onClick={handleGenerate}
-                      disabled={!prompt.trim() || isGenerating}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {txt.generating}
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="mr-2 h-4 w-4" />
-                          {txt.generate}
-                        </>
-                      )}
-                    </Button>
-                  </CardFooter>
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
+            {/* Manual Prompt section removed - now integrated into InkVision chat */}
 
-            {/* Generation Settings */}
-            <Card>
-              <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-zinc-900/50 transition-colors">
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Settings className="h-5 w-5" />
-                        {txt.settings}
-                      </div>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isConfigOpen ? 'rotate-180' : ''}`} />
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="space-y-4">
-                    {/* Model Selection */}
-                    <div>
-                      <Label>{txt.model}</Label>
-                      <RadioGroup value={modelVariant} onValueChange={setModelVariant} className="mt-2">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="pro" id="pro" />
-                            <Label htmlFor="pro" className="text-xs">Kontext Pro</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="max" id="max" />
-                            <Label htmlFor="max" className="text-xs">Kontext Max</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="qwen" id="qwen" />
-                            <Label htmlFor="qwen" className="text-xs">Qwen Edit</Label>
-                          </div>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    {/* Aspect Ratio */}
-                    <div>
-                      <Label>{txt.aspectRatio}</Label>
-                      
-                      <RadioGroup 
-                        value={aspectRatio} 
-                        onValueChange={(value) => {
-                          setAspectRatio(value);
-                          setMatchInput(value === "Match Input");
-                        }}
-                        className="mt-2"
-                      >
-                        <div className="grid grid-cols-3 gap-2">
-                          {/* Standard aspect ratios */}
-                          {["Match Input", "1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16", "21:9", "9:21"].map((ratio) => (
-                            <div key={ratio} className="flex items-center space-x-1">
-                              <RadioGroupItem 
-                                value={ratio} 
-                                id={ratio.replace(/[:\s]/g, '-')} 
-                              />
-                              <Label 
-                                htmlFor={ratio.replace(/[:\s]/g, '-')} 
-                                className="text-xs"
-                                title={ratio === "Match Input" ? (language === "es" ? "Usar dimensiones de la imagen de referencia" : "Use reference image dimensions") : undefined}
-                              >
-                                {ratio}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    {/* Dimensions Display */}
-                    <div className="flex gap-4">
-                      <div className="flex-1">
-                        <Label className="text-xs">{txt.width}</Label>
-                        <p className="text-sm font-mono">{width}px</p>
-                      </div>
-                      <div className="flex-1">
-                        <Label className="text-xs">{txt.height}</Label>
-                        <p className="text-sm font-mono">{height}px</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
+            {/* Generation Settings section removed - now integrated into InkVision chat */}
           </div>
 
           {/* Right Sidebar - Results (con order-3 para aparecer último) */}

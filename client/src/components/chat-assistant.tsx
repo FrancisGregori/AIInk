@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2, ImageIcon } from "lucide-react";
+import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2, ImageIcon, Settings, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {
@@ -25,6 +26,9 @@ interface ChatAssistantProps {
   isAuthenticated?: boolean;
   onAuthRequired?: () => void;
   modelVariant?: string;
+  aspectRatio?: string;
+  onModelChange?: (model: string) => void;
+  onAspectRatioChange?: (ratio: string) => void;
 }
 
 export interface ChatAssistantRef {
@@ -32,7 +36,7 @@ export interface ChatAssistantRef {
   addImageMessage: (imageUrl: string) => void;
 }
 
-const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload, onImageGenerated, isAuthenticated = false, onAuthRequired, modelVariant = "pro" }, ref) => {
+const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ currentImage, onApplyPrompt, language = "es", embedded = false, onImageUpload, onImageGenerated, isAuthenticated = false, onAuthRequired, modelVariant = "pro", aspectRatio = "Match Input", onModelChange, onAspectRatioChange }, ref) => {
   const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastImageAnalyzed, setLastImageAnalyzed] = useState<string>("");
@@ -1060,6 +1064,51 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   disabled={isLoading}
                   data-testid="textarea-chat-input"
                 />
+                
+                {/* Options chips/badges */}
+                <div className="flex flex-wrap gap-2">
+                  {/* Model Selection */}
+                  <div className="flex items-center gap-1">
+                    <Settings className="h-3 w-3 text-zinc-400" />
+                    <div className="flex gap-1">
+                      {[
+                        { value: "pro", label: "Kontext Pro" },
+                        { value: "max", label: "Kontext Max" }, 
+                        { value: "qwen", label: "Qwen Edit" }
+                      ].map((model) => (
+                        <Button
+                          key={model.value}
+                          variant={modelVariant === model.value ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => onModelChange?.(model.value)}
+                          className="h-6 px-2 text-xs"
+                          data-testid={`button-model-${model.value}`}
+                        >
+                          {model.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Aspect Ratio Selection */}
+                  <div className="flex items-center gap-1">
+                    <Monitor className="h-3 w-3 text-zinc-400" />
+                    <div className="flex gap-1">
+                      {["Match Input", "1:1", "2:3", "3:2", "16:9"].map((ratio) => (
+                        <Button
+                          key={ratio}
+                          variant={aspectRatio === ratio ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => onAspectRatioChange?.(ratio)}
+                          className="h-6 px-2 text-xs"
+                          data-testid={`button-aspect-${ratio.replace(/[:\s]/g, '-')}`}
+                        >
+                          {ratio}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
               
               {/* Botón de enviar a la derecha */}
