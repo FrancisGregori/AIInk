@@ -809,17 +809,21 @@ function DesignEditor() {
         setHeight(1024);
       }
     } else {
-      // Use predefined aspect ratios with optimal Flux resolutions (1.0MP standard)
+      // Use predefined aspect ratios with optimal Flux resolutions
       const ratios: { [key: string]: [number, number] } = {
         "1:1": [1024, 1024],     // Square
-        "3:2": [1216, 832],      // Classic landscape
-        "2:3": [832, 1216],      // Classic portrait
-        "4:3": [1152, 896],      // Standard landscape
-        "3:4": [896, 1152],      // Standard portrait
         "16:9": [1344, 768],     // Widescreen
         "9:16": [768, 1344],     // Vertical/Mobile
+        "4:3": [1152, 896],      // Standard landscape
+        "3:4": [896, 1152],      // Standard portrait
+        "3:2": [1216, 832],      // Classic landscape
+        "2:3": [832, 1216],      // Classic portrait
+        "4:5": [896, 1120],      // Portrait
+        "5:4": [1120, 896],      // Landscape
         "21:9": [1408, 608],     // Ultra-wide
         "9:21": [608, 1408],     // Ultra-tall
+        "2:1": [1344, 672],      // Panoramic
+        "1:2": [672, 1344],      // Tall
       };
       
       const [w, h] = ratios[aspectRatio] || [1024, 1024];

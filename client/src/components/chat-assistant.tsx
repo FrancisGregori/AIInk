@@ -1127,8 +1127,12 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       <Square className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-32">
-                    {["Match Input", "1:1", "2:3", "3:2", "16:9"].map((ratio) => (
+                  <DropdownMenuContent align="start" className="w-40">
+                    {/* Show different options based on model */}
+                    {(modelVariant === "qwen" ? 
+                      ["Match Input"] : 
+                      ["Match Input", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]
+                    ).map((ratio) => (
                       <DropdownMenuItem 
                         key={ratio}
                         onClick={() => onAspectRatioChange?.(ratio)}
