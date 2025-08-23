@@ -408,7 +408,7 @@ export default function Gallery() {
             </div>
 
             {viewMode === 'grid' ? (
-              <div className={`grid gap-6 ${
+              <div className={`grid gap-4 ${
                 imageSize === 'small' 
                   ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8' 
                   : imageSize === 'medium'
@@ -416,31 +416,29 @@ export default function Gallery() {
                   : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
               }`}>
                 {items.map((item: any) => (
-                  <Card key={item.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 border border-zinc-200 dark:border-zinc-700">
+                  <Card key={item.id} className="overflow-hidden group hover:shadow-xl transition-all">
                     <Dialog>
                       <DialogTrigger asChild>
                         <div className={`relative cursor-pointer ${
                           imageSize === 'small' 
                             ? 'aspect-square' 
                             : imageSize === 'medium'
-                            ? 'aspect-[4/5]'
-                            : 'aspect-[4/5]'
-                        } ${item.type === 'stencil' 
-                          ? 'bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800' 
-                          : 'bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-100 dark:to-zinc-50'}`}>
+                            ? 'aspect-[3/4]'
+                            : 'aspect-[3/4]'
+                        } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
                           <AuthenticatedImage
                             src={item.thumbnailUrl || item.imageUrl} 
                             alt={item.title || 'Diseño'}
-                            className={`w-full h-full ${item.type === 'stencil' ? 'object-contain p-3' : 'object-cover'} transition-transform group-hover:scale-105 duration-300`}
+                            className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
                           />
                           {/* Overlay on hover - solo mostrar en tamaños medianos y grandes */}
                           {imageSize !== 'small' && (
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <p className="text-white text-sm font-semibold truncate drop-shadow-sm">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute bottom-0 left-0 right-0 p-3">
+                                <p className="text-white text-sm font-semibold truncate">
                                   {item.title || 'Sin título'}
                                 </p>
-                                <p className="text-zinc-300 text-xs drop-shadow-sm">
+                                <p className="text-white/70 text-xs">
                                   {new Date(item.createdAt).toLocaleTimeString('es-ES', {
                                     hour: '2-digit',
                                     minute: '2-digit'
@@ -451,11 +449,11 @@ export default function Gallery() {
                           )}
                           {/* Badges - ajustar tamaño según la vista */}
                           {item.isFavorite && imageSize !== 'small' && (
-                            <Heart className="absolute top-3 right-3 w-5 h-5 text-red-500 fill-red-500 drop-shadow-lg" />
+                            <Heart className="absolute top-2 right-2 w-4 h-4 text-red-500 fill-red-500 drop-shadow-lg" />
                           )}
                           {imageSize !== 'small' && (
                             <Badge 
-                              className="absolute top-3 left-3 text-xs shadow-lg"
+                              className="absolute top-2 left-2 text-xs"
                               variant={item.type === 'stencil' ? 'default' : 'secondary'}
                             >
                               {item.type === 'stencil' ? 'Stencil' : 'Diseño'}
@@ -463,7 +461,7 @@ export default function Gallery() {
                           )}
                         </div>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-fit p-0 bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 overflow-hidden rounded-xl">
+                      <DialogContent className="sm:max-w-fit p-0 bg-zinc-900 border-zinc-800 overflow-hidden">
                         <DialogTitle className="sr-only">Vista de Imagen</DialogTitle>
                         <DialogDescription className="sr-only">
                           Vista ampliada de tu {item.type === 'stencil' ? 'stencil' : 'diseño'}
@@ -471,7 +469,7 @@ export default function Gallery() {
                         
                         <div className="flex flex-col">
                           {/* Imagen principal - tamaño compacto */}
-                          <div className={`relative ${item.type === 'stencil' ? 'bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800' : 'bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-100 dark:to-zinc-50'} flex items-center justify-center p-6`}>
+                          <div className={`relative ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} flex items-center justify-center p-3`}>
                             <img
                               src={item.imageUrl}
                               alt={item.title || 'Diseño'}
