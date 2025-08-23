@@ -3,13 +3,7 @@ import { Coins } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-
-interface CreditsData {
-  available: number;
-  monthlyAllowance: number;
-  used: number;
-  subscriptionTier: string;
-}
+import type { CreditsData } from "@/lib/api";
 
 export function CreditsDisplay() {
   const { data: credits, isLoading } = useQuery<CreditsData>({
