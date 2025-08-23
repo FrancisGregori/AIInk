@@ -172,7 +172,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If job has a ComfyDeploy run ID and is still processing, check status
       if (job.comfyDeployRunId && job.status === "processing") {
         try {
-          const status = await comfyDeploy.checkRunStatus(job.comfyDeployRunId);
+          const status = await comfyDeploy.checkRunStatus(
+            job.comfyDeployRunId,
+            userId,
+            job.style
+          );
           
           console.log("Polling result for job", job.id, "ComfyDeploy run:", job.comfyDeployRunId);
           console.log("Status from ComfyDeploy:", {
@@ -369,6 +373,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         processingOptions: options,
       });
 
+      // Clean up temp file after creating job
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (cleanupError) {
+        console.warn('Could not clean up temp file:', cleanupError);
+      }
+
       // Deduct credits before starting processing
       const deducted = await storage.deductCredits(userId, STENCIL_COST);
       if (!deducted) {
@@ -381,7 +392,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const result = await comfyDeploy.processImage(
           publicImageUrl,
           style as any,
-          options
+          options,
+          userId
         );
         
         // Update job with ComfyDeploy run ID
