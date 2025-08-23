@@ -15,8 +15,9 @@ import {
   ChevronDown,
   Info,
   Loader2,
-  Square,
-  RectangleHorizontal
+  Grid3x3,
+  Grid2x2,
+  LayoutGrid
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -183,7 +184,7 @@ export default function Gallery() {
               </SelectContent>
             </Select>
 
-            {/* Size selector with icons */}
+            {/* Size selector with grid icons */}
             <div className="flex items-center gap-1 p-1 bg-card border rounded-lg">
               <Button
                 variant={imageSize === 'small' ? 'default' : 'ghost'}
@@ -191,8 +192,9 @@ export default function Gallery() {
                 onClick={() => setImageSize('small')}
                 className="h-8 w-8 p-0"
                 data-testid="button-size-small"
+                title="Pequeño (8 columnas)"
               >
-                <Square className="h-3 w-3" />
+                <Grid3x3 className="h-4 w-4" />
               </Button>
               <Button
                 variant={imageSize === 'medium' ? 'default' : 'ghost'}
@@ -200,8 +202,9 @@ export default function Gallery() {
                 onClick={() => setImageSize('medium')}
                 className="h-8 w-8 p-0"
                 data-testid="button-size-medium"
+                title="Mediano (6 columnas)"
               >
-                <Square className="h-4 w-4" />
+                <Grid2x2 className="h-4 w-4" />
               </Button>
               <Button
                 variant={imageSize === 'large' ? 'default' : 'ghost'}
@@ -209,8 +212,9 @@ export default function Gallery() {
                 onClick={() => setImageSize('large')}
                 className="h-8 w-8 p-0"
                 data-testid="button-size-large"
+                title="Grande (4 columnas)"
               >
-                <Square className="h-5 w-5" />
+                <LayoutGrid className="h-4 w-4" />
               </Button>
             </div>
           </div>
