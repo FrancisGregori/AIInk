@@ -117,9 +117,9 @@ export default function Navigation() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatarUrl || user.profileImageUrl} alt={user.displayName || user.email} />
+                      <AvatarImage src={user.profileImageUrl} alt={`${user.firstName || user.email}` || user.email} />
                       <AvatarFallback>
-                        {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
+                        {(user.firstName || user.email || "U").charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -127,7 +127,7 @@ export default function Navigation() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.displayName || "User"}</p>
+                      <p className="text-sm font-medium leading-none">{user.firstName || user.lastName ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "User"}</p>
                       <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                       {user.subscriptionTier && (
                         <p className="text-xs text-primary mt-1">{user.subscriptionTier} Plan</p>
