@@ -1039,7 +1039,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             
             {/* Full width container */}
             <div className="space-y-2">
-              {/* Textarea with all buttons positioned absolutely */}
+              {/* Textarea with send button only */}
               <div className="relative">
                 <Textarea
                   ref={textareaRef}
@@ -1049,24 +1049,10 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   placeholder={language === 'es' 
                     ? "Describe los cambios o arrastra una imagen..."
                     : "Describe changes or drag an image..."}
-                  className="w-full min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors pl-28 pr-12"
+                  className="w-full min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors pr-12"
                   disabled={isLoading}
                   data-testid="textarea-chat-input"
                 />
-                
-                {/* Upload button positioned absolutely on the left */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute left-2 bottom-2 flex items-center gap-2 px-3 py-2 h-8"
-                  data-testid="button-upload-image"
-                >
-                  <ImageIcon className="h-4 w-4" />
-                  <span className="text-sm">
-                    {language === 'es' ? 'Cargar imagen' : 'Upload image'}
-                  </span>
-                </Button>
                 
                 {/* Send button positioned absolutely on the right */}
                 <Button
@@ -1081,6 +1067,20 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               
               {/* Options chips/badges */}
               <div className="flex flex-wrap gap-2">
+                {/* Upload button first */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-3 py-2 h-auto"
+                  data-testid="button-upload-image"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  <span className="text-sm">
+                    {language === 'es' ? 'Cargar imagen' : 'Upload image'}
+                  </span>
+                </Button>
+                
                 {/* Model Selection Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
