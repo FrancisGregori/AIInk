@@ -790,9 +790,15 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     // If it's a short phrase (likely a modification prompt), show buttons
     const isShortPhrase = content.trim().length > 5 && content.trim().length < 200;
     
-    // Check for common modification patterns
-    const modificationPatterns = [
-      // English
+    // Check for technical prompt patterns (especially Gemini responses)
+    const technicalPromptPatterns = [
+      // Gemini generated technical prompts (key indicators)
+      'maintaining', 'manteniendo',
+      'change the', 'cambiar el', 'cambiar la',
+      'add ', 'remove ', 'transform to', 'turn the',
+      'rotate ', 'replace ', 'girar ', 'rotar ',
+      ', maintaining', ', manteniendo',
+      // Standard modification patterns
       'add', 'remove', 'change', 'with', 'make', 'convert',
       'transform', 'edit', 'modify', 'apply', 'generate',
       'increase', 'decrease', 'enhance', 'improve',
@@ -806,7 +812,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       'black', 'white', 'style', 'background'
     ];
     
-    const hasModification = modificationPatterns.some(pattern => 
+    const hasModification = technicalPromptPatterns.some(pattern => 
       content.toLowerCase().includes(pattern)
     );
     
