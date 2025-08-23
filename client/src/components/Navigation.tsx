@@ -117,7 +117,7 @@ export default function Navigation() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.profileImageUrl} alt={`${user.firstName || user.email}` || user.email} />
+                      <AvatarImage src={user.profileImageUrl || undefined} alt={`${user.firstName || user.email || 'User'}`} />
                       <AvatarFallback>
                         {(user.firstName || user.email || "U").charAt(0).toUpperCase()}
                       </AvatarFallback>
@@ -132,9 +132,9 @@ export default function Navigation() {
                       {user.subscriptionTier && (
                         <p className="text-xs text-primary mt-1">{user.subscriptionTier} Plan</p>
                       )}
-                      {user.creditsUsed !== undefined && user.monthlyCredits !== undefined && (
+                      {user.creditsUsed !== null && user.monthlyCredits !== null && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Credits: {user.monthlyCredits - user.creditsUsed}/{user.monthlyCredits}
+                          Credits: {(user.monthlyCredits || 0) - (user.creditsUsed || 0)}/{user.monthlyCredits || 0}
                         </p>
                       )}
                     </div>

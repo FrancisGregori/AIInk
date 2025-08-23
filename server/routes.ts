@@ -84,13 +84,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/credits', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
       const credits = await storage.getUserCredits(userId);
       
       res.json({
         available: credits,
-        monthlyAllowance: 10, // Default monthly allowance
-        used: 0, // Placeholder for credits used
-        subscriptionTier: 'free' // Default tier
+        monthlyAllowance: user?.monthlyCredits || 10,
+        used: user?.creditsUsed || 0,
+        subscriptionTier: user?.subscriptionTier || 'free'
       });
     } catch (error) {
       console.error("Error fetching credits:", error);
@@ -308,6 +309,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Process stencil with ComfyDeploy
   app.post("/api/stencil/process", isAuthenticated, upload.single('image'), async (req, res) => {
+    let creditsDeducted = false;
+    const STENCIL_COST = 5;
+    let userId = "";
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided" });
@@ -320,14 +324,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { style = "steven", processingOptions } = req.body;
-      const userId = authenticatedUserId;
-      
+      userId = authenticatedUserId;
+
       // Check if user has enough credits (5 credits for stencil)
-      const STENCIL_COST = 5;
       const availableCredits = await storage.getUserCredits(userId);
-      
+
       if (availableCredits < STENCIL_COST) {
-        return res.status(402).json({ 
+        return res.status(402).json({
           error: "Insufficient credits",
           required: STENCIL_COST,
           available: availableCredits
@@ -366,6 +369,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         processingOptions: options,
       });
 
+      // Deduct credits before starting processing
+      const deducted = await storage.deductCredits(userId, STENCIL_COST);
+      if (!deducted) {
+        return res.status(402).json({ error: "Insufficient credits" });
+      }
+      creditsDeducted = true;
+
       // Start processing with ComfyDeploy
       try {
         const result = await comfyDeploy.processImage(
@@ -380,9 +390,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: result.status,
           processedImageUrl: result.outputUrl,
         });
-
-        // Deduct credits after successful processing
-        await storage.deductCredits(userId, STENCIL_COST);
 
         // Save to gallery
         if (result.outputUrl) {
@@ -409,16 +416,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const updatedJob = await storage.getStencilJob(job.id);
         res.json(updatedJob);
       } catch (processError) {
-        // If ComfyDeploy fails, return the job with error status
+        // If ComfyDeploy fails, refund credits and return the job with error status
+        if (creditsDeducted) {
+          await storage.addCredits(userId, STENCIL_COST);
+          creditsDeducted = false;
+        }
         await storage.updateStencilJob(job.id, {
           status: "failed",
           errorMessage: String(processError),
         });
-        
+
         const updatedJob = await storage.getStencilJob(job.id);
         res.json(updatedJob);
       }
     } catch (error) {
+      if (creditsDeducted) {
+        await storage.addCredits(userId, STENCIL_COST);
+      }
       console.error("Error processing stencil:", error);
       res.status(500).json({ error: "Error processing image" });
     }
@@ -689,6 +703,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Replicate FLUX Kontext endpoint - Exact implementation from your original
   app.post("/api/generate", isAuthenticated, async (req: any, res) => {
+    let creditsDeducted = false;
+    const DESIGN_COST = 3;
+    let userId = "";
     try {
       console.log("========= /api/generate CALLED =========");
       console.log("Raw request body:", JSON.stringify(req.body, null, 2));
@@ -698,17 +715,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("========================================");
       
       // Get authenticated user ID
-      const userId = req.user?.claims?.sub;
+      userId = req.user?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
-      
+
       // Check if user has enough credits (3 credits for design)
-      const DESIGN_COST = 3;
       const availableCredits = await storage.getUserCredits(userId);
-      
+
       if (availableCredits < DESIGN_COST) {
-        return res.status(402).json({ 
+        return res.status(402).json({
           error: "Insufficient credits",
           required: DESIGN_COST,
           available: availableCredits
@@ -818,6 +834,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Reference image format is invalid for Replicate API" });
         }
       }
+
+      // Deduct credits before starting generation
+      const deducted = await storage.deductCredits(userId, DESIGN_COST);
+      if (!deducted) {
+        return res.status(402).json({ error: "Insufficient credits" });
+      }
+      creditsDeducted = true;
 
       // Usar el SDK de Replicate con reintentos para manejar interrupciones
       let output;
@@ -940,8 +963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Devolver la URL de la imagen generada - Igual que tu repositorio
-      // Deduct credits after successful generation
-      await storage.deductCredits(userId, DESIGN_COST);
+      // Credits already deducted before generation
       
       // Crear abreviatura del modelo
       const modelAbbr = model === 'qwen' ? 'Q' : 
@@ -1015,6 +1037,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
     } catch (error: any) {
+      if (creditsDeducted) {
+        await storage.addCredits(userId, DESIGN_COST);
+      }
       console.error("DETAILED ERROR in /api/generate:", error);
       console.error("Error stack:", error.stack);
       console.error("Error message:", error.message);
