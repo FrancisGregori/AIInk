@@ -146,20 +146,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deductCredits(userId: string, amount: number): Promise<boolean> {
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
-    if (!user || !user.credits || user.credits < amount) {
-      return false;
-    }
-
-    await db.update(users)
+    // ATOMIC TRANSACTION: Prevents race conditions and double-spending
+    const result = await db.update(users)
       .set({ 
-        credits: user.credits - amount,
-        creditsUsed: (user.creditsUsed || 0) + amount,
+        credits: sql`GREATEST(${users.credits} - ${amount}, 0)`,
+        creditsUsed: sql`${users.creditsUsed} + ${amount}`,
         updatedAt: new Date() 
       })
-      .where(eq(users.id, userId));
+      .where(and(
+        eq(users.id, userId),
+        sql`${users.credits} >= ${amount}` // Only update if sufficient credits
+      ))
+      .returning({ credits: users.credits });
     
-    return true;
+    // Return true if update succeeded (row was affected)
+    return result.length > 0;
   }
 
   // Update available credits (not monthly allowance)

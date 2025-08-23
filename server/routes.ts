@@ -10,11 +10,28 @@ import Replicate from "replicate";
 import { z } from "zod";
 import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
 
-// Configure multer for file uploads
+// Configure multer for file uploads - SECURE DISK STORAGE
+import fs from 'fs';
+import path from 'path';
+
+// Ensure temp directory exists
+const tempDir = path.join(process.cwd(), 'temp');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.diskStorage({
+    destination: tempDir,
+    filename: (req, file, cb) => {
+      // Generate unique filename to prevent conflicts
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, `upload-${uniqueSuffix}-${file.originalname}`);
+    }
+  }),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 1, // Only 1 file per request
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -250,6 +267,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initialize global tempImages with TTL cleanup
+  if (!(global as any).tempImages) {
+    (global as any).tempImages = new Map();
+    
+    // Cleanup expired images every 5 minutes
+    setInterval(() => {
+      const now = Date.now();
+      const tempImages = (global as any).tempImages;
+      
+      for (const [id, data] of tempImages.entries()) {
+        // Remove images older than 30 minutes
+        if (now - data.timestamp > 30 * 60 * 1000) {
+          tempImages.delete(id);
+          console.log(`Cleaned up expired temp image: ${id}`);
+        }
+      }
+    }, 5 * 60 * 1000); // Run every 5 minutes
+  }
+
   // Serve temporary images for ComfyDeploy
   app.get("/api/temp-image/:id", (req, res) => {
     const { id } = req.params;
@@ -259,6 +295,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     const imageData = (global as any).tempImages.get(id);
+    
+    // Check if image has expired (30 minutes TTL)
+    if (Date.now() - imageData.timestamp > 30 * 60 * 1000) {
+      (global as any).tempImages.delete(id);
+      return res.status(404).json({ error: "Image expired" });
+    }
+    
     res.set('Content-Type', imageData.mimeType);
     res.set('Cache-Control', 'no-store');
     res.send(imageData.buffer);
@@ -541,16 +584,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No image file provided" });
       }
 
-      // Save image temporarily for analysis
-      const tempPath = `/tmp/${Date.now()}-${req.file.originalname}`;
-      require('fs').writeFileSync(tempPath, req.file.buffer);
-
+      // Save image temporarily for analysis using disk storage
+      const tempPath = req.file.path; // Use the file already saved by multer
+      
       try {
         const analysis = await analyzeImage(tempPath);
         res.json({ analysis });
       } finally {
         // Clean up temporary file
-        require('fs').unlinkSync(tempPath);
+        fs.unlinkSync(tempPath);
       }
     } catch (error) {
       console.error("Error analyzing image:", error);
