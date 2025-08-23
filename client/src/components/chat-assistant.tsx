@@ -1037,110 +1037,108 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               </div>
             )}
             
-            <div className="flex gap-2 items-end">
-              {/* Botón de cargar imagen con ícono y texto */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-3 py-2 h-auto"
-                data-testid="button-upload-image"
-              >
-                <ImageIcon className="h-4 w-4" />
-                <span className="text-sm">
-                  {language === 'es' ? 'Cargar imagen' : 'Upload image'}
-                </span>
-              </Button>
-              
-              {/* Textarea container with full width */}
-              <div className="flex flex-col gap-2 flex-1">
-                {/* Textarea with send button inside */}
-                <div className="relative">
-                  <Textarea
-                    ref={textareaRef}
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={language === 'es' 
-                      ? "Describe los cambios o arrastra una imagen..."
-                      : "Describe changes or drag an image..."}
-                    className="w-full min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors pr-12"
-                    disabled={isLoading}
-                    data-testid="textarea-chat-input"
-                  />
-                  
-                  {/* Send button inside textarea */}
-                  <Button
-                    onClick={sendMessage}
-                    disabled={!inputMessage.trim() || isLoading}
-                    className="absolute right-2 bottom-2 h-8 w-8 p-0"
-                    data-testid="button-send-message"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
+            {/* Full width container */}
+            <div className="space-y-2">
+              {/* Textarea with all buttons positioned absolutely */}
+              <div className="relative">
+                <Textarea
+                  ref={textareaRef}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={language === 'es' 
+                    ? "Describe los cambios o arrastra una imagen..."
+                    : "Describe changes or drag an image..."}
+                  className="w-full min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors pl-28 pr-12"
+                  disabled={isLoading}
+                  data-testid="textarea-chat-input"
+                />
                 
-                {/* Options chips/badges */}
-                <div className="flex flex-wrap gap-2">
-                  {/* Model Selection Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-6 w-6 p-0 flex items-center justify-center"
-                        data-testid="button-model-dropdown"
-                      >
-                        <Bot className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-40">
+                {/* Upload button positioned absolutely on the left */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute left-2 bottom-2 flex items-center gap-2 px-3 py-2 h-8"
+                  data-testid="button-upload-image"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  <span className="text-sm">
+                    {language === 'es' ? 'Cargar imagen' : 'Upload image'}
+                  </span>
+                </Button>
+                
+                {/* Send button positioned absolutely on the right */}
+                <Button
+                  onClick={sendMessage}
+                  disabled={!inputMessage.trim() || isLoading}
+                  className="absolute right-2 bottom-2 h-8 w-8 p-0"
+                  data-testid="button-send-message"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Options chips/badges */}
+              <div className="flex flex-wrap gap-2">
+                {/* Model Selection Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 w-6 p-0 flex items-center justify-center"
+                      data-testid="button-model-dropdown"
+                    >
+                      <Bot className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-40">
+                    <DropdownMenuItem 
+                      onClick={() => onModelChange?.("pro")}
+                      className={modelVariant === "pro" ? "bg-zinc-800" : ""}
+                    >
+                      Kontext Pro
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onModelChange?.("max")}
+                      className={modelVariant === "max" ? "bg-zinc-800" : ""}
+                    >
+                      Kontext Max
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onModelChange?.("qwen")}
+                      className={modelVariant === "qwen" ? "bg-zinc-800" : ""}
+                    >
+                      Qwen Edit
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {/* Aspect Ratio Selection Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 w-6 p-0 flex items-center justify-center"
+                      data-testid="button-aspect-dropdown"
+                    >
+                      <Square className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-32">
+                    {["Match Input", "1:1", "2:3", "3:2", "16:9"].map((ratio) => (
                       <DropdownMenuItem 
-                        onClick={() => onModelChange?.("pro")}
-                        className={modelVariant === "pro" ? "bg-zinc-800" : ""}
+                        key={ratio}
+                        onClick={() => onAspectRatioChange?.(ratio)}
+                        className={aspectRatio === ratio ? "bg-zinc-800" : ""}
                       >
-                        Kontext Pro
+                        {ratio}
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => onModelChange?.("max")}
-                        className={modelVariant === "max" ? "bg-zinc-800" : ""}
-                      >
-                        Kontext Max
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => onModelChange?.("qwen")}
-                        className={modelVariant === "qwen" ? "bg-zinc-800" : ""}
-                      >
-                        Qwen Edit
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  {/* Aspect Ratio Selection Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-6 w-6 p-0 flex items-center justify-center"
-                        data-testid="button-aspect-dropdown"
-                      >
-                        <Square className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-32">
-                      {["Match Input", "1:1", "2:3", "3:2", "16:9"].map((ratio) => (
-                        <DropdownMenuItem 
-                          key={ratio}
-                          onClick={() => onAspectRatioChange?.(ratio)}
-                          className={aspectRatio === ratio ? "bg-zinc-800" : ""}
-                        >
-                          {ratio}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
             
