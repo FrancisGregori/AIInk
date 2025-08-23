@@ -530,7 +530,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                   <div className="space-y-6">
                     {/* Mobile: Always 2 columns, Desktop: Responsive */}
                     <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
-                      {(showFullGallery ? recentJobs : recentJobs.slice(0, 4)).map((job) => {
+                      {(showFullGallery ? recentJobs : recentJobs.slice(0, 8)).map((job) => {
                         // Galería siempre accesible, incluso durante procesamiento
                         return (
                         <div
@@ -565,14 +565,14 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                     </div>
                     
                     {/* Load More Button - only show when not in full gallery mode and there are more items */}
-                    {!showFullGallery && recentJobs.length > 4 && (
+                    {!showFullGallery && recentJobs.length > 8 && (
                       <div className="flex justify-center">
                         <Button
                           variant="outline"
                           onClick={() => setShowFullGallery(true)}
                           className="text-sm"
                         >
-                          Load More ({recentJobs.length - 4} más)
+                          Load More ({recentJobs.length - 8} más)
                         </Button>
                       </div>
                     )}

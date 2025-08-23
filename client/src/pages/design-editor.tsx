@@ -1278,7 +1278,7 @@ function DesignEditor() {
                 <div className="space-y-4">
                   {/* Mobile: 2 columns, Desktop: 2 columns */}
                   <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
-                    {projects.slice(0, 4).map((project) => (
+                    {projects.slice(0, 8).map((project) => (
                     <Dialog key={project.id}>
                       <DialogTrigger asChild>
                         <div className="relative group cursor-pointer">
@@ -1353,8 +1353,8 @@ function DesignEditor() {
                     ))}
                   </div>
                   
-                  {/* Load More Button - show when there are more than 4 projects */}
-                  {projects.length > 4 && (
+                  {/* Load More Button - show when there are more than 8 projects */}
+                  {projects.length > 8 && (
                     <div className="flex justify-center">
                       <Button
                         variant="outline"
