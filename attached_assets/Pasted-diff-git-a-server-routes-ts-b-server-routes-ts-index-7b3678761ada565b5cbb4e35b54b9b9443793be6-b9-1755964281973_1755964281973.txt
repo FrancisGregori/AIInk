@@ -1,0 +1,464 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index 7b3678761ada565b5cbb4e35b54b9b9443793be6..b91ebce44e861ef594c6060b8df959cb2ec0301c 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -286,161 +286,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
+   }
+ 
+   // Serve temporary images for ComfyDeploy
+   app.get("/api/temp-image/:id", (req, res) => {
+     const { id } = req.params;
+     
+     if (!(global as any).tempImages || !(global as any).tempImages.has(id)) {
+       return res.status(404).json({ error: "Image not found or expired" });
+     }
+     
+     const imageData = (global as any).tempImages.get(id);
+     
+     // Check if image has expired (30 minutes TTL)
+     if (Date.now() - imageData.timestamp > 30 * 60 * 1000) {
+       (global as any).tempImages.delete(id);
+       return res.status(404).json({ error: "Image expired" });
+     }
+     
+     res.set('Content-Type', imageData.mimeType);
+     res.set('Cache-Control', 'no-store');
+     res.send(imageData.buffer);
+   });
+ 
+   // Process stencil with ComfyDeploy
+   app.post("/api/stencil/process", isAuthenticated, upload.single('image'), async (req, res) => {
++    let creditsDeducted = false;
++    const STENCIL_COST = 5;
++    let userId = "";
+     try {
+       if (!req.file) {
+         return res.status(400).json({ error: "No image file provided" });
+       }
+ 
+       // Get authenticated user ID
+       const authenticatedUserId = (req as any).user?.claims?.sub;
+       if (!authenticatedUserId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+ 
+       const { style = "steven", processingOptions } = req.body;
+-      const userId = authenticatedUserId;
+-      
++      userId = authenticatedUserId;
++
+       // Check if user has enough credits (5 credits for stencil)
+-      const STENCIL_COST = 5;
+       const availableCredits = await storage.getUserCredits(userId);
+-      
++
+       if (availableCredits < STENCIL_COST) {
+-        return res.status(402).json({ 
++        return res.status(402).json({
+           error: "Insufficient credits",
+           required: STENCIL_COST,
+           available: availableCredits
+         });
+       }
+       
+       // Parse processing options if it's a string
+       let options = processingOptions;
+       if (typeof processingOptions === 'string') {
+         try {
+           options = JSON.parse(processingOptions);
+         } catch {
+           options = {};
+         }
+       }
+ 
+       // Convert file to base64 URL for processing
+       let publicImageUrl;
+       try {
+         // Read file from disk and convert to base64 data URL (ComfyDeploy accepts this)
+         const fileBuffer = fs.readFileSync(req.file.path);
+         const base64 = fileBuffer.toString('base64');
+         const mimeType = req.file.mimetype || 'image/png';
+         publicImageUrl = `data:${mimeType};base64,${base64}`;
+         console.log("Image prepared for processing");
+       } catch (uploadError) {
+         console.error("Error preparing image:", uploadError);
+         return res.status(500).json({ error: "Failed to prepare image" });
+       }
+       
+       // Create the stencil job
+       const job = await storage.createStencilJob({
+         userId,
+         originalImageUrl: publicImageUrl,
+         style,
+         processingOptions: options,
+       });
+ 
++      // Deduct credits before starting processing
++      const deducted = await storage.deductCredits(userId, STENCIL_COST);
++      if (!deducted) {
++        return res.status(402).json({ error: "Insufficient credits" });
++      }
++      creditsDeducted = true;
++
+       // Start processing with ComfyDeploy
+       try {
+         const result = await comfyDeploy.processImage(
+           publicImageUrl,
+           style as any,
+           options
+         );
+         
+         // Update job with ComfyDeploy run ID
+         await storage.updateStencilJob(job.id, {
+           comfyDeployRunId: result.runId,
+           status: result.status,
+           processedImageUrl: result.outputUrl,
+         });
+ 
+-        // Deduct credits after successful processing
+-        await storage.deductCredits(userId, STENCIL_COST);
+-
+         // Save to gallery
+         if (result.outputUrl) {
+           try {
+             await storage.addToGallery({
+               userId,
+               imageUrl: result.outputUrl,
+               thumbnailUrl: publicImageUrl,
+               type: 'stencil',
+               title: `Stencil - ${style}`,
+               style: style,
+               metadata: {
+                 jobId: job.id,
+                 processingOptions: options
+               }
+             });
+             console.log("Stencil saved to gallery immediately");
+           } catch (galleryError) {
+             console.error("Error saving to gallery:", galleryError);
+           }
+         }
+ 
+         // Return updated job
+         const updatedJob = await storage.getStencilJob(job.id);
+         res.json(updatedJob);
+       } catch (processError) {
+-        // If ComfyDeploy fails, return the job with error status
++        // If ComfyDeploy fails, refund credits and return the job with error status
++        if (creditsDeducted) {
++          await storage.addCredits(userId, STENCIL_COST);
++          creditsDeducted = false;
++        }
+         await storage.updateStencilJob(job.id, {
+           status: "failed",
+           errorMessage: String(processError),
+         });
+-        
++
+         const updatedJob = await storage.getStencilJob(job.id);
+         res.json(updatedJob);
+       }
+     } catch (error) {
++      if (creditsDeducted) {
++        await storage.addCredits(userId, STENCIL_COST);
++      }
+       console.error("Error processing stencil:", error);
+       res.status(500).json({ error: "Error processing image" });
+     }
+   });
+ 
+   // Flux Kontext Routes
+   app.get("/api/flux/projects", isAuthenticated, async (req: any, res) => {
+     try {
+       // SEGURIDAD: Obtener userId del usuario autenticado
+       const userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+ 
+       // Solo devolver proyectos del usuario autenticado
+       console.log(`[DB] Fetching flux projects for user ${userId}`);
+       const startTime = Date.now();
+       const projects = await storage.getFluxProjects(userId);
+       const endTime = Date.now();
+       console.log(`Flux projects query took ${endTime - startTime}ms for ${projects.length} items`);
+       
+       if (endTime - startTime > 5000) {
+         console.warn(`🐌 SLOW QUERY DETECTED: flux projects took ${endTime - startTime}ms - investigating...`);
+       }
+       
+diff --git a/server/routes.ts b/server/routes.ts
+index 7b3678761ada565b5cbb4e35b54b9b9443793be6..b91ebce44e861ef594c6060b8df959cb2ec0301c 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -667,70 +680,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
+       res.setHeader('Access-Control-Allow-Origin', '*');
+       
+       // Get streaming response from Gemini
+       const stream = await streamChatResponseGemini(messages, image);
+       const reader = stream.getReader();
+       
+       // Process and send chunks
+       while (true) {
+         const { done, value } = await reader.read();
+         if (done) break;
+         
+         // Send the chunk directly to the client
+         res.write(value);
+       }
+       
+       res.end();
+     } catch (error) {
+       console.error("Error in chat stream:", error);
+       res.write(`data: ${JSON.stringify({ error: "Failed to process chat" })}\n\n`);
+       res.end();
+     }
+   });
+ 
+   // Replicate FLUX Kontext endpoint - Exact implementation from your original
+   app.post("/api/generate", isAuthenticated, async (req: any, res) => {
++    let creditsDeducted = false;
++    const DESIGN_COST = 3;
++    let userId = "";
+     try {
+       console.log("========= /api/generate CALLED =========");
+       console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+       console.log("Model from body BEFORE parsing:", req.body.model);
+       const { prompt, inputImageUrl, width, height, aspectRatio, model } = generateImageSchema.parse(req.body);
+       console.log("Model AFTER parsing:", model);
+       console.log("========================================");
+       
+       // Get authenticated user ID
+-      const userId = req.user?.claims?.sub;
++      userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+-      
++
+       // Check if user has enough credits (3 credits for design)
+-      const DESIGN_COST = 3;
+       const availableCredits = await storage.getUserCredits(userId);
+-      
++
+       if (availableCredits < DESIGN_COST) {
+-        return res.status(402).json({ 
++        return res.status(402).json({
+           error: "Insufficient credits",
+           required: DESIGN_COST,
+           available: availableCredits
+         });
+       }
+       
+       const replicateToken = process.env.REPLICATE_API_TOKEN;
+       
+       if (!replicateToken) {
+         return res.status(400).json({ 
+           error: "Replicate API token not configured. Please set REPLICATE_API_TOKEN in your environment." 
+         });
+       }
+ 
+       const replicate = new Replicate({
+         auth: replicateToken,
+       });
+ 
+       // Configuración de entrada basada en el modelo
+       let input: any = {};
+       
+       // Configuración específica para Qwen Image Edit
+       if (model === "qwen") {
+         input = {
+           prompt: prompt,
+diff --git a/server/routes.ts b/server/routes.ts
+index 7b3678761ada565b5cbb4e35b54b9b9443793be6..b91ebce44e861ef594c6060b8df959cb2ec0301c 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -800,50 +815,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
+       console.log("Model === 'qwen':", model === "qwen");
+       console.log("Model === 'pro':", model === "pro");
+       console.log("Model === 'max':", model === "max");
+       
+       let modelName: string;
+       if (model === "qwen") {
+         modelName = "qwen/qwen-image-edit";
+       } else if (model === "pro") {
+         modelName = "black-forest-labs/flux-kontext-pro";
+       } else {
+         modelName = "black-forest-labs/flux-kontext-max";
+       }
+       
+       console.log(`Using model: ${modelName}`);
+       console.log("Final input object for Replicate:", JSON.stringify(input, null, 2));
+       
+       // Validación final: asegurar que la imagen es válida si existe
+       const imageField = model === "qwen" ? "image" : "input_image";
+       if (input[imageField] && typeof input[imageField] === 'string') {
+         if (!input[imageField].startsWith('data:') && !input[imageField].startsWith('http')) {
+           console.error(`CRITICAL: ${imageField} is not a valid URI or base64:`, input[imageField]);
+           return res.status(400).json({ error: "Reference image format is invalid for Replicate API" });
+         }
+       }
+ 
++      // Deduct credits before starting generation
++      const deducted = await storage.deductCredits(userId, DESIGN_COST);
++      if (!deducted) {
++        return res.status(402).json({ error: "Insufficient credits" });
++      }
++      creditsDeducted = true;
++
+       // Usar el SDK de Replicate con reintentos para manejar interrupciones
+       let output;
+       let retries = 3;
+       
+       for (let attempt = 1; attempt <= retries; attempt++) {
+         try {
+           console.log(`Generating image (attempt ${attempt}/${retries}) with ${modelName}...`);
+           output = await replicate.run(modelName as any, { input });
+           break; // Éxito, salir del bucle
+         } catch (error: any) {
+           console.log(`Attempt ${attempt} failed:`, error.message);
+           
+           // Si es error de contenido sensible, no reintentar
+           if (error.message?.includes("flagged as sensitive")) {
+             throw new Error("Content was flagged as sensitive. Please try with a different prompt or image.");
+           }
+           
+           if (attempt === retries || !error.message?.includes("Prediction interrupted")) {
+             throw error; // Último intento o error diferente
+           }
+           
+           // Esperar antes del siguiente intento
+           await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+         }
+       }
+diff --git a/server/routes.ts b/server/routes.ts
+index 7b3678761ada565b5cbb4e35b54b9b9443793be6..b91ebce44e861ef594c6060b8df959cb2ec0301c 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -921,57 +943,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
+           // Convertir a base64 data URL
+           const base64 = imageBuffer.toString('base64');
+           imageUrl = `data:image/png;base64,${base64}`;
+           console.log("Created data URL, length:", imageUrl.length);
+         } catch (streamError) {
+           console.error("Error reading stream:", streamError);
+           throw new Error("Failed to read image stream");
+         } finally {
+           reader.releaseLock();
+         }
+       } else {
+         console.error("Unexpected output format from FLUX Kontext Max:", output);
+         return res.status(500).json({ 
+           error: "No image URL was generated - unexpected output format" 
+         });
+       }
+       
+       if (!imageUrl || typeof imageUrl !== 'string') {
+         console.error("Invalid image URL:", imageUrl);
+         return res.status(500).json({ 
+           error: "No valid image URL was generated" 
+         });
+       }
+ 
+       // Devolver la URL de la imagen generada - Igual que tu repositorio
+-      // Deduct credits after successful generation
+-      await storage.deductCredits(userId, DESIGN_COST);
+-      
++
+       // Crear abreviatura del modelo
+-      const modelAbbr = model === 'qwen' ? 'Q' : 
+-                       model === 'pro' ? 'P' : 
+-                       model === 'max' ? 'M' : 
++      const modelAbbr = model === 'qwen' ? 'Q' :
++                       model === 'pro' ? 'P' :
++                       model === 'max' ? 'M' :
+                        (model as string).charAt(0).toUpperCase();
+       
+       // Subir imagen a Object Storage en lugar de guardar base64
+       const objectStorage = new ObjectStorageService();
+       let finalImageUrl = imageUrl;
+       let thumbnailUrl = null;
+       
+       try {
+         console.log('=== PROCESANDO IMAGEN PARA OBJECT STORAGE ===');
+         console.log('Tipo de imagen:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
+         
+         // Subir la imagen a Object Storage
+         if (imageUrl.startsWith('data:')) {
+           // Si es base64, subir directamente
+           const uploadResult = await objectStorage.uploadImageFromBase64(
+             imageUrl,
+             'designs',
+             userId
+           );
+           finalImageUrl = uploadResult.imageUrl;
+           thumbnailUrl = uploadResult.thumbnailUrl;
+         } else {
+           // Si es URL externa, descargar y subir
+           const uploadResult = await objectStorage.uploadImageFromUrl(
+             imageUrl,
+diff --git a/server/routes.ts b/server/routes.ts
+index 7b3678761ada565b5cbb4e35b54b9b9443793be6..b91ebce44e861ef594c6060b8df959cb2ec0301c 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -996,55 +1016,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
+         imageUrl: finalImageUrl,
+         thumbnailUrl: thumbnailUrl,
+         type: 'design',
+         title: `${prompt.slice(0, 45)} (${modelAbbr})`,
+         description: prompt,
+         prompt: prompt,
+         metadata: {
+           model: modelName,
+           inputImageUrl: inputImageUrl
+         }
+       });
+       
+       console.log('=== IMAGEN GUARDADA EN GALERÍA ===');
+       console.log('ID:', savedItem.id);
+       console.log('Título:', savedItem.title);
+       
+       res.json({
+         imageUrl: finalImageUrl, // Devolver URL optimizada en lugar de base64
+         thumbnailUrl: thumbnailUrl,
+         prompt,
+         model: modelName,
+         success: true
+       });
+       
+     } catch (error: any) {
++      if (creditsDeducted) {
++        await storage.addCredits(userId, DESIGN_COST);
++      }
+       console.error("DETAILED ERROR in /api/generate:", error);
+       console.error("Error stack:", error.stack);
+       console.error("Error message:", error.message);
+-      
+-      res.status(500).json({ 
++
++      res.status(500).json({
+         error: "Failed to generate image",
+         details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+       });
+     }
+   });
+ 
+   // Gallery API Routes
+   
+   // Get user gallery
+   app.get("/api/gallery", isAuthenticated, async (req: any, res) => {
+     try {
+       const userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+       
+       const { type, limit, page } = req.query;
+       // Paginación: 50 items por página por defecto, máximo 100
+       const requestedLimit = limit ? Math.min(parseInt(limit as string), 100) : 50;
+       const requestedPage = page ? Math.max(parseInt(page as string), 1) : 1;
+       const offset = (requestedPage - 1) * requestedLimit;
+       
+       // Iniciar timer para medir performance
+       const startTime = Date.now();
+       
