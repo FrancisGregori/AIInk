@@ -242,14 +242,21 @@ export class DatabaseStorage implements IStorage {
     
     let result;
     if (userId) {
-      result = await db.select().from(fluxProjects)
-        .where(eq(fluxProjects.userId, userId))
-        .orderBy(desc(fluxProjects.createdAt))
-        .limit(50); // Limitar para evitar lentitud
+      // OPTIMIZACIÓN: Usar consulta SQL directa para mejor rendimiento
+      const queryResult = await db.execute(sql`
+        SELECT * FROM flux_projects 
+        WHERE user_id = ${userId} 
+        ORDER BY created_at DESC 
+        LIMIT 50
+      `);
+      result = queryResult.rows as FluxProject[];
     } else {
-      result = await db.select().from(fluxProjects)
-        .orderBy(desc(fluxProjects.createdAt))
-        .limit(50);
+      const queryResult = await db.execute(sql`
+        SELECT * FROM flux_projects 
+        ORDER BY created_at DESC 
+        LIMIT 50
+      `);
+      result = queryResult.rows as FluxProject[];
     }
     
     const endTime = Date.now();
