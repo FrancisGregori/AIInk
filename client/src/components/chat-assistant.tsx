@@ -673,7 +673,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             // Crear abreviatura del modelo
             const modelAbbr = modelVariant === 'qwen' ? 'Q' : 
                             modelVariant === 'pro' ? 'P' : 
-                            modelVariant === 'max' ? 'M' : 
                             modelVariant.charAt(0).toUpperCase();
             
             const projectResponse = await fetch('/api/flux/create', {
@@ -1099,12 +1098,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       className={modelVariant === "pro" ? "bg-zinc-800" : ""}
                     >
                       Kontext Pro
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => onModelChange?.("max")}
-                      className={modelVariant === "max" ? "bg-zinc-800" : ""}
-                    >
-                      Kontext Max
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => onModelChange?.("qwen")}

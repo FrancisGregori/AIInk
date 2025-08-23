@@ -58,7 +58,7 @@ const generateImageSchema = z.object({
   width: z.number().optional().default(1024),
   height: z.number().optional().default(1024),
   aspectRatio: z.string().optional().default("match_input_image"),
-  model: z.enum(["max", "pro", "qwen"]).optional().default("max"),
+  model: z.enum(["pro", "qwen"]).optional().default("pro"),
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -799,15 +799,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Model type:", typeof model);
       console.log("Model === 'qwen':", model === "qwen");
       console.log("Model === 'pro':", model === "pro");
-      console.log("Model === 'max':", model === "max");
       
       let modelName: string;
       if (model === "qwen") {
         modelName = "qwen/qwen-image-edit";
-      } else if (model === "pro") {
-        modelName = "black-forest-labs/flux-kontext-pro";
       } else {
-        modelName = "black-forest-labs/flux-kontext-max";
+        modelName = "black-forest-labs/flux-kontext-pro";
       }
       
       console.log(`Using model: ${modelName}`);
