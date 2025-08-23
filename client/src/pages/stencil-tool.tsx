@@ -578,21 +578,6 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                               className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                             />
                           </div>
-                          {/* Delete button overlay */}
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm('¿Estás seguro de que quieres eliminar este stencil?')) {
-                                deleteStencilMutation.mutate(job.id);
-                              }
-                            }}
-                            data-testid={`button-delete-stencil-${job.id}`}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
                         </div>
                         );
                       })}
