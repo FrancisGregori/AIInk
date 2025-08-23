@@ -21,24 +21,36 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError }: Aut
         setIsLoading(true);
         setHasError(false);
         
-        // Fetch the image with credentials
-        const response = await fetch(src, {
-          credentials: 'include',
-          mode: 'cors',
-          cache: 'default'
-        });
+        // Check if this is an internal API route that requires authentication
+        const isInternalAPI = src.startsWith('/api/images/');
         
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        
-        if (mounted) {
-          setImageSrc(objectUrl);
-          setIsLoading(false);
-          onLoad?.();
+        if (isInternalAPI) {
+          // Fetch the image with credentials for internal API routes
+          const response = await fetch(src, {
+            credentials: 'include',
+            mode: 'cors',
+            cache: 'default'
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          
+          if (mounted) {
+            setImageSrc(objectUrl);
+            setIsLoading(false);
+            onLoad?.();
+          }
+        } else {
+          // For external URLs, use direct image loading
+          if (mounted) {
+            setImageSrc(src);
+            setIsLoading(false);
+            onLoad?.();
+          }
         }
       } catch (error) {
         console.error('Error loading authenticated image:', src, error);
