@@ -508,46 +508,46 @@ Press and hold the stencil image above and select "Copy", then paste it directly
           {/* Right Column - Gallery */}
           <div className="xl:col-span-1 lg:col-span-1">
             {/* Gallery Header with Toggle */}
-            <Card>
-              <CardHeader className="pb-3">
+            <Card className="border border-zinc-200 dark:border-zinc-800">
+              <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                    <Clock className="h-5 w-5" />
                     Galería de Stencils
                   </CardTitle>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => setShowFullGallery(!showFullGallery)}
-                    className="text-xs"
+                    className="text-sm font-medium px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-600"
                   >
                     {showFullGallery ? 'Ver menos' : `Ver todos (${recentJobs.length})`}
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 {recentJobs.length > 0 ? (
-                  <div className={`grid ${showFullGallery ? 'grid-cols-2 max-h-[600px] overflow-y-auto custom-scrollbar' : 'grid-cols-1'} gap-3`}>
-                    {(showFullGallery ? recentJobs : recentJobs.slice(0, 2)).map((job) => {
+                  <div className={`grid ${showFullGallery ? 'grid-cols-1 lg:grid-cols-2 max-h-[700px] overflow-y-auto custom-scrollbar' : 'grid-cols-1'} gap-4`}>
+                    {(showFullGallery ? recentJobs : recentJobs.slice(0, 1)).map((job) => {
                       // Galería siempre accesible, incluso durante procesamiento
                       return (
                       <div
                         key={job.id}
-                        className="group cursor-pointer"
+                        className="group cursor-pointer transition-all duration-300 hover:shadow-lg"
                         onClick={() => openGalleryModal(job)}
                       >
-                        <div className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]">
+                        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800 aspect-[4/5] shadow-sm border border-zinc-200 dark:border-zinc-700">
                           <img
                             src={job.processedImageUrl || job.originalImageUrl}
                             alt={`Stencil ${job.style}`}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                            className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
                           />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Eye className="h-6 w-6 text-white" />
+                          <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-xl">
+                            <Eye className="h-8 w-8 text-white drop-shadow-lg" />
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3">
-                            <p className="text-sm font-semibold capitalize">{job.style}</p>
-                            <p className="text-xs text-zinc-400">
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 rounded-b-xl">
+                            <p className="text-white text-sm font-semibold capitalize drop-shadow-sm">{job.style}</p>
+                            <p className="text-zinc-300 text-xs drop-shadow-sm">
                               {new Date(job.createdAt || "").toLocaleString('es-ES', {
                                 day: 'numeric',
                                 month: 'short',
