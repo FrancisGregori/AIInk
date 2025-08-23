@@ -1074,13 +1074,10 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-6 px-2 text-xs flex items-center gap-1"
+                        className="h-6 w-6 p-0 flex items-center justify-center"
                         data-testid="button-model-dropdown"
                       >
                         <Settings className="h-3 w-3" />
-                        {modelVariant === "pro" && "Pro"}
-                        {modelVariant === "max" && "Max"} 
-                        {modelVariant === "qwen" && "Qwen"}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-40">
@@ -1111,11 +1108,10 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-6 px-2 text-xs flex items-center gap-1"
+                        className="h-6 w-6 p-0 flex items-center justify-center"
                         data-testid="button-aspect-dropdown"
                       >
                         <Monitor className="h-3 w-3" />
-                        {aspectRatio}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-32">
