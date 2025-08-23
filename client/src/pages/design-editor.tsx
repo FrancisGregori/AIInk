@@ -49,7 +49,7 @@ import type { FluxProject, StencilJob } from "@shared/schema";
 import { AuthenticatedImage } from "@/components/AuthenticatedImage";
 
 function DesignEditor() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [prompt, setPrompt] = useState<string>("");
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
@@ -122,13 +122,13 @@ function DesignEditor() {
 
   // Recuperar trabajo en progreso al cargar la página - CON LIMPIEZA Y AUTENTICACIÓN
   useEffect(() => {
-    // IMPORTANTE: Solo cargar el historial si el usuario está autenticado
-    // Esto evita que usuarios no autenticados vean imágenes privadas
+    if (isLoading) return;
     if (!user) {
-      // Si no hay usuario, limpiar cualquier dato guardado
       localStorage.removeItem('tattoo-stencil-jobs');
       return;
     }
+    // IMPORTANTE: Solo cargar el historial si el usuario está autenticado
+    // Esto evita que usuarios no autenticados vean imágenes privadas
     
     // Limpiar trabajos colgados viejos primero
     const storageKey = 'tattoo-stencil-jobs';
@@ -208,7 +208,7 @@ function DesignEditor() {
         console.error('Error parsing localStorage:', error);
       }
     }
-  }, [user]); // Ejecutar cuando cambie el usuario
+  }, [user, isLoading]); // Ejecutar cuando cambie el usuario o el estado de carga
 
   // Guardar TODOS los trabajos (processing, completed, failed) en localStorage
   useEffect(() => {

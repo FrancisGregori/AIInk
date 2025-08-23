@@ -1,0 +1,181 @@
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index fc39d2d33d4ab6b863cecaf12a6b4b0d940eeb30..d5ab6124a92888a3bdffccf7dafc0efc2c36dc5e 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -27,51 +27,51 @@ import {
+   Download, 
+   Image as ImageIcon, 
+   Upload,
+   Loader2,
+   Settings,
+   History,
+   Copy,
+   Languages,
+   RefreshCw,
+   Maximize2,
+   Camera,
+   Palette,
+   ChevronLeft,
+   ChevronRight,
+   ChevronDown,
+   Edit,
+   Clock,
+   Trash2
+ } from "lucide-react";
+ import Navigation from "@/components/Navigation";
+ import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
+ import type { FluxProject, StencilJob } from "@shared/schema";
+ import { AuthenticatedImage } from "@/components/AuthenticatedImage";
+ 
+ function DesignEditor() {
+-  const { isAuthenticated, user } = useAuth();
++  const { isAuthenticated, user, isLoading } = useAuth();
+   const [showAuthDialog, setShowAuthDialog] = useState(false);
+   const [prompt, setPrompt] = useState<string>("");
+   const [referenceImage, setReferenceImage] = useState<File | null>(null);
+   const [referencePreview, setReferencePreview] = useState<string | null>(null);
+   const [aspectRatio, setAspectRatio] = useState<string>("Match Input");
+   const [modelVariant, setModelVariant] = useState<string>("qwen");
+   const [width, setWidth] = useState<number>(1024);
+   const [height, setHeight] = useState<number>(1024);
+   const [language, setLanguage] = useState<"es" | "en">("es");
+   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+   const [compareMode, setCompareMode] = useState<boolean>(false);
+   const [comparePosition, setComparePosition] = useState<number>(50);
+   const [isConfigOpen, setIsConfigOpen] = useState<boolean>(false);
+   const [isPromptOpen, setIsPromptOpen] = useState<boolean>(false); // Inicialmente cerrado
+   const [matchInput, setMatchInput] = useState<boolean>(true); // Default to true for Match Input
+   
+   const fileInputRef = useRef<HTMLInputElement>(null);
+   const chatAssistantRef = useRef<ChatAssistantRef>(null);
+   const queryClient = useQueryClient();
+   const { toast } = useToast();
+   const { addJob, updateJob, getJob } = useJobs();
+   // const { activeJobsOfType } = useJobRecovery('design'); // Disabled to avoid duplicate polling
+ 
+   // Estado para trabajo actual y persistencia
+   const [currentJob, setCurrentJob] = useState<any>(null);
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index fc39d2d33d4ab6b863cecaf12a6b4b0d940eeb30..d5ab6124a92888a3bdffccf7dafc0efc2c36dc5e 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -100,58 +100,58 @@ function DesignEditor() {
+       { es: "Contraluz", en: "Backlighting" },
+     ],
+     styleChanges: [
+       { es: "Dibujo a lápiz", en: "Pencil sketch" },
+       { es: "Hiperrealista", en: "Hyperrealistic" },
+       { es: "Acuarela", en: "Watercolor" },
+       { es: "Tinta", en: "Ink drawing" },
+       { es: "Óleo", en: "Oil painting" },
+       { es: "Minimalista", en: "Minimalist" },
+       { es: "Grabado vintage", en: "Vintage engraving" },
+       { es: "Arte vectorial", en: "Vector art" },
+     ],
+     cameraAngles: [
+       { es: "Vista aérea", en: "Bird's eye view" },
+       { es: "Ángulo bajo", en: "Low angle" },
+       { es: "Ángulo holandés", en: "Dutch angle" },
+       { es: "Plano medio", en: "Medium shot" },
+       { es: "Primer plano", en: "Close-up" },
+       { es: "Nivel de ojos", en: "Eye level" },
+       { es: "Nivel del suelo", en: "Ground level" },
+     ],
+   };
+ 
+   // Recuperar trabajo en progreso al cargar la página - CON LIMPIEZA Y AUTENTICACIÓN
+   useEffect(() => {
+-    // IMPORTANTE: Solo cargar el historial si el usuario está autenticado
+-    // Esto evita que usuarios no autenticados vean imágenes privadas
++    if (isLoading) return;
+     if (!user) {
+-      // Si no hay usuario, limpiar cualquier dato guardado
+       localStorage.removeItem('tattoo-stencil-jobs');
+       return;
+     }
+-    
++    // IMPORTANTE: Solo cargar el historial si el usuario está autenticado
++    // Esto evita que usuarios no autenticados vean imágenes privadas
++
+     // Limpiar trabajos colgados viejos primero
+     const storageKey = 'tattoo-stencil-jobs';
+     const stored = localStorage.getItem(storageKey);
+     if (stored) {
+       try {
+         const jobs = JSON.parse(stored);
+         const now = Date.now();
+         
+         // Filtrar trabajos: eliminar los que están procesando por más de 5 minutos
+         const cleanedJobs = jobs.map((job: any) => {
+           if (job.type === 'design' && job.status === 'processing') {
+             const startTime = new Date(job.startedAt || job.createdAt).getTime();
+             const timeDiff = (now - startTime) / 1000 / 60; // minutos
+             
+             if (timeDiff > 5) {
+               // Marcar como fallido si lleva más de 5 minutos
+               return {
+                 ...job,
+                 status: 'failed',
+                 errorMessage: 'Timeout - proceso interrumpido',
+                 completedAt: new Date().toISOString()
+               };
+             }
+           }
+           return job;
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index fc39d2d33d4ab6b863cecaf12a6b4b0d940eeb30..d5ab6124a92888a3bdffccf7dafc0efc2c36dc5e 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -186,51 +186,51 @@ function DesignEditor() {
+           const completedJobs = cleanedJobs
+             .filter((job: any) => job.status === 'completed' && job.type === 'design')
+             .sort((a: any, b: any) => new Date(b.completedAt || b.createdAt).getTime() - new Date(a.completedAt || a.createdAt).getTime());
+           
+           if (completedJobs.length > 0) {
+             const latestJob = completedJobs[0];
+             console.log('Design job recovery: Loading latest completed job', latestJob.id);
+             setCurrentJob(latestJob);
+             
+             // Restaurar datos del trabajo completado
+             if (latestJob.originalImageUrl) {
+               setReferencePreview(latestJob.originalImageUrl);
+               const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
+               setReferenceImage(fakeFile);
+             }
+             
+             if (latestJob.style) {
+               setPrompt(latestJob.style);
+             }
+           }
+         }
+       } catch (error) {
+         console.error('Error parsing localStorage:', error);
+       }
+     }
+-  }, [user]); // Ejecutar cuando cambie el usuario
++  }, [user, isLoading]); // Ejecutar cuando cambie el usuario o el estado de carga
+ 
+   // Guardar TODOS los trabajos (processing, completed, failed) en localStorage
+   useEffect(() => {
+     if (!currentJob) return;
+     
+     const saveJobDirectly = () => {
+       const storageKey = 'tattoo-stencil-jobs';
+       const stored = localStorage.getItem(storageKey);
+       
+       try {
+         const jobs = stored ? JSON.parse(stored) : [];
+         const existingIndex = jobs.findIndex((j: any) => j.id === currentJob.id);
+         
+         if (existingIndex >= 0) {
+           // Actualizar trabajo existente
+           jobs[existingIndex] = currentJob;
+         } else {
+           // Agregar nuevo trabajo
+           jobs.push(currentJob);
+         }
+         
+         localStorage.setItem(storageKey, JSON.stringify(jobs));
+         console.log(`Trabajo ${currentJob.status} guardado en localStorage:`, currentJob.id);
+       } catch (error) {
+         console.error('Error saving job:', error);
