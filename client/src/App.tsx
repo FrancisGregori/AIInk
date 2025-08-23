@@ -14,7 +14,6 @@ import SimpleLogin from "@/pages/simple-login";
 import Profile from "@/pages/profile";
 import Gallery from "@/pages/gallery";
 import NotFound from "@/pages/not-found";
-import AdminCredits from "@/pages/admin-credits";
 
 function Router() {
   return (
@@ -27,7 +26,6 @@ function Router() {
       <Route path="/gallery" component={Gallery} />
       <Route path="/stencil-tool" component={StencilTool} />
       <Route path="/design-editor" component={DesignEditor} />
-      <Route path="/admin-credits" component={AdminCredits} />
       
       <Route component={NotFound} />
     </Switch>
