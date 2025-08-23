@@ -1052,19 +1052,33 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                 </span>
               </Button>
               
+              {/* Textarea container with full width */}
               <div className="flex flex-col gap-2 flex-1">
-                <Textarea
-                  ref={textareaRef}
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={language === 'es' 
-                    ? "Describe los cambios o arrastra una imagen..."
-                    : "Describe changes or drag an image..."}
-                  className="flex-1 min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors"
-                  disabled={isLoading}
-                  data-testid="textarea-chat-input"
-                />
+                {/* Textarea with send button inside */}
+                <div className="relative">
+                  <Textarea
+                    ref={textareaRef}
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={language === 'es' 
+                      ? "Describe los cambios o arrastra una imagen..."
+                      : "Describe changes or drag an image..."}
+                    className="w-full min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors pr-12"
+                    disabled={isLoading}
+                    data-testid="textarea-chat-input"
+                  />
+                  
+                  {/* Send button inside textarea */}
+                  <Button
+                    onClick={sendMessage}
+                    disabled={!inputMessage.trim() || isLoading}
+                    className="absolute right-2 bottom-2 h-8 w-8 p-0"
+                    data-testid="button-send-message"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
                 
                 {/* Options chips/badges */}
                 <div className="flex flex-wrap gap-2">
@@ -1128,16 +1142,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   </DropdownMenu>
                 </div>
               </div>
-              
-              {/* Botón de enviar a la derecha */}
-              <Button
-                onClick={sendMessage}
-                disabled={!inputMessage.trim() || isLoading}
-                className="self-end"
-                data-testid="button-send-message"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
             </div>
             
             <input
