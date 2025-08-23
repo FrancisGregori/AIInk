@@ -41,6 +41,7 @@ import ImageUploader from "@/components/image-uploader";
 import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { StencilJob, StencilStyle } from "@shared/schema";
+import type { CreditsData } from "@/lib/api";
 
 interface ProcessingOptions {
   removeBackground: boolean;
@@ -70,6 +71,12 @@ function StencilTool() {
   const queryClient = useQueryClient();
   const { addJob, updateJob, getJob } = useJobs();
   const { activeJobsOfType } = useJobRecovery('stencil');
+  
+  // Hook para obtener créditos del usuario
+  const { data: credits } = useQuery<CreditsData>({
+    queryKey: ["/api/credits"],
+    retry: false,
+  });
 
   // Delete stencil mutation (uses gallery API since stencils are saved there)
   const deleteStencilMutation = useMutation({
@@ -276,6 +283,16 @@ function StencilTool() {
       return;
     }
 
+    // Check credits before processing
+    if (!credits || credits.available < 5) {
+      toast({
+        title: "Créditos insuficientes",
+        description: "No tienes suficientes créditos",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // MOSTRAR INMEDIATAMENTE el estado de procesamiento
     setIsProcessing(true);
     
@@ -447,7 +464,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                   <div className="flex gap-2">
                     <Button
                     onClick={handleProcess}
-                    disabled={!selectedFile || isProcessing}
+                    disabled={!selectedFile || isProcessing || !credits || credits.available < 5}
                     className="flex-1 bg-white hover:bg-gray-100 text-black font-semibold"
                     size="default"
                   >
