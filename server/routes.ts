@@ -1176,8 +1176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // SEGURIDAD: Verificar que la imagen pertenece al usuario autenticado
-      // Las rutas son: .private/designs/{userId}/... o .private/uploads/{userId}/...
-      const userPattern = new RegExp(`\\.private/(designs|uploads)/${userId}/`);
+      // Las rutas son: .private/designs/{userId}/... o .private/uploads/{userId}/... o .private/thumbnails/{userId}/...
+      const userPattern = new RegExp(`\\.private/(designs|uploads|thumbnails)/${userId}/`);
       if (!userPattern.test(filename)) {
         console.warn(`Usuario ${userId} intentó acceder a imagen no autorizada: ${filename}`);
         return res.status(403).json({ message: "No autorizado para ver esta imagen" });
