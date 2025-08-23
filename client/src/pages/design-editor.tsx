@@ -1024,11 +1024,6 @@ function DesignEditor() {
                                 alt="Processed design"
                                 className="w-full rounded-lg transition-all group-hover:opacity-90"
                               />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-all flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-3 py-1 rounded-lg">
-                                  <p className="text-xs text-white">Click para ampliar</p>
-                                </div>
-                              </div>
                             </div>
                           </DialogTrigger>
                           <DialogContent className="max-w-4xl max-h-[90vh] p-2">
@@ -1159,19 +1154,8 @@ function DesignEditor() {
                           <AuthenticatedImage
                             src={project.imageUrl || ""}
                             alt={project.name}
-                            className="w-full aspect-[3/4] rounded-lg object-cover hover:opacity-90 transition-opacity"
+                            className="w-full aspect-[3/4] rounded-lg object-cover transition-opacity"
                           />
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 lg:p-3 rounded-b-lg">
-                            <p className="text-xs lg:text-sm font-semibold text-white truncate">{project.name}</p>
-                            <p className="text-xs text-white/70">
-                              {new Date(project.createdAt || "").toLocaleString('es-ES', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                          </div>
                         </div>
                       </DialogTrigger>
                         <DialogContent className="max-w-4xl max-h-[90vh] p-4">
