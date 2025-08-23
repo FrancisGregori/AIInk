@@ -1,6 +1,5 @@
 import { 
-  type UserProfile, 
-  type InsertUserProfile, 
+  type User,
   type StencilJob, 
   type InsertStencilJob,
   type StencilStyle,
@@ -15,7 +14,6 @@ import {
   type InsertGalleryItem,
   users,
   userGallery,
-  userProfiles,
   stencilJobs,
   stencilStyles,
   fluxProjects,
@@ -39,20 +37,19 @@ export interface StencilProcessRequest {
 
 // Storage interface
 export interface IStorage {
-  // User profile methods
-  getUserProfile(id: string): Promise<UserProfile | undefined>;
-  getUserProfileByEmail(email: string): Promise<UserProfile | undefined>;
-  createUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
-  updateUserProfile(id: string, updates: Partial<UserProfile>): Promise<UserProfile | undefined>;
+  // User methods  
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: Partial<User>): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   
   // Replit Auth required methods
-  getUser(id: string): Promise<UserProfile | undefined>;
-  upsertUser(user: Partial<UserProfile>): Promise<UserProfile>;
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: Partial<User>): Promise<User>;
   
   // Credit system methods
   getUserCredits(userId: string): Promise<number>;
   deductCredits(userId: string, amount: number): Promise<boolean>;
-  updateUserCredits(userId: string, newCredits: number): Promise<UserProfile>;
+  updateUserCredits(userId: string, newCredits: number): Promise<User>;
   
   // Stencil methods
   getStencilStyles(): Promise<StencilStyle[]>;
@@ -89,26 +86,21 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User profile methods
-  async getUserProfile(id: string): Promise<UserProfile | undefined> {
-    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.id, id));
-    return profile;
+  // User methods
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
   }
 
-  async getUserProfileByEmail(email: string): Promise<UserProfile | undefined> {
-    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.email, email));
-    return profile;
+  async createUser(user: Partial<User>): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
   }
 
-  async createUserProfile(profile: InsertUserProfile): Promise<UserProfile> {
-    const [newProfile] = await db.insert(userProfiles).values(profile).returning();
-    return newProfile;
-  }
-
-  async updateUserProfile(id: string, updates: Partial<UserProfile>): Promise<UserProfile | undefined> {
-    const [updated] = await db.update(userProfiles)
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [updated] = await db.update(users)
       .set({ ...updates, updatedAt: new Date() })
-      .where(eq(userProfiles.id, id))
+      .where(eq(users.id, id))
       .returning();
     return updated;
   }
@@ -169,13 +161,13 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async updateUserCredits(userId: string, newCredits: number): Promise<UserProfile> {
+  async updateUserCredits(userId: string, newCredits: number): Promise<User> {
     const [updated] = await db.update(users)
       .set({ credits: newCredits, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     
-    return updated as UserProfile;
+    return updated;
   }
 
   // Stencil methods

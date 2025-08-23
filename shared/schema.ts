@@ -66,19 +66,6 @@ export const userGallery = pgTable("user_gallery", {
 export type InsertGalleryItem = typeof userGallery.$inferInsert;
 export type GalleryItem = typeof userGallery.$inferSelect;
 
-// User profiles table (for backward compatibility)
-export const userProfiles = pgTable("user_profiles", {
-  id: varchar("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  displayName: text("display_name"),
-  avatarUrl: text("avatar_url"),
-  subscriptionTier: varchar("subscription_tier").default("free"),
-  monthlyCredits: integer("monthly_credits").default(10),
-  creditsUsed: integer("credits_used").default(0),
-  totalJobsProcessed: integer("total_jobs_processed").default(0),
-  createdAt: timestamp("created_at").default(sql`now()`),
-  updatedAt: timestamp("updated_at").default(sql`now()`),
-});
 
 // Stencil jobs table (for tracking image processing)
 export const stencilJobs = pgTable("stencil_jobs", {
@@ -148,10 +135,6 @@ export const usageTracking = pgTable("usage_tracking", {
 });
 
 // Insert schemas
-export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
-  createdAt: true,
-  updatedAt: true,
-});
 
 export const insertStencilJobSchema = createInsertSchema(stencilJobs).omit({
   id: true,
@@ -177,8 +160,6 @@ export const insertUsageTrackingSchema = createInsertSchema(usageTracking).omit(
 });
 
 // Types
-export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
-export type UserProfile = typeof userProfiles.$inferSelect;
 
 export type InsertStencilJob = z.infer<typeof insertStencilJobSchema>;
 export type StencilJob = typeof stencilJobs.$inferSelect;
