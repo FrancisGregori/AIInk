@@ -527,39 +527,55 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               </CardHeader>
               <CardContent>
                 {recentJobs.length > 0 ? (
-                  <div className={`grid ${showFullGallery ? 'grid-cols-2 max-h-[600px] overflow-y-auto custom-scrollbar' : 'grid-cols-1'} gap-3`}>
-                    {(showFullGallery ? recentJobs : recentJobs.slice(0, 2)).map((job) => {
-                      // Galería siempre accesible, incluso durante procesamiento
-                      return (
-                      <div
-                        key={job.id}
-                        className="group cursor-pointer"
-                        onClick={() => openGalleryModal(job)}
-                      >
-                        <div className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]">
-                          <img
-                            src={job.processedImageUrl || job.originalImageUrl}
-                            alt={`Stencil ${job.style}`}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Eye className="h-6 w-6 text-white" />
-                          </div>
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-3">
-                            <p className="text-sm font-semibold capitalize">{job.style}</p>
-                            <p className="text-xs text-zinc-400">
-                              {new Date(job.createdAt || "").toLocaleString('es-ES', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
+                  <div className="space-y-6">
+                    {/* Mobile: Always 2 columns, Desktop: Responsive */}
+                    <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
+                      {(showFullGallery ? recentJobs : recentJobs.slice(0, 4)).map((job) => {
+                        // Galería siempre accesible, incluso durante procesamiento
+                        return (
+                        <div
+                          key={job.id}
+                          className="group cursor-pointer"
+                          onClick={() => openGalleryModal(job)}
+                        >
+                          <div className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]">
+                            <img
+                              src={job.processedImageUrl || job.originalImageUrl}
+                              alt={`Stencil ${job.style}`}
+                              className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Eye className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 lg:p-3">
+                              <p className="text-xs lg:text-sm font-semibold capitalize">{job.style}</p>
+                              <p className="text-xs text-zinc-400">
+                                {new Date(job.createdAt || "").toLocaleString('es-ES', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
                                 minute: '2-digit'
                               })}
                             </p>
+                            </div>
                           </div>
                         </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Load More Button - only show when not in full gallery mode and there are more items */}
+                    {!showFullGallery && recentJobs.length > 4 && (
+                      <div className="flex justify-center">
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowFullGallery(true)}
+                          className="text-sm"
+                        >
+                          Load More ({recentJobs.length - 4} más)
+                        </Button>
                       </div>
-                      );
-                    })}
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12">

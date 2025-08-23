@@ -408,12 +408,12 @@ export default function Gallery() {
             </div>
 
             {viewMode === 'grid' ? (
-              <div className={`grid gap-4 ${
+              <div className={`grid gap-3 sm:gap-4 ${
                 imageSize === 'small' 
-                  ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8' 
+                  ? 'grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8' 
                   : imageSize === 'medium'
                   ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
-                  : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+                  : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
               }`}>
                 {items.map((item: any) => (
                   <Card key={item.id} className="overflow-hidden group hover:shadow-xl transition-all">
@@ -431,11 +431,11 @@ export default function Gallery() {
                             alt={item.title || 'Diseño'}
                             className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
                           />
-                          {/* Overlay on hover - solo mostrar en tamaños medianos y grandes */}
+                          {/* Overlay on hover - responsive text sizes */}
                           {imageSize !== 'small' && (
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="absolute bottom-0 left-0 right-0 p-3">
-                                <p className="text-white text-sm font-semibold truncate">
+                              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
+                                <p className="text-white text-xs sm:text-sm font-semibold truncate">
                                   {item.title || 'Sin título'}
                                 </p>
                                 <p className="text-white/70 text-xs">
@@ -447,13 +447,13 @@ export default function Gallery() {
                               </div>
                             </div>
                           )}
-                          {/* Badges - ajustar tamaño según la vista */}
+                          {/* Badges - mobile optimized */}
                           {item.isFavorite && imageSize !== 'small' && (
-                            <Heart className="absolute top-2 right-2 w-4 h-4 text-red-500 fill-red-500 drop-shadow-lg" />
+                            <Heart className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-3 h-3 sm:w-4 sm:h-4 text-red-500 fill-red-500 drop-shadow-lg" />
                           )}
                           {imageSize !== 'small' && (
                             <Badge 
-                              className="absolute top-2 left-2 text-xs"
+                              className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 text-xs scale-90 sm:scale-100"
                               variant={item.type === 'stencil' ? 'default' : 'secondary'}
                             >
                               {item.type === 'stencil' ? 'Stencil' : 'Diseño'}
