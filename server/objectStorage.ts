@@ -5,6 +5,12 @@ import sharp from "sharp";
 
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 
+// Nombre del bucket de object storage. Se puede configurar vía variable de entorno
+// para mantenerlo consistente en toda la aplicación.
+export const OBJECT_STORAGE_BUCKET =
+  process.env.OBJECT_STORAGE_BUCKET ||
+  "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b";
+
 // Object storage client para interactuar con el servicio
 export const objectStorageClient = new Storage({
   credentials: {
@@ -38,7 +44,7 @@ export class ObjectStorageService {
   
   constructor() {
     // Usar el bucket configurado
-    this.bucketName = "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b";
+    this.bucketName = OBJECT_STORAGE_BUCKET;
   }
 
   // Obtener directorio privado

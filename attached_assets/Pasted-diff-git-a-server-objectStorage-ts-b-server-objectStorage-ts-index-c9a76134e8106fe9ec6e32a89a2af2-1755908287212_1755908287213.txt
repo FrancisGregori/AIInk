@@ -1,0 +1,79 @@
+diff --git a/server/objectStorage.ts b/server/objectStorage.ts
+index c9a76134e8106fe9ec6e32a89a2af2ccc3975827..09c7b2e6b9e43bdf3d85d1684cdf33e76973372d 100644
+--- a/server/objectStorage.ts
++++ b/server/objectStorage.ts
+@@ -1,66 +1,72 @@
+ import { Storage, File } from "@google-cloud/storage";
+ import { Response } from "express";
+ import { randomUUID } from "crypto";
+ import sharp from "sharp";
+ 
+ const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
+ 
++// Nombre del bucket de object storage. Se puede configurar vía variable de entorno
++// para mantenerlo consistente en toda la aplicación.
++export const OBJECT_STORAGE_BUCKET =
++  process.env.OBJECT_STORAGE_BUCKET ||
++  "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b";
++
+ // Object storage client para interactuar con el servicio
+ export const objectStorageClient = new Storage({
+   credentials: {
+     audience: "replit",
+     subject_token_type: "access_token",
+     token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
+     type: "external_account",
+     credential_source: {
+       url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
+       format: {
+         type: "json",
+         subject_token_field_name: "access_token",
+       },
+     },
+     universe_domain: "googleapis.com",
+   },
+   projectId: "",
+ });
+ 
+ export class ObjectNotFoundError extends Error {
+   constructor() {
+     super("Object not found");
+     this.name = "ObjectNotFoundError";
+     Object.setPrototypeOf(this, ObjectNotFoundError.prototype);
+   }
+ }
+ 
+ // Servicio de object storage para manejar imágenes
+ export class ObjectStorageService {
+   private bucketName: string;
+-  
++
+   constructor() {
+     // Usar el bucket configurado
+-    this.bucketName = "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b";
++    this.bucketName = OBJECT_STORAGE_BUCKET;
+   }
+ 
+   // Obtener directorio privado
+   getPrivateObjectDir(): string {
+     return process.env.PRIVATE_OBJECT_DIR || `/${this.bucketName}/.private`;
+   }
+ 
+   // Subir imagen desde base64 a Object Storage
+   async uploadImageFromBase64(
+     base64Data: string,
+     folder: 'designs' | 'stencils' | 'thumbnails',
+     userId: string
+   ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+     try {
+       console.log(`=== SUBIENDO IMAGEN A OBJECT STORAGE (PRIVADO) ===`);
+       console.log(`Carpeta: ${folder}, Usuario: ${userId}`);
+       
+       // Limpiar el prefijo de base64 si existe
+       const base64Clean = base64Data.replace(/^data:image\/\w+;base64,/, '');
+       const imageBuffer = Buffer.from(base64Clean, 'base64');
+       
+       // Generar ID único para el archivo
+       const fileId = randomUUID();
+       const timestamp = Date.now();
+       // IMPORTANTE: Usar directorio PRIVADO para proteger imágenes de usuarios

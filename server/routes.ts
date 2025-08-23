@@ -8,7 +8,7 @@ import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema
 import ComfyDeployService from "./comfydeploy";
 import Replicate from "replicate";
 import { z } from "zod";
-import { ObjectStorageService, objectStorageClient } from "./objectStorage";
+import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -1184,7 +1184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const objectStorage = new ObjectStorageService();
-      const bucket = objectStorageClient.bucket('repl-default-bucket');
+      const bucket = objectStorageClient.bucket(OBJECT_STORAGE_BUCKET);
       const file = bucket.file(filename);
       
       // Verificar que el archivo existe
