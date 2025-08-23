@@ -120,7 +120,10 @@ export const fluxProjects = pgTable("flux_projects", {
   isPublic: boolean("is_public").default(false),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
-});
+}, (table) => [
+  index("flux_projects_user_id_idx").on(table.userId),
+  index("flux_projects_created_at_idx").on(table.createdAt),
+]);
 
 // Gemini chat messages table
 export const geminiChats = pgTable("gemini_chats", {

@@ -391,7 +391,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Solo devolver proyectos del usuario autenticado
+      console.log(`[DB] Fetching flux projects for user ${userId}`);
+      const startTime = Date.now();
       const projects = await storage.getFluxProjects(userId);
+      const endTime = Date.now();
+      console.log(`Flux projects query took ${endTime - startTime}ms for ${projects.length} items`);
+      
       res.json(projects);
     } catch (error) {
       console.error("Error fetching flux projects:", error);

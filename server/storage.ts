@@ -240,9 +240,12 @@ export class DatabaseStorage implements IStorage {
     if (userId) {
       return db.select().from(fluxProjects)
         .where(eq(fluxProjects.userId, userId))
-        .orderBy(desc(fluxProjects.createdAt));
+        .orderBy(desc(fluxProjects.createdAt))
+        .limit(50); // Limitar para evitar lentitud
     }
-    return db.select().from(fluxProjects).orderBy(desc(fluxProjects.createdAt));
+    return db.select().from(fluxProjects)
+      .orderBy(desc(fluxProjects.createdAt))
+      .limit(50);
   }
 
   async createFluxProject(project: InsertFluxProject): Promise<FluxProject> {
