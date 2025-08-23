@@ -1,0 +1,67 @@
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index 6d3cdaa496a38b2dde5d243e4468d9354afb0349..e97dd51e7096d0e0fc31cc612b77b42004b86d19 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -362,59 +362,59 @@ function DesignEditor() {
+       inkVision: "InkVision - AI Assistant",
+       sendMessage: "Send message",
+       messagePlaceholder: "Ask about designs or request ideas...",
+       apply: "Apply",
+       compareMode: "Compare mode",
+       history: "History",
+       settings: "Settings",
+       analyzing: "Analyzing image...",
+       generating: "Generating design...",
+       suggestions: "Suggested edits",
+       poseChanges: "Pose changes",
+       lightingChanges: "Lighting",
+       styleChanges: "Styles",
+       cameraAngles: "Camera angles",
+       expressions: "Expressions",
+     }
+   };
+ 
+   const txt = t[language];
+ 
+   // Fetch user's projects (moved before useEffect to avoid initialization error)
+   const { data: projects = [] } = useQuery<FluxProject[]>({
+     queryKey: ["/api/flux/projects"],
+     queryFn: getQueryFn({ on401: "returnNull" }),
+     initialData: [],
+-    enabled: isAuthenticated, // evita petición antes de autenticarse
++    enabled: isAuthenticated && !isLoading, // evita petición antes de autenticarse
+     staleTime: 0,              // permite refetch inmediato tras login
+   });
+ 
+   useEffect(() => {
+-    if (isAuthenticated) {
++    if (isAuthenticated && !isLoading) {
+       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+     }
+-  }, [isAuthenticated, queryClient]);
++  }, [isAuthenticated, isLoading, queryClient]);
+ 
+   // Verificar automáticamente cuando se actualiza la lista de proyectos
+   useEffect(() => {
+     if (!currentJob || currentJob.status !== 'processing' || !projects.length) return;
+ 
+     const completedProject = projects.find((p: any) => p.id === currentJob.id);
+     if (completedProject && completedProject.imageUrl && !completedProject.imageUrl.includes('placeholder')) {
+       console.log('Design job completed, updating state');
+       setIsGenerating(false);
+       updateJob(currentJob.id, {
+         status: 'completed',
+         processedImageUrl: completedProject.imageUrl,
+         completedAt: new Date().toISOString()
+       });
+       setCurrentJob({
+         ...currentJob,
+         status: 'completed',
+         processedImageUrl: completedProject.imageUrl
+       });
+       
+       toast({
+         title: "Diseño completado",
+         description: "Tu imagen ha sido generada exitosamente",
+       });
+     }

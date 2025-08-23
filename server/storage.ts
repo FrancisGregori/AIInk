@@ -242,21 +242,29 @@ export class DatabaseStorage implements IStorage {
     
     let result;
     if (userId) {
-      // OPTIMIZACIÓN: Usar consulta SQL directa para mejor rendimiento
+      // OPTIMIZACIÓN: Excluir campo settings que es muy pesado para historial
       const queryResult = await db.execute(sql`
-        SELECT * FROM flux_projects 
+        SELECT id, user_id, name, description, prompt, image_url, is_public, created_at, updated_at
+        FROM flux_projects 
         WHERE user_id = ${userId} 
         ORDER BY created_at DESC 
         LIMIT 50
       `);
-      result = queryResult.rows as FluxProject[];
+      result = queryResult.rows.map(row => ({
+        ...row,
+        settings: null // Excluir settings pesado del historial
+      })) as FluxProject[];
     } else {
       const queryResult = await db.execute(sql`
-        SELECT * FROM flux_projects 
+        SELECT id, user_id, name, description, prompt, image_url, is_public, created_at, updated_at
+        FROM flux_projects 
         ORDER BY created_at DESC 
         LIMIT 50
       `);
-      result = queryResult.rows as FluxProject[];
+      result = queryResult.rows.map(row => ({
+        ...row,
+        settings: null
+      })) as FluxProject[];
     }
     
     const endTime = Date.now();
