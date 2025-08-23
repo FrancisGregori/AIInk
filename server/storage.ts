@@ -114,12 +114,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Replit Auth methods
-  async getUser(id: string): Promise<UserProfile | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user as UserProfile;
+    return user;
   }
 
-  async upsertUser(user: Partial<UserProfile>): Promise<UserProfile> {
+  async upsertUser(user: Partial<User>): Promise<User> {
     if (!user.id) {
       throw new Error("User ID is required for upsert operation");
     }
@@ -131,7 +131,7 @@ export class DatabaseStorage implements IStorage {
         .set({ ...user, updatedAt: new Date() })
         .where(eq(users.id, user.id))
         .returning();
-      return updated as UserProfile;
+      return updated;
     } else {
       const [newUser] = await db.insert(users).values({
         id: user.id,
@@ -142,7 +142,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: new Date(),
         updatedAt: new Date(),
       }).returning();
-      return newUser as UserProfile;
+      return newUser;
     }
   }
 
@@ -154,7 +154,7 @@ export class DatabaseStorage implements IStorage {
 
   async deductCredits(userId: string, amount: number): Promise<boolean> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    if (!user || user.credits < amount) {
+    if (!user || !user.credits || user.credits < amount) {
       return false;
     }
 
@@ -322,13 +322,18 @@ export class DatabaseStorage implements IStorage {
     
     const startTime = Date.now();
     
-    let query = db.select().from(userGallery).where(eq(userGallery.userId, userId));
+    let baseQuery = db.select().from(userGallery);
     
     if (type && type !== 'all') {
-      query = query.where(eq(userGallery.type, type));
+      baseQuery = baseQuery.where(and(
+        eq(userGallery.userId, userId),
+        eq(userGallery.type, type)
+      ));
+    } else {
+      baseQuery = baseQuery.where(eq(userGallery.userId, userId));
     }
     
-    const result = await query
+    const result = await baseQuery
       .orderBy(desc(userGallery.createdAt))
       .limit(defaultLimit)
       .offset(defaultOffset);
@@ -340,14 +345,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGalleryItemCount(userId: string, type?: string): Promise<number> {
-    let query = db.select({ count: sql<number>`count(*)` }).from(userGallery)
-      .where(eq(userGallery.userId, userId));
+    let baseQuery = db.select({ count: sql<number>`count(*)` }).from(userGallery);
     
     if (type && type !== 'all') {
-      query = query.where(eq(userGallery.type, type));
+      baseQuery = baseQuery.where(and(
+        eq(userGallery.userId, userId),
+        eq(userGallery.type, type)
+      ));
+    } else {
+      baseQuery = baseQuery.where(eq(userGallery.userId, userId));
     }
     
-    const [result] = await query;
+    const [result] = await baseQuery;
     return Number(result.count);
   }
 
