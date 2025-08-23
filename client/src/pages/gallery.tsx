@@ -58,8 +58,10 @@ export default function Gallery() {
       } else {
         setAllLoadedItems(prev => [...prev, ...data]);
       }
+      // Update hasMore based on returned items
+      setHasMore(data.length === itemsPerPage);
     }
-  }, [data, currentPage]);
+  }, [data, currentPage, itemsPerPage]);
 
   // Filter items by search term
   const filteredItems = allLoadedItems.filter(item =>
@@ -220,87 +222,14 @@ export default function Gallery() {
               <div className="h-px bg-border flex-1" />
             </div>
 
-            {/* Desktop: horizontal layout */}
-            <div className="hidden lg:block">
-              <div className="flex gap-6 overflow-x-auto pb-4">
-                {items.map((item: any) => (
-                  <Card key={item.id} className="flex-shrink-0 overflow-hidden group transition-all">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <div className={`relative cursor-pointer ${
-                          imageSize === 'small' 
-                            ? 'w-64 h-64' 
-                            : imageSize === 'medium'
-                            ? 'w-80 h-80'
-                            : 'w-96 h-96'
-                        } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
-                          <AuthenticatedImage
-                            src={item.thumbnailUrl || item.imageUrl} 
-                            alt={item.title || 'Diseño'}
-                            className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
-                          />
-                        </div>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-fit p-0 bg-zinc-900 border-zinc-800 overflow-hidden">
-                        <DialogTitle className="sr-only">Vista de Imagen</DialogTitle>
-                        <DialogDescription className="sr-only">
-                          Vista ampliada de tu {item.type === 'stencil' ? 'stencil' : 'diseño'}
-                        </DialogDescription>
-                        
-                        <div className="flex flex-col">
-                          <div className={`relative ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} flex items-center justify-center p-3`}>
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title || 'Diseño'}
-                              className="max-w-[400px] max-h-[55vh] w-auto h-auto object-contain"
-                            />
-                          </div>
-                          
-                          <div className="bg-zinc-900 p-3 border-t border-zinc-800">
-                            <div className="flex items-center justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                {item.type !== 'stencil' && (
-                                  <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
-                                )}
-                                {item.style && item.type !== 'stencil' && (
-                                  <p className="text-xs text-zinc-400">Estilo: {item.style}</p>
-                                )}
-                              </div>
-                              <div className="flex gap-1">
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  className="h-8 w-8"
-                                  onClick={() => favoriteMutation.mutate(item.id)}
-                                >
-                                  <Heart className={`w-3 h-3 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
-                                </Button>
-                                <Button
-                                  onClick={() => handleDownload(item.imageUrl, item.title)}
-                                  className="bg-white text-black hover:bg-zinc-200 h-8 px-3 text-sm"
-                                >
-                                  <Download className="mr-1 h-3 w-3" />
-                                  Descargar
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Mobile/tablet: grid layout */}
-            <div className="lg:hidden">
+            {/* Unified grid layout for all screen sizes */}
+            <div>
               <div className={`grid gap-3 sm:gap-4 ${
                 imageSize === 'small' 
-                  ? 'grid-cols-2 sm:grid-cols-4 md:grid-cols-6' 
+                  ? 'grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8' 
                   : imageSize === 'medium'
-                  ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
-                  : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3'
+                  ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6'
+                  : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
               }`}>
                 {items.map((item: any) => (
                   <Card key={item.id} className="overflow-hidden group transition-all">
@@ -374,20 +303,33 @@ export default function Gallery() {
           </div>
         ))}
         
-        {/* Loading indicator */}
+        {/* Load More Button */}
         <div ref={loadMoreRef} className="flex justify-center mt-8 mb-4">
-          {isFetching && hasMore && (
-            <>
+          {hasMore && !isFetching && filteredItems.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className="px-8 py-2"
+              data-testid="button-load-more"
+            >
+              Cargar más imágenes
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          )}
+          
+          {isFetching && (
+            <div className="flex items-center">
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Cargando...
-            </>
+              Cargando más imágenes...
+            </div>
           )}
         </div>
         
         {/* End message */}
-        {!hasMore && allLoadedItems.length > 0 && (
+        {!hasMore && filteredItems.length > 0 && !isFetching && (
           <div className="text-center text-muted-foreground py-4">
-            No hay más elementos para mostrar
+            <p>Ya has visto todas las imágenes disponibles</p>
+            <p className="text-sm">Total: {filteredItems.length} imágenes</p>
           </div>
         )}
       </div>
