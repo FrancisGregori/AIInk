@@ -45,11 +45,12 @@ export default function Gallery() {
   const [currentPage, setCurrentPage] = useState(1);
   const [allLoadedItems, setAllLoadedItems] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
-  const itemsPerPage = 50; // Increased from 15 to show more items
+  const itemsPerPage = 20; // Reduce page size for smoother loading
+  const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
 
   // Fetch gallery items con paginación
   const { data, error, isError, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['/api/gallery', currentPage, selectedType],
+    queryKey: ['/api/gallery', currentPage, selectedType, itemsPerPage],
     queryFn: async () => {
       const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
       const response = await apiRequest('GET', `/api/gallery?limit=${itemsPerPage}&page=${currentPage}${typeParam}`);
@@ -111,6 +112,19 @@ export default function Gallery() {
     setAllLoadedItems([]);
     setHasMore(true);
   }, [selectedType]);
+
+  // Infinite scroll observer
+  React.useEffect(() => {
+    if (!loadMoreRef.current) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && hasMore && !isFetching) {
+        setCurrentPage(prev => prev + 1);
+      }
+    });
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, isFetching]);
 
   const allGalleryItems = allLoadedItems;
 
@@ -639,30 +653,15 @@ export default function Gallery() {
           </div>
         ))}
         
-        {/* Botón Cargar Más */}
-        {hasMore && !isLoading && allLoadedItems.length > 0 && (
-          <div className="flex justify-center mt-8 mb-4">
-            <Button
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={isFetching}
-              size="lg"
-              variant="outline"
-              className="min-w-[200px]"
-            >
-              {isFetching ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Cargando...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Cargar más
-                </>
-              )}
-            </Button>
-          </div>
-        )}
+        {/* Infinite scroll sentinel */}
+        <div ref={loadMoreRef} className="flex justify-center mt-8 mb-4">
+          {isFetching && hasMore && (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Cargando...
+            </>
+          )}
+        </div>
         
         {/* Mensaje cuando no hay más elementos */}
         {!hasMore && allLoadedItems.length > 0 && (

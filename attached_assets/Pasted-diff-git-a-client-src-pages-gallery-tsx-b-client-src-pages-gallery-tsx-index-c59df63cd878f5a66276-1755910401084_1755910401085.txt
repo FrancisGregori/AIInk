@@ -1,0 +1,206 @@
+diff --git a/client/src/pages/gallery.tsx b/client/src/pages/gallery.tsx
+index c59df63cd878f5a662769484633cc48010b405b1..b7964d2fd35b3cf2c5e958262e34651c45b915f2 100644
+--- a/client/src/pages/gallery.tsx
++++ b/client/src/pages/gallery.tsx
+@@ -22,55 +22,56 @@ import {
+   X,
+   RefreshCw
+ } from 'lucide-react';
+ import {
+   Dialog,
+   DialogContent,
+   DialogTrigger,
+   DialogTitle,
+   DialogDescription,
+ } from "@/components/ui/dialog";
+ import { apiRequest } from '@/lib/queryClient';
+ import { isUnauthorizedError } from '@/lib/authUtils';
+ import { Link, useLocation } from 'wouter';
+ 
+ export default function Gallery() {
+   const { toast } = useToast();
+   const [, setLocation] = useLocation();
+   const [searchTerm, setSearchTerm] = useState('');
+   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+   const [imageSize, setImageSize] = useState<'small' | 'medium' | 'large'>('small'); // Por defecto pequeño
+   const [selectedType, setSelectedType] = useState<'all' | 'stencil' | 'design'>('all');
+   const [selectedImage, setSelectedImage] = useState<any>(null);
+   const [currentPage, setCurrentPage] = useState(1);
+   const [allLoadedItems, setAllLoadedItems] = useState<any[]>([]);
+   const [hasMore, setHasMore] = useState(true);
+-  const itemsPerPage = 50; // Increased from 15 to show more items
++  const itemsPerPage = 20; // Reduce page size for smoother loading
++  const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
+ 
+   // Fetch gallery items con paginación
+   const { data, error, isError, isLoading, refetch, isFetching } = useQuery({
+-    queryKey: ['/api/gallery', currentPage, selectedType],
++    queryKey: ['/api/gallery', currentPage, selectedType, itemsPerPage],
+     queryFn: async () => {
+       const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
+       const response = await apiRequest('GET', `/api/gallery?limit=${itemsPerPage}&page=${currentPage}${typeParam}`);
+       const totalCount = response.headers.get('X-Total-Count');
+       const totalPages = response.headers.get('X-Total-Pages');
+       const items = await response.json();
+       
+       // Actualizar estado de paginación
+       if (totalPages && currentPage >= parseInt(totalPages)) {
+         setHasMore(false);
+       }
+       
+       return items;
+     },
+     placeholderData: keepPreviousData,
+     // MÁXIMA OPTIMIZACIÓN DE CACHE
+     refetchOnMount: 'always', // Siempre refrescar para datos actualizados
+     refetchOnWindowFocus: false, // NO refrescar al cambiar de ventana
+     staleTime: 60000, // Datos frescos por 1 minuto
+     gcTime: 10 * 60 * 1000, // Mantener en cache por 10 minutos
+     refetchInterval: false, // NO actualizar automáticamente
+     enabled: true // Siempre habilitado
+   });
+ 
+   // Actualizar items cuando cambia la data
+diff --git a/client/src/pages/gallery.tsx b/client/src/pages/gallery.tsx
+index c59df63cd878f5a662769484633cc48010b405b1..b7964d2fd35b3cf2c5e958262e34651c45b915f2 100644
+--- a/client/src/pages/gallery.tsx
++++ b/client/src/pages/gallery.tsx
+@@ -89,50 +90,63 @@ export default function Gallery() {
+       }
+     }
+   }, [data, currentPage, isError]);
+ 
+   React.useEffect(() => {
+     if (isError) {
+       if (error instanceof Error && isUnauthorizedError(error)) {
+         setLocation('/login');
+       } else {
+         toast({
+           title: 'Error',
+           description: 'No se pudo cargar la galería',
+           variant: 'destructive',
+         });
+       }
+     }
+   }, [isError, error, setLocation, toast]);
+ 
+   // Resetear paginación cuando cambia el tipo
+   React.useEffect(() => {
+     setCurrentPage(1);
+     setAllLoadedItems([]);
+     setHasMore(true);
+   }, [selectedType]);
+ 
++  // Infinite scroll observer
++  React.useEffect(() => {
++    if (!loadMoreRef.current) return;
++    const observer = new IntersectionObserver((entries) => {
++      const entry = entries[0];
++      if (entry.isIntersecting && hasMore && !isFetching) {
++        setCurrentPage(prev => prev + 1);
++      }
++    });
++    observer.observe(loadMoreRef.current);
++    return () => observer.disconnect();
++  }, [hasMore, isFetching]);
++
+   const allGalleryItems = allLoadedItems;
+ 
+   // Items already filtered by server, no need to filter again
+   const galleryItems = allGalleryItems;
+ 
+   // Delete mutation
+   const deleteMutation = useMutation({
+     mutationFn: async (id: string) => {
+       return apiRequest('DELETE', `/api/gallery/${id}`);
+     },
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+       toast({
+         title: "Eliminado",
+         description: "El diseño ha sido eliminado de tu galería",
+       });
+     },
+     onError: () => {
+       toast({
+         title: "Error",
+         description: "No se pudo eliminar el diseño",
+         variant: "destructive",
+       });
+     }
+   });
+diff --git a/client/src/pages/gallery.tsx b/client/src/pages/gallery.tsx
+index c59df63cd878f5a662769484633cc48010b405b1..b7964d2fd35b3cf2c5e958262e34651c45b915f2 100644
+--- a/client/src/pages/gallery.tsx
++++ b/client/src/pages/gallery.tsx
+@@ -617,60 +631,45 @@ export default function Gallery() {
+                               variant="ghost"
+                               className="h-8 w-8"
+                               onClick={() => handleDownload(item.imageUrl, item.title)}
+                             >
+                               <Download className="w-4 h-4" />
+                             </Button>
+                             <Button
+                               size="icon"
+                               variant="ghost"
+                               className="h-8 w-8"
+                               onClick={() => deleteMutation.mutate(item.id)}
+                             >
+                               <Trash2 className="w-4 h-4" />
+                             </Button>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   </Card>
+                 ))}
+               </div>
+             )}
+           </div>
+         ))}
+         
+-        {/* Botón Cargar Más */}
+-        {hasMore && !isLoading && allLoadedItems.length > 0 && (
+-          <div className="flex justify-center mt-8 mb-4">
+-            <Button
+-              onClick={() => setCurrentPage(prev => prev + 1)}
+-              disabled={isFetching}
+-              size="lg"
+-              variant="outline"
+-              className="min-w-[200px]"
+-            >
+-              {isFetching ? (
+-                <>
+-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+-                  Cargando...
+-                </>
+-              ) : (
+-                <>
+-                  <RefreshCw className="mr-2 h-4 w-4" />
+-                  Cargar más
+-                </>
+-              )}
+-            </Button>
+-          </div>
+-        )}
+-        
++        {/* Infinite scroll sentinel */}
++        <div ref={loadMoreRef} className="flex justify-center mt-8 mb-4">
++          {isFetching && hasMore && (
++            <>
++              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
++              Cargando...
++            </>
++          )}
++        </div>
++
+         {/* Mensaje cuando no hay más elementos */}
+         {!hasMore && allLoadedItems.length > 0 && (
+           <div className="text-center text-muted-foreground py-4">
+             No hay más elementos para mostrar
+           </div>
+         )}
+       </div>
+     </div>
+   );
+ }
