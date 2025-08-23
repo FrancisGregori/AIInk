@@ -544,20 +544,6 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                               alt={`Stencil ${job.style}`}
                               className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                             />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Eye className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 lg:p-3">
-                              <p className="text-xs lg:text-sm font-semibold capitalize">{job.style}</p>
-                              <p className="text-xs text-zinc-400">
-                                {new Date(job.createdAt || "").toLocaleString('es-ES', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                            </div>
                           </div>
                         </div>
                         );
