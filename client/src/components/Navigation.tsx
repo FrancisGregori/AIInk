@@ -132,11 +132,9 @@ export default function Navigation() {
                       {user.subscriptionTier && (
                         <p className="text-xs text-primary mt-1">{user.subscriptionTier} Plan</p>
                       )}
-                      {user.creditsUsed !== null && user.monthlyCredits !== null && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Credits: {(user.monthlyCredits || 0) - (user.creditsUsed || 0)}/{user.monthlyCredits || 0}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Credits: {user.credits || 0} available
+                      </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
