@@ -1158,16 +1158,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint para servir imágenes privadas (verificación en la propia URL)
-  app.get('/api/images/:filename(*)', async (req: any, res) => {
+  // Endpoint seguro para servir imágenes privadas con autenticación
+  app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
     try {
       const filename = decodeURIComponent(req.params.filename);
       console.log('Sirviendo imagen privada:', filename);
       
-      // Las imágenes privadas contienen el userId en la ruta (.private/designs/userId/...)
-      // Solo verificamos que esté en el formato correcto
+      // SEGURIDAD: Verificar que el usuario está autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      
+      // SEGURIDAD: Solo servir imágenes del directorio privado
       if (!filename.startsWith('.private/')) {
         return res.status(404).json({ message: "Imagen no encontrada" });
+      }
+      
+      // SEGURIDAD: Verificar que la imagen pertenece al usuario autenticado
+      // Las rutas son: .private/designs/{userId}/... o .private/uploads/{userId}/...
+      const userPattern = new RegExp(`\\.private/(designs|uploads)/${userId}/`);
+      if (!userPattern.test(filename)) {
+        console.warn(`Usuario ${userId} intentó acceder a imagen no autorizada: ${filename}`);
+        return res.status(403).json({ message: "No autorizado para ver esta imagen" });
       }
       
       const objectStorage = new ObjectStorageService();
