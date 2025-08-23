@@ -397,6 +397,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const endTime = Date.now();
       console.log(`Flux projects query took ${endTime - startTime}ms for ${projects.length} items`);
       
+      if (endTime - startTime > 5000) {
+        console.warn(`🐌 SLOW QUERY DETECTED: flux projects took ${endTime - startTime}ms - investigating...`);
+      }
+      
       res.json(projects);
     } catch (error) {
       console.error("Error fetching flux projects:", error);

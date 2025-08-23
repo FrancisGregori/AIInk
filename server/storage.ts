@@ -237,15 +237,24 @@ export class DatabaseStorage implements IStorage {
 
   // Flux Kontext methods
   async getFluxProjects(userId?: string): Promise<FluxProject[]> {
+    console.log(`[STORAGE] getFluxProjects called for userId: ${userId}`);
+    const startTime = Date.now();
+    
+    let result;
     if (userId) {
-      return db.select().from(fluxProjects)
+      result = await db.select().from(fluxProjects)
         .where(eq(fluxProjects.userId, userId))
         .orderBy(desc(fluxProjects.createdAt))
         .limit(50); // Limitar para evitar lentitud
+    } else {
+      result = await db.select().from(fluxProjects)
+        .orderBy(desc(fluxProjects.createdAt))
+        .limit(50);
     }
-    return db.select().from(fluxProjects)
-      .orderBy(desc(fluxProjects.createdAt))
-      .limit(50);
+    
+    const endTime = Date.now();
+    console.log(`[STORAGE] DB query completed in ${endTime - startTime}ms, returning ${result.length} items`);
+    return result;
   }
 
   async createFluxProject(project: InsertFluxProject): Promise<FluxProject> {
