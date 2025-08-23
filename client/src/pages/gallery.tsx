@@ -224,7 +224,7 @@ export default function Gallery() {
             <div className="hidden lg:block">
               <div className="flex gap-6 overflow-x-auto pb-4">
                 {items.map((item: any) => (
-                  <Card key={item.id} className="flex-shrink-0 overflow-hidden group hover:shadow-xl transition-all">
+                  <Card key={item.id} className="flex-shrink-0 overflow-hidden group transition-all">
                     <Dialog>
                       <DialogTrigger asChild>
                         <div className={`relative cursor-pointer ${
@@ -259,8 +259,10 @@ export default function Gallery() {
                           <div className="bg-zinc-900 p-3 border-t border-zinc-800">
                             <div className="flex items-center justify-between gap-4">
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
-                                {item.style && (
+                                {item.type !== 'stencil' && (
+                                  <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
+                                )}
+                                {item.style && item.type !== 'stencil' && (
                                   <p className="text-xs text-zinc-400">Estilo: {item.style}</p>
                                 )}
                               </div>
@@ -301,7 +303,7 @@ export default function Gallery() {
                   : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3'
               }`}>
                 {items.map((item: any) => (
-                  <Card key={item.id} className="overflow-hidden group hover:shadow-xl transition-all">
+                  <Card key={item.id} className="overflow-hidden group transition-all">
                     <Dialog>
                       <DialogTrigger asChild>
                         <div className={`relative cursor-pointer ${
@@ -336,8 +338,10 @@ export default function Gallery() {
                           <div className="bg-zinc-900 p-3 border-t border-zinc-800">
                             <div className="flex items-center justify-between gap-4">
                               <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
-                                {item.style && (
+                                {item.type !== 'stencil' && (
+                                  <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
+                                )}
+                                {item.style && item.type !== 'stencil' && (
                                   <p className="text-xs text-zinc-400">Estilo: {item.style}</p>
                                 )}
                               </div>
