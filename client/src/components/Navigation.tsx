@@ -196,8 +196,8 @@ export default function Navigation() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-black border-t border-gray-800">
               <Link href="/" onClick={() => setIsOpen(false)}>
-                <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-home" title="Home">
-                  <Home className="h-5 w-5" />
+                <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-home">
+                  Home
                 </span>
               </Link>
               <Link href="/stencil-tool" onClick={() => setIsOpen(false)}>
@@ -212,8 +212,8 @@ export default function Navigation() {
               </Link>
               {isAuthenticated && (
                 <Link href="/gallery" onClick={() => setIsOpen(false)}>
-                  <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-gallery" title="Mi Galería">
-                    <Images className="h-5 w-5" />
+                  <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-gallery">
+                    Mi Galería
                   </span>
                 </Link>
               )}
