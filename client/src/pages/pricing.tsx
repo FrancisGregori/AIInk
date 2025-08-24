@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useLocation } from "wouter";
 import Navigation from "@/components/Navigation";
+import { CREDIT_PACKS, SUBSCRIPTION_PLANS } from "@shared/stripe-config";
 
 export default function Pricing() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
@@ -91,12 +92,8 @@ export default function Pricing() {
     }
   ];
 
-  const creditPacks = [
-    { credits: 100, price: 4.99, perCredit: 0.0499 },
-    { credits: 250, price: 9.99, perCredit: 0.0400, popular: true },
-    { credits: 500, price: 18.99, perCredit: 0.0380 },
-    { credits: 1000, price: 36.99, perCredit: 0.0370 }
-  ];
+  // Get credit packs from centralized configuration
+  const creditPacks = Object.values(CREDIT_PACKS);
 
   return (
     <>
@@ -219,7 +216,7 @@ export default function Pricing() {
                 </CardDescription>
               </CardHeader>
               <CardFooter className="pt-0">
-                <Link to={`/checkout?amount=${pack.price}&credits=${pack.credits}`}>
+                <Link to={`/checkout?credits=${pack.credits}`}>
                   <Button 
                     variant="outline" 
                     className="w-full" 

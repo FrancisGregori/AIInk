@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, CreditCard } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import Navigation from "@/components/Navigation";
+import { CREDIT_PACKS } from "@shared/stripe-config";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
@@ -17,7 +18,10 @@ if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 
-const CheckoutForm = ({ amount, credits }: { amount: number; credits: number }) => {
+const CheckoutForm = ({ credits }: { credits: number }) => {
+  // Get display price from centralized configuration
+  const pack = CREDIT_PACKS[credits];
+  const amount = pack?.price || 0;
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -98,21 +102,23 @@ export default function Checkout() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
-  // Get amount and credits from URL parameters
+  // Get credits from URL parameters (amount is validated server-side)
   const urlParams = new URLSearchParams(window.location.search);
-  const amount = parseFloat(urlParams.get('amount') || '0');
   const credits = parseInt(urlParams.get('credits') || '0');
+  
+  // Get price from centralized configuration
+  const pack = CREDIT_PACKS[credits];
+  const amount = pack?.price || 0;
 
   useEffect(() => {
-    if (!amount || !credits) {
-      setError("Parámetros de pago inválidos");
+    if (!credits || !pack) {
+      setError("Paquete de créditos inválido");
       setLoading(false);
       return;
     }
 
-    // Create PaymentIntent as soon as the page loads
+    // Create PaymentIntent with server-validated price
     apiRequest("POST", "/api/create-payment-intent", { 
-      amount, 
       credits,
       type: "credit_pack" 
     })
@@ -204,7 +210,7 @@ export default function Checkout() {
 
           {/* Checkout Form */}
           <Elements stripe={stripePromise} options={{ clientSecret }}>
-            <CheckoutForm amount={amount} credits={credits} />
+            <CheckoutForm credits={credits} />
           </Elements>
           
           {/* Security Notice */}

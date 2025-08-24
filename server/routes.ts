@@ -10,6 +10,7 @@ import Replicate from "replicate";
 import { z } from "zod";
 import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
 import Stripe from "stripe";
+import { CREDIT_PACKS, STRIPE_PRICE_IDS, getCreditPackByCredits, getPriceId } from "../shared/stripe-config";
 
 // Configure multer for file uploads - SECURE DISK STORAGE
 import fs from 'fs';
@@ -49,7 +50,7 @@ let stripe: Stripe | null = null;
 try {
   if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2025-07-30.basil",
+      apiVersion: "2024-11-20.acacia", // Using stable API version
     });
     console.log("✅ Stripe initialized successfully");
   } else {
@@ -1301,16 +1302,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return true;
   };
 
+  // STRIPE WEBHOOK - Procesa eventos de pagos completados
+  app.post('/api/stripe/webhook', async (req, res) => {
+    if (!stripe) {
+      return res.status(503).json({ error: "Stripe not configured" });
+    }
+
+    const sig = req.headers['stripe-signature'] as string;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('⚠️ STRIPE_WEBHOOK_SECRET not configured');
+      // In development, process the webhook without signature verification
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Processing webhook in development mode (no signature verification)');
+        try {
+          const event = JSON.parse(req.body.toString());
+          await handleStripeWebhook(event);
+          return res.json({ received: true });
+        } catch (error) {
+          console.error('Error processing webhook:', error);
+          return res.status(400).json({ error: 'Webhook processing failed' });
+        }
+      }
+      return res.status(400).json({ error: 'Webhook secret not configured' });
+    }
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err: any) {
+      console.error(`⚠️ Webhook signature verification failed:`, err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Process the webhook event
+    await handleStripeWebhook(event);
+    res.json({ received: true });
+  });
+
+  // Helper function to handle different webhook events
+  async function handleStripeWebhook(event: any) {
+    console.log(`Processing webhook event: ${event.type}`);
+
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        const paymentIntent = event.data.object;
+        console.log('💰 Payment succeeded:', {
+          id: paymentIntent.id,
+          amount: paymentIntent.amount / 100,
+          metadata: paymentIntent.metadata
+        });
+
+        // Update user credits if this is a credit pack purchase
+        if (paymentIntent.metadata?.type === 'credit_pack' && paymentIntent.metadata?.credits) {
+          const userId = paymentIntent.metadata.userId;
+          const credits = parseInt(paymentIntent.metadata.credits);
+          
+          try {
+            const user = await storage.getUser(userId);
+            if (user) {
+              const newCredits = (user.credits || 0) + credits;
+              await storage.upsertUser({
+                ...user,
+                credits: newCredits
+              });
+              console.log(`✅ Added ${credits} credits to user ${userId}. New balance: ${newCredits}`);
+            }
+          } catch (error) {
+            console.error('Error updating user credits:', error);
+          }
+        }
+        break;
+
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+        const subscription = event.data.object;
+        console.log('📅 Subscription event:', {
+          type: event.type,
+          id: subscription.id,
+          status: subscription.status,
+          customer: subscription.customer
+        });
+
+        // Update user subscription status
+        try {
+          const users = await storage.getAllUsers();
+          const user = users.find(u => u.stripeCustomerId === subscription.customer);
+          
+          if (user) {
+            // Determine tier from subscription items
+            let tier = 'basic';
+            if (subscription.items?.data?.[0]?.price?.id) {
+              const priceId = subscription.items.data[0].price.id;
+              // Map price IDs to tiers
+              if (priceId.includes('pro') || subscription.items.data[0].price.unit_amount > 2000) {
+                tier = 'pro';
+              } else if (priceId.includes('premium') || subscription.items.data[0].price.unit_amount > 3500) {
+                tier = 'premium';
+              }
+            }
+
+            await storage.upsertUser({
+              ...user,
+              stripeSubscriptionId: subscription.id,
+              subscriptionTier: tier,
+              subscriptionStatus: subscription.status
+            });
+            console.log(`✅ Updated subscription for user ${user.id}: ${tier} (${subscription.status})`);
+          }
+        } catch (error) {
+          console.error('Error updating subscription:', error);
+        }
+        break;
+
+      case 'customer.subscription.deleted':
+        const deletedSub = event.data.object;
+        console.log('❌ Subscription cancelled:', deletedSub.id);
+
+        // Remove subscription from user
+        try {
+          const users = await storage.getAllUsers();
+          const user = users.find(u => u.stripeSubscriptionId === deletedSub.id);
+          
+          if (user) {
+            await storage.upsertUser({
+              ...user,
+              stripeSubscriptionId: null,
+              subscriptionTier: 'free',
+              subscriptionStatus: null
+            });
+            console.log(`✅ Removed subscription for user ${user.id}`);
+          }
+        } catch (error) {
+          console.error('Error removing subscription:', error);
+        }
+        break;
+
+      case 'invoice.payment_succeeded':
+        const invoice = event.data.object;
+        console.log('📧 Invoice paid:', {
+          id: invoice.id,
+          subscription: invoice.subscription,
+          amount: invoice.amount_paid / 100
+        });
+        // Could send receipt email here
+        break;
+
+      case 'invoice.payment_failed':
+        const failedInvoice = event.data.object;
+        console.log('⚠️ Invoice payment failed:', {
+          id: failedInvoice.id,
+          subscription: failedInvoice.subscription
+        });
+        // Could send payment failure notification here
+        break;
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+  }
+
+  // Credit pack prices are now imported from shared configuration
+
   // Create payment intent for one-time payments (credit packs)
   app.post("/api/create-payment-intent", isAuthenticated, async (req: any, res) => {
     try {
       if (!checkStripe(res)) return;
 
-      const { amount, credits, type = "credit_pack" } = req.body;
+      const { credits, type = "credit_pack" } = req.body;
       
-      if (!amount || amount <= 0) {
-        return res.status(400).json({ error: "Invalid amount" });
+      // SECURITY: Validate credit package exists using centralized config
+      const pack = getCreditPackByCredits(credits);
+      if (!pack) {
+        console.error(`Invalid credit package requested: ${credits}`);
+        return res.status(400).json({ 
+          error: "Invalid credit package",
+          message: "El paquete de créditos seleccionado no es válido" 
+        });
       }
+      
+      // SECURITY: Always use server-side validated price
+      const amount = pack.price;
+      
+      console.log('Creating payment intent:', {
+        credits: pack.credits,
+        amount: amount,
+        userId: req.user.claims.sub
+      });
 
       const paymentIntent = await stripe!.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
@@ -1318,7 +1497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           userId: req.user.claims.sub,
           type,
-          credits: credits?.toString() || "0"
+          credits: pack.credits.toString()
         }
       });
       

@@ -3,6 +3,15 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// IMPORTANT: Stripe webhook must be registered BEFORE body parsers
+// to access raw body for signature verification
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req, res, next) => {
+  // This will be handled by the webhook handler in routes.ts
+  // We just need to ensure raw body is available
+  next();
+});
+
 // Increase body size limit to 50MB for image uploads
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
