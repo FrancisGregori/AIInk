@@ -10,7 +10,7 @@ import Replicate from "replicate";
 import { z } from "zod";
 import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
 import Stripe from "stripe";
-import { CREDIT_PACKS, STRIPE_PRICE_IDS, getCreditPackByCredits, getPriceId } from "../shared/stripe-config";
+import { CREDIT_PACKS, getCreditPackByCredits, getPriceId } from "../shared/stripe-config";
 
 // Configure multer for file uploads - SECURE DISK STORAGE
 import fs from 'fs';
@@ -1568,23 +1568,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { plan = "basic", billingPeriod = "monthly" } = req.body;
       
-      // Price mapping for different plans and periods - UPDATED WITH REAL STRIPE PRICE IDs
-      const priceMap: Record<string, Record<string, string>> = {
-        basic: {
-          monthly: "price_1RzfEMIDfLh5OgxC5n6nNv7J", // Basic $11.99/mes
-          annual: "price_1RzfH1IDfLh5OgxCya1cNQCF"   // Basic $119/año
-        },
-        pro: {
-          monthly: "price_1Rzk6zIDfLh5OgxCUA69kNnZ", // Pro $19.99/mes
-          annual: "price_1Rzk7eIDfLh5OgxCYoI0R3ku"   // Pro $199/año
-        },
-        premium: {
-          monthly: "price_1Rzk8PIDfLh5OgxCTSs1FJvt", // Premium $39.99/mes
-          annual: "price_1Rzk8nIDfLh5OgxCZ6YzOkA1"   // Premium $399/año
-        }
-      };
-
-      const priceId = priceMap[plan]?.[billingPeriod];
+      // Use centralized getPriceId function to get the Stripe price ID
+      const priceId = getPriceId(plan, billingPeriod as 'monthly' | 'annual');
       if (!priceId) {
         return res.status(400).json({ error: "Invalid plan or billing period" });
       }
