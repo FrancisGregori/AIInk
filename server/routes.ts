@@ -1356,7 +1356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.json({
               subscriptionId: subscription.id,
               status: subscription.status,
-              clientSecret: latestInvoice.payment_intent && typeof latestInvoice.payment_intent === 'object' ? (latestInvoice.payment_intent as any).client_secret : null,
+              clientSecret: (latestInvoice as any).payment_intent?.client_secret || null,
             });
           }
         } catch (error) {
