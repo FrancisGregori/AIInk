@@ -225,7 +225,7 @@ export default function Home() {
               <ToolCard
                 title="AI Image Editor"
                 description="Advanced AI-powered tattoo generator and image editor"
-                icon={Bot}
+                icon={Sparkles}
                 imageUrl={aiEditorImage}
                 href="/design-editor"
                 isActive={true}
