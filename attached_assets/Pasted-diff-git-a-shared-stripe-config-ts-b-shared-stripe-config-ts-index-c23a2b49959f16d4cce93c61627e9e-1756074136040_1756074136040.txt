@@ -1,0 +1,70 @@
+diff --git a/shared/stripe-config.ts b/shared/stripe-config.ts
+index c23a2b49959f16d4cce93c61627e9e207815c580..a2d46fe1f5796d25fe87c3ca9b2bd0bcc01aa695 100644
+--- a/shared/stripe-config.ts
++++ b/shared/stripe-config.ts
+@@ -90,60 +90,60 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
+       "1,000 créditos mensuales",
+       "200 stencils profesionales",
+       "333 diseños editados",
+       "Asistente AI ilimitado",
+       "Soporte prioritario (4h)",
+       "Modelo personalizado disponible",
+       "API access",
+       "Auto Top-Up disponible",
+       "Rollover 50% créditos"
+     ]
+   }
+ };
+ 
+ // Stripe Price IDs mapping (from your live Stripe account)
+ export const STRIPE_PRICE_IDS = {
+   creditPacks: {
+     // These would be created in Stripe for one-time payments
+     // Currently handled dynamically by payment amount
+   },
+   subscriptions: {
+     basic: {
+       monthly: "price_1RzfEMIDfLh5OgxChHN9KcSH", // Basic $11.99/month
+       annual: "price_1RzfEuIDfLh5OgxC0RFsNlvX"   // Basic $119/year
+     },
+     pro: {
+-      monthly: "price_1Rzk7TIDfLh5OgxCABCUNxQ9", // Pro $24.99/month
+-      annual: "price_1Rzk7zIDfLh5OgxCn6vhQcpw"   // Pro $249/year
++      monthly: "price_1Rzk7TIDfLh5OgxCABCUNxQ9", // Pro $19.99/month
++      annual: "price_1Rzk7zIDfLh5OgxCn6vhQcpw"   // Pro $199/year
+     },
+     premium: {
+       monthly: "price_1Rzk8PIDfLh5OgxCTSs1FJvt", // Premium $39.99/month
+       annual: "price_1Rzk8nIDfLh5OgxCZ6YzOkA1"   // Premium $399/year
+     }
+   }
+ };
+ 
+ // Reverse mapping: Price ID to Tier (for webhook processing)
+ export const PRICE_ID_TO_TIER: Record<string, string> = {
+   // Basic tier
+   "price_1RzfEMIDfLh5OgxChHN9KcSH": "basic", // Basic $11.99/month
+   "price_1RzfEuIDfLh5OgxC0RFsNlvX": "basic", // Basic $119/year
+-  // Pro tier  
+-  "price_1Rzk7TIDfLh5OgxCABCUNxQ9": "pro",   // Pro $24.99/month
+-  "price_1Rzk7zIDfLh5OgxCn6vhQcpw": "pro",   // Pro $249/year
++  // Pro tier
++  "price_1Rzk7TIDfLh5OgxCABCUNxQ9": "pro",   // Pro $19.99/month
++  "price_1Rzk7zIDfLh5OgxCn6vhQcpw": "pro",   // Pro $199/year
+   // Premium tier
+   "price_1Rzk8PIDfLh5OgxCTSs1FJvt": "premium", // Premium $39.99/month
+   "price_1Rzk8nIDfLh5OgxCZ6YzOkA1": "premium"  // Premium $399/year
+ };
+ 
+ // Helper functions
+ export function getCreditPackByCredits(credits: number): CreditPack | undefined {
+   return CREDIT_PACKS[credits];
+ }
+ 
+ export function getSubscriptionPlan(tier: string): SubscriptionPlan | undefined {
+   return SUBSCRIPTION_PLANS[tier];
+ }
+ 
+ export function getPriceId(plan: string, billingPeriod: 'monthly' | 'annual'): string | undefined {
+   return STRIPE_PRICE_IDS.subscriptions[plan as keyof typeof STRIPE_PRICE_IDS.subscriptions]?.[billingPeriod];
+ }

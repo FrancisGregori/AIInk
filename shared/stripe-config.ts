@@ -108,12 +108,12 @@ export const STRIPE_PRICE_IDS = {
   },
   subscriptions: {
     basic: {
-      monthly: "price_1RzfEMIDfLh5OgxChHN9KcSH", // Basic $11.99/month
-      annual: "price_1RzfEuIDfLh5OgxC0RFsNlvX"   // Basic $119/year
+      monthly: "price_1RzfEMIDfLh5OgxC5n6nNv7J", // Basic $11.99/month
+      annual: "price_1RzfH1IDfLh5OgxCya1cNQCF"   // Basic $119/year
     },
     pro: {
-      monthly: "price_1Rzk7TIDfLh5OgxCABCUNxQ9", // Pro $24.99/month
-      annual: "price_1Rzk7zIDfLh5OgxCn6vhQcpw"   // Pro $249/year
+      monthly: "price_1Rzk6zIDfLh5OgxCUA69kNnZ", // Pro $19.99/month
+      annual: "price_1Rzk7eIDfLh5OgxCYoI0R3ku"   // Pro $199/year
     },
     premium: {
       monthly: "price_1Rzk8PIDfLh5OgxCTSs1FJvt", // Premium $39.99/month
@@ -125,11 +125,11 @@ export const STRIPE_PRICE_IDS = {
 // Reverse mapping: Price ID to Tier (for webhook processing)
 export const PRICE_ID_TO_TIER: Record<string, string> = {
   // Basic tier
-  "price_1RzfEMIDfLh5OgxChHN9KcSH": "basic", // Basic $11.99/month
-  "price_1RzfEuIDfLh5OgxC0RFsNlvX": "basic", // Basic $119/year
+  "price_1RzfEMIDfLh5OgxC5n6nNv7J": "basic", // Basic $11.99/month
+  "price_1RzfH1IDfLh5OgxCya1cNQCF": "basic", // Basic $119/year
   // Pro tier  
-  "price_1Rzk7TIDfLh5OgxCABCUNxQ9": "pro",   // Pro $24.99/month
-  "price_1Rzk7zIDfLh5OgxCn6vhQcpw": "pro",   // Pro $249/year
+  "price_1Rzk6zIDfLh5OgxCUA69kNnZ": "pro",   // Pro $19.99/month
+  "price_1Rzk7eIDfLh5OgxCYoI0R3ku": "pro",   // Pro $199/year
   // Premium tier
   "price_1Rzk8PIDfLh5OgxCTSs1FJvt": "premium", // Premium $39.99/month
   "price_1Rzk8nIDfLh5OgxCZ6YzOkA1": "premium"  // Premium $399/year
