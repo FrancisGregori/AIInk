@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, Grid3X3, Pencil, Minus, ZoomIn, Info, X, BadgeCheck, Brush } from "lucide-react";
+import { Image, Grid3X3, Pencil, Minus, ZoomIn, Info, X, BadgeCheck, Brush, Plus, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -200,6 +200,37 @@ export default function StyleSelector({ selectedStyle, onStyleChange, onOpenHelp
               </div>
             );
           })}
+          
+          {/* Add Custom Style Promotional Card */}
+          <div className="relative">
+            <button
+              onClick={() => onOpenHelp?.("premium")}
+              className="block w-full p-2 bg-zinc-800/50 rounded-lg border-2 border-dashed border-zinc-600 hover:border-zinc-400 transition-all hover:bg-zinc-700/30 cursor-pointer group"
+              aria-label="Create your custom style"
+            >
+              <div className="flex items-center gap-3">
+                {/* Icon Container */}
+                <div className="relative w-12 h-12 bg-gradient-to-br from-zinc-700 to-zinc-800 rounded-lg flex-shrink-0 overflow-hidden group-hover:from-zinc-600 group-hover:to-zinc-700 transition-colors">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Plus className="h-6 w-6 text-zinc-400 group-hover:text-white transition-colors" />
+                  </div>
+                  <Sparkles className="absolute top-0.5 right-0.5 h-3 w-3 text-yellow-500 animate-pulse" />
+                </div>
+                
+                {/* Info */}
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-gray-400 group-hover:text-white transition-colors">
+                      Create Your Style
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors">
+                    Train AI with your art
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
