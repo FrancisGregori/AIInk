@@ -1389,19 +1389,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { plan = "basic", billingPeriod = "monthly" } = req.body;
       
-      // Price mapping for different plans and periods
+      // Price mapping for different plans and periods - UPDATED WITH REAL STRIPE PRICE IDs
       const priceMap: Record<string, Record<string, string>> = {
         basic: {
-          monthly: "price_basic_monthly", // Replace with actual Stripe price IDs
-          annual: "price_basic_annual"
+          monthly: "price_1RzfEMIDfLh5OgxC5n6nNv7J", // Basic $11.99/mes
+          annual: "price_1RzfH1IDfLh5OgxCya1cNQCF"   // Basic $119/año
         },
         pro: {
-          monthly: "price_pro_monthly",
-          annual: "price_pro_annual"
+          monthly: "price_1Rzk6zIDfLh5OgxCUA69kNnZ", // Pro $19.99/mes
+          annual: "price_1Rzk7eIDfLh5OgxCYoI0R3ku"   // Pro $199/año
         },
         premium: {
-          monthly: "price_premium_monthly",
-          annual: "price_premium_annual"
+          monthly: "price_1Rzk8PIDfLh5OgxCTSs1FJvt", // Premium $39.99/mes
+          annual: "price_1Rzk8nIDfLh5OgxCZ6YzOkA1"   // Premium $399/año
         }
       };
 
