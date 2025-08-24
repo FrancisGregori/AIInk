@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Palette, Sparkles, RotateCw, Wand2, ArrowRight, Pen, Edit3, Bot } from "lucide-react";
+import { Palette, Sparkles, RotateCw, Wand2, ArrowRight, Pen, Edit3, Bot, PenTool } from "lucide-react";
 import { motion } from "framer-motion";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
 import stencilExample1 from "@assets/hub_stencil1.png";
@@ -212,7 +212,7 @@ export default function Home() {
               <ToolCard
                 title="Stencil Generator"
                 description="Convert designs into hand-drawn style stencils"
-                icon={Pen}
+                icon={PenTool}
                 imageUrl="https://images.unsplash.com/photo-1611224923853-80b023f02d71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
                 videoUrl="https://inknationstudio.com/wp-content/uploads/2024/09/video021.mp4"
                 href="/stencil-tool"
