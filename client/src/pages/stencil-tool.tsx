@@ -405,6 +405,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               <StyleSelector
                 selectedStyle={selectedStyle}
                 onStyleChange={setSelectedStyle}
+                styles={styles}
               />
             </div>
 

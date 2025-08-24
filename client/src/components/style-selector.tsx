@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, Grid3X3, Pencil, Minus, ZoomIn, Info, X, BadgeCheck } from "lucide-react";
+import { Image, Grid3X3, Pencil, Minus, ZoomIn, Info, X, BadgeCheck, Brush } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,20 +12,33 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { StencilStyle } from "@shared/schema";
 
 interface StyleSelectorProps {
   selectedStyle: string;
   onStyleChange: (style: string) => void;
   onOpenHelp?: (tab: string) => void;
+  styles?: StencilStyle[];
 }
 
-const styles = [
+// Map style IDs to icons
+const styleIcons: Record<string, any> = {
+  steven: Image,
+  maki: Grid3X3,
+  makishi: Grid3X3,
+  darwin: Pencil,
+  adrian: Minus,
+  neutral: Brush, // Icon for Neutral style
+};
+
+// Default hardcoded styles (fallback if API doesn't return data)
+const defaultStyles = [
   {
     id: "steven",
     name: "Stiven Hernandez",
     description: "Clean, classic detail",
     icon: Image,
-    thumbnail: null, // Will add thumbnails later
+    thumbnail: null,
     verified: true,
   },
   {
@@ -54,8 +67,20 @@ const styles = [
   },
 ];
 
-export default function StyleSelector({ selectedStyle, onStyleChange, onOpenHelp }: StyleSelectorProps) {
+export default function StyleSelector({ selectedStyle, onStyleChange, onOpenHelp, styles: apiStyles }: StyleSelectorProps) {
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
+  
+  // Use API styles if available, otherwise use defaults
+  const styles = apiStyles && apiStyles.length > 0 
+    ? apiStyles.map(style => ({
+        id: style.id,
+        name: style.name,
+        description: style.description || "Professional tattoo stencil",
+        icon: styleIcons[style.id] || Brush,
+        thumbnail: style.previewImageUrl || null,
+        verified: style.isActive !== false,
+      }))
+    : defaultStyles;
 
   const handleThumbnailClick = (e: React.MouseEvent, src: string | null, name: string) => {
     e.stopPropagation();
