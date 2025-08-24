@@ -1387,8 +1387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Update user subscription status
         try {
-          const users = await storage.getAllUsers();
-          const user = users.find(u => u.stripeCustomerId === subscription.customer);
+          const user = await storage.getUserByStripeCustomerId(subscription.customer as string);
           
           if (user) {
             // Determine tier from subscription items using centralized mapping
@@ -1420,8 +1419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Remove subscription from user
         try {
-          const users = await storage.getAllUsers();
-          const user = users.find(u => u.stripeSubscriptionId === deletedSub.id);
+          const user = await storage.getUserByStripeSubscriptionId(deletedSub.id);
           
           if (user) {
             await storage.upsertUser({

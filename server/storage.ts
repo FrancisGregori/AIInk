@@ -39,6 +39,8 @@ export interface StencilProcessRequest {
 export interface IStorage {
   // User methods  
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined>;
+  getUserByStripeSubscriptionId(stripeSubscriptionId: string): Promise<User | undefined>;
   createUser(user: Partial<User>): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   
@@ -90,6 +92,16 @@ export class DatabaseStorage implements IStorage {
   // User methods
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, stripeCustomerId));
+    return user;
+  }
+
+  async getUserByStripeSubscriptionId(stripeSubscriptionId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.stripeSubscriptionId, stripeSubscriptionId));
     return user;
   }
 

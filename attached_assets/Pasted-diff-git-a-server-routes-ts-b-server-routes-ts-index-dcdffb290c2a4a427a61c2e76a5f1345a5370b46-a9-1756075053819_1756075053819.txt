@@ -1,0 +1,96 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index dcdffb290c2a4a427a61c2e76a5f1345a5370b46..a98ec89e419c9ec17f2f3957b12d761dcb7a44e9 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1365,86 +1365,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
+               const newCredits = (user.credits || 0) + credits;
+               await storage.upsertUser({
+                 ...user,
+                 credits: newCredits
+               });
+               console.log(`✅ Added ${credits} credits to user ${userId}. New balance: ${newCredits}`);
+             }
+           } catch (error) {
+             console.error('Error updating user credits:', error);
+           }
+         }
+         break;
+ 
+       case 'customer.subscription.created':
+       case 'customer.subscription.updated':
+         const subscription = event.data.object;
+         console.log('📅 Subscription event:', {
+           type: event.type,
+           id: subscription.id,
+           status: subscription.status,
+           customer: subscription.customer
+         });
+ 
+         // Update user subscription status
+         try {
+-          const users = await storage.getAllUsers();
+-          const user = users.find(u => u.stripeCustomerId === subscription.customer);
+-          
++          const user = await storage.getUserByStripeCustomerId(subscription.customer as string);
++
+           if (user) {
+             // Determine tier from subscription items using centralized mapping
+             const priceId = subscription.items?.data?.[0]?.price?.id;
+             const tier = priceId ? (PRICE_ID_TO_TIER[priceId] ?? 'basic') : 'basic';
+-            
++
+             console.log('✅ Mapped price ID to tier:', {
+               priceId,
+               tier,
+               found: priceId ? PRICE_ID_TO_TIER[priceId] !== undefined : false
+             });
+ 
+             await storage.upsertUser({
+               ...user,
+               stripeSubscriptionId: subscription.id,
+               subscriptionTier: tier,
+               subscriptionStatus: subscription.status
+             });
+             console.log(`✅ Updated subscription for user ${user.id}: ${tier} (${subscription.status})`);
+           }
+         } catch (error) {
+           console.error('Error updating subscription:', error);
+         }
+         break;
+ 
+       case 'customer.subscription.deleted':
+         const deletedSub = event.data.object;
+         console.log('❌ Subscription cancelled:', deletedSub.id);
+ 
+         // Remove subscription from user
+         try {
+-          const users = await storage.getAllUsers();
+-          const user = users.find(u => u.stripeSubscriptionId === deletedSub.id);
+-          
++          const user = await storage.getUserByStripeSubscriptionId(deletedSub.id);
++
+           if (user) {
+             await storage.upsertUser({
+               ...user,
+               stripeSubscriptionId: null,
+               subscriptionTier: 'free',
+               subscriptionStatus: null
+             });
+             console.log(`✅ Removed subscription for user ${user.id}`);
+           }
+         } catch (error) {
+           console.error('Error removing subscription:', error);
+         }
+         break;
+ 
+       case 'invoice.payment_succeeded':
+         const invoice = event.data.object;
+         console.log('📧 Invoice paid:', {
+           id: invoice.id,
+           subscription: invoice.subscription,
+           amount: invoice.amount_paid / 100
+         });
+         // Could send receipt email here
+         break;
+ 
+       case 'invoice.payment_failed':
