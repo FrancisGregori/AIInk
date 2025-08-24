@@ -55,7 +55,7 @@ function DesignEditor() {
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>("Match Input");
-  const [modelVariant, setModelVariant] = useState<string>("pro");
+  const [modelVariant, setModelVariant] = useState<string>("qwen");
   const [width, setWidth] = useState<number>(1024);
   const [height, setHeight] = useState<number>(1024);
   const [language, setLanguage] = useState<"es" | "en">("es");
