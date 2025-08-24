@@ -547,7 +547,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                 <div className="flex items-center justify-between mb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    Galería de Stencils
+                    Stencils
                   </CardTitle>
                   <Button
                     variant="ghost"
