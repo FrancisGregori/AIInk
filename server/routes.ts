@@ -404,11 +404,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       creditsDeducted = true;
 
+      // Get style configuration from database
+      const styleConfig = await storage.getStencilStyle(style);
+      
       // Start processing with ComfyDeploy
       try {
         const result = await comfyDeploy.processImage(
           publicImageUrl,
-          style as any,
+          styleConfig || style,  // Pass full config if available, otherwise just the name
           options,
           userId
         );

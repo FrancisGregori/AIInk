@@ -1,4 +1,4 @@
-import { StencilJob } from "@shared/schema";
+import { StencilJob, StencilStyle } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
 
 // Map style names to LoRA model files
@@ -59,7 +59,7 @@ export class ComfyDeployService {
 
   async processImage(
     imageUrl: string,
-    style: string,
+    style: string | StencilStyle,
     processingOptions?: any,
     userId?: string
   ): Promise<{ runId: string; status: string; outputUrl?: string }> {
@@ -72,20 +72,22 @@ export class ComfyDeployService {
       
       // If userId provided, save to protected storage
       if (userId) {
+        const styleName = typeof style === 'string' ? style : style.id;
         try {
-          mockOutputUrl = await this.saveStencilToStorage(imageUrl, userId, style);
+          mockOutputUrl = await this.saveStencilToStorage(imageUrl, userId, styleName);
         } catch (error) {
           console.error('Failed to save mock stencil to storage:', error);
           // Fallback to original behavior
           mockOutputUrl = imageUrl.includes('?') 
-            ? `${imageUrl}&stencil=${style}&t=${Date.now()}`
-            : `${imageUrl}?stencil=${style}&t=${Date.now()}`;
+            ? `${imageUrl}&stencil=${styleName}&t=${Date.now()}`
+            : `${imageUrl}?stencil=${styleName}&t=${Date.now()}`;
         }
       } else {
         // Original mock behavior for backward compatibility
+        const styleName = typeof style === 'string' ? style : style.id;
         mockOutputUrl = imageUrl.includes('?') 
-          ? `${imageUrl}&stencil=${style}&t=${Date.now()}`
-          : `${imageUrl}?stencil=${style}&t=${Date.now()}`;
+          ? `${imageUrl}&stencil=${styleName}&t=${Date.now()}`
+          : `${imageUrl}?stencil=${styleName}&t=${Date.now()}`;
       }
       
       return {
@@ -96,14 +98,31 @@ export class ComfyDeployService {
     }
 
     try {
+      // Check if style is an object (StencilStyle) or string
+      const styleConfig = typeof style === 'object' ? style : null;
+      const styleName = typeof style === 'string' ? style : style.id;
+      
+      // Build inputs based on style type
+      const inputs: any = {
+        input_image: imageUrl, // Correct parameter name for ComfyDeploy
+        "fondo transparente": processingOptions?.removeBackground || false,
+        line_color: processingOptions?.lineColor || "black",
+      };
+      
+      // If style has promptTemplate (type 'prompt'), use prompt instead of LoRA
+      if (styleConfig?.styleType === 'prompt' && styleConfig.promptTemplate) {
+        // For prompt-based styles, send the prompt
+        inputs.prompt = styleConfig.promptTemplate;
+        console.log("Using prompt-based style:", styleName);
+      } else {
+        // For LoRA-based styles
+        inputs.lora_path = LORA_MODELS[styleName] || LORA_MODELS.steven;
+        console.log("Using LoRA style:", styleName, "with path:", inputs.lora_path);
+      }
+      
       const requestBody = {
         deployment_id: this.deploymentId,
-        inputs: {
-          input_image: imageUrl, // Correct parameter name for ComfyDeploy
-          "fondo transparente": processingOptions?.removeBackground || false,
-          line_color: processingOptions?.lineColor || "black",
-          lora_path: LORA_MODELS[style] || LORA_MODELS.steven, // Use full LoRA path
-        },
+        inputs,
       };
 
       console.log("Sending request to ComfyDeploy:", {
