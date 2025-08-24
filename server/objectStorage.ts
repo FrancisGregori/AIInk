@@ -11,24 +11,43 @@ export const OBJECT_STORAGE_BUCKET =
   process.env.OBJECT_STORAGE_BUCKET ||
   "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b";
 
+// Detectar si estamos en desarrollo o deployment
+const isDevelopment = process.env.NODE_ENV === 'development' || 
+                     process.env.REPLIT_ENV === 'development' ||
+                     !process.env.REPLIT_DEPLOYMENT;
+
+console.log('=== OBJECT STORAGE CONFIG ===');
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Is Development:', isDevelopment);
+console.log('Replit Deployment:', process.env.REPLIT_DEPLOYMENT || 'not set');
+
 // Object storage client para interactuar con el servicio
-export const objectStorageClient = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: {
-        type: "json",
-        subject_token_field_name: "access_token",
+export const objectStorageClient = new Storage(
+  isDevelopment ? {
+    // Configuración para DESARROLLO (usando sidecar)
+    credentials: {
+      audience: "replit",
+      subject_token_type: "access_token",
+      token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
+      type: "external_account",
+      credential_source: {
+        url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
+        format: {
+          type: "json",
+          subject_token_field_name: "access_token",
+        },
       },
+      universe_domain: "googleapis.com",
     },
-    universe_domain: "googleapis.com",
-  },
-  projectId: "",
-});
+    projectId: "",
+  } : {
+    // Configuración para DEPLOYMENT (credenciales automáticas)
+    // En deployment, Replit proporciona credenciales automáticamente
+    projectId: process.env.GOOGLE_CLOUD_PROJECT || "",
+  }
+);
+
+console.log('Object Storage Client initialized for:', isDevelopment ? 'DEVELOPMENT' : 'DEPLOYMENT');
 
 export class ObjectNotFoundError extends Error {
   constructor() {
