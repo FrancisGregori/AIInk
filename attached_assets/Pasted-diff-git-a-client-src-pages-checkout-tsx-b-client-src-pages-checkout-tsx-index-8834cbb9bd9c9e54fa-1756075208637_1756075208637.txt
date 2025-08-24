@@ -1,0 +1,147 @@
+diff --git a/client/src/pages/checkout.tsx b/client/src/pages/checkout.tsx
+index 8834cbb9bd9c9e54fa38d5614495a43af2cfc33d..a45d046399407591a195c64e247d1f45da16c29f 100644
+--- a/client/src/pages/checkout.tsx
++++ b/client/src/pages/checkout.tsx
+@@ -1,49 +1,49 @@
+ import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-stripe-js';
+ import { loadStripe } from '@stripe/stripe-js';
+ import { useEffect, useState } from 'react';
+ import { apiRequest } from "@/lib/queryClient";
+ import { useToast } from "@/hooks/use-toast";
+ import { Button } from "@/components/ui/button";
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+ import { ArrowLeft, CreditCard } from "lucide-react";
+ import { Link, useLocation } from "wouter";
+ import Navigation from "@/components/Navigation";
+ import { CREDIT_PACKS } from "@shared/stripe-config";
+ 
+ // Make sure to call `loadStripe` outside of a component's render to avoid
+ // recreating the `Stripe` object on every render.
+ if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+   console.warn('Missing VITE_STRIPE_PUBLIC_KEY - Stripe checkout will not work');
+ }
+ 
+ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+ 
+ const CheckoutForm = ({ credits }: { credits: number }) => {
+-  // Get display price from centralized configuration
++  // Get display price from centralized configuration (stored in cents)
+   const pack = CREDIT_PACKS[credits];
+-  const amount = pack?.price || 0;
++  const amount = ((pack?.price ?? 0) / 100).toFixed(2);
+   const stripe = useStripe();
+   const elements = useElements();
+   const { toast } = useToast();
+   const [isProcessing, setIsProcessing] = useState(false);
+   const [, setLocation] = useLocation();
+ 
+   const handleSubmit = async (e: React.FormEvent) => {
+     e.preventDefault();
+     
+     if (!stripe || !elements) {
+       return;
+     }
+ 
+     setIsProcessing(true);
+ 
+     try {
+       const { error } = await stripe.confirmPayment({
+         elements,
+         confirmParams: {
+           return_url: `${window.location.origin}/pricing?success=true`,
+         },
+       });
+ 
+       if (error) {
+         toast({
+diff --git a/client/src/pages/checkout.tsx b/client/src/pages/checkout.tsx
+index 8834cbb9bd9c9e54fa38d5614495a43af2cfc33d..a45d046399407591a195c64e247d1f45da16c29f 100644
+--- a/client/src/pages/checkout.tsx
++++ b/client/src/pages/checkout.tsx
+@@ -86,85 +86,84 @@ const CheckoutForm = ({ credits }: { credits: number }) => {
+           <Button 
+             type="submit" 
+             className="w-full" 
+             disabled={!stripe || !elements || isProcessing}
+             data-testid="button-confirm-payment"
+           >
+             {isProcessing ? "Procesando..." : `Pagar $${amount}`}
+           </Button>
+         </form>
+       </CardContent>
+     </Card>
+   );
+ };
+ 
+ export default function Checkout() {
+   const [clientSecret, setClientSecret] = useState("");
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState("");
+   
+   // Get credits from URL parameters (amount is validated server-side)
+   const urlParams = new URLSearchParams(window.location.search);
+   const credits = parseInt(urlParams.get('credits') || '0');
+   
+   // Get price from centralized configuration
+   const pack = CREDIT_PACKS[credits];
+-  const amount = pack?.price || 0;
+ 
+   useEffect(() => {
+     if (!credits || !pack) {
+       setError("Paquete de créditos inválido");
+       setLoading(false);
+       return;
+     }
+ 
+     // Create PaymentIntent with server-validated price
+     apiRequest("POST", "/api/create-payment-intent", { 
+       credits,
+       type: "credit_pack" 
+     })
+       .then((res) => {
+         if (!res.ok) {
+           throw new Error(`HTTP error! status: ${res.status}`);
+         }
+         return res.json();
+       })
+       .then((data) => {
+         if (data.clientSecret) {
+           setClientSecret(data.clientSecret);
+         } else {
+           throw new Error("No client secret received");
+         }
+       })
+       .catch((error) => {
+         console.error("Error creating payment intent:", error);
+         setError("Error al inicializar el pago. Por favor intenta de nuevo.");
+       })
+       .finally(() => {
+         setLoading(false);
+       });
+-  }, [amount, credits]);
++  }, [credits, pack]);
+ 
+   if (loading) {
+     return (
+       <>
+         <Navigation />
+         <div className="container mx-auto px-4 pt-24 pb-20">
+           <div className="h-screen flex items-center justify-center">
+             <div className="text-center">
+               <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" aria-label="Loading"/>
+               <p className="text-muted-foreground">Preparando tu pago...</p>
+             </div>
+           </div>
+         </div>
+       </>
+     );
+   }
+ 
+   if (error || !clientSecret) {
+     return (
+       <>
+         <Navigation />
+         <div className="container mx-auto px-4 pt-24 pb-20">
+           <div className="max-w-md mx-auto text-center">
+             <Card>
+               <CardHeader>

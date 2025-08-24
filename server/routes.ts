@@ -1478,17 +1478,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // SECURITY: Always use server-side validated price
+      // SECURITY: Always use server-side validated price (already in cents)
       const amount = pack.price;
       
       console.log('Creating payment intent:', {
         credits: pack.credits,
         amount: amount,
+        amountInDollars: amount / 100,
         userId: req.user.claims.sub
       });
 
       const paymentIntent = await stripe!.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
+        amount: amount, // Already in cents, no conversion needed
         currency: "usd",
         metadata: {
           userId: req.user.claims.sub,

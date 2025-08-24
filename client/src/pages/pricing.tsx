@@ -84,10 +84,10 @@ export default function Pricing() {
               
               <div className="mb-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">${plan.price}</span>
+                  <span className="text-4xl font-bold">${(plan.price / 100).toFixed(2)}</span>
                   {plan.originalPrice && (
                     <span className="text-lg text-muted-foreground line-through">
-                      ${plan.originalPrice}
+                      ${(plan.originalPrice / 100).toFixed(2)}
                     </span>
                   )}
                   <span className="text-muted-foreground">/{plan.period}</span>
@@ -144,9 +144,9 @@ export default function Pricing() {
                   <Badge className="w-fit mb-2" variant="secondary">Mejor valor</Badge>
                 )}
                 <CardTitle className="text-xl">{pack.credits} créditos</CardTitle>
-                <div className="text-2xl font-bold">${pack.price}</div>
+                <div className="text-2xl font-bold">${(pack.price / 100).toFixed(2)}</div>
                 <CardDescription className="text-xs">
-                  ${pack.perCredit.toFixed(4)} por crédito
+                  ${(pack.perCredit / 100).toFixed(2)} por crédito
                 </CardDescription>
               </CardHeader>
               <CardFooter className="pt-0">

@@ -232,10 +232,10 @@ export default function Subscribe() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold">
-                    ${price}
+                    ${price ? (price / 100).toFixed(2) : '0.00'}
                     {billingPeriod === 'annual' && (
                       <span className="text-lg text-muted-foreground line-through ml-2">
-                        ${(currentPlan.monthlyPrice * 12).toFixed(2)}
+                        ${((currentPlan.monthlyPrice * 12) / 100).toFixed(2)}
                       </span>
                     )}
                   </div>

@@ -3,16 +3,16 @@
 
 export interface CreditPack {
   credits: number;
-  price: number;
-  perCredit: number;
+  price: number; // Price in cents (e.g., 499 = $4.99)
+  perCredit: number; // Price per credit in cents
   popular?: boolean;
 }
 
 export interface SubscriptionPlan {
   name: string;
   tier: 'basic' | 'pro' | 'premium';
-  monthlyPrice: number;
-  annualPrice: number;
+  monthlyPrice: number; // Price in cents (e.g., 1199 = $11.99)
+  annualPrice: number; // Price in cents (e.g., 11900 = $119.00)
   monthlyCredits: number;
   features: string[];
   popular?: boolean;
@@ -20,37 +20,39 @@ export interface SubscriptionPlan {
 }
 
 // Credit packs configuration - used by both frontend and backend
+// All prices are stored in cents to avoid floating point precision issues
 export const CREDIT_PACKS: Record<number, CreditPack> = {
   100: { 
     credits: 100, 
-    price: 4.99, 
-    perCredit: 0.0499 
+    price: 499, // $4.99 in cents
+    perCredit: 5 // ~$0.05 per credit in cents
   },
   250: { 
     credits: 250, 
-    price: 9.99, 
-    perCredit: 0.0400, 
+    price: 999, // $9.99 in cents
+    perCredit: 4, // ~$0.04 per credit in cents
     popular: true 
   },
   500: { 
     credits: 500, 
-    price: 18.99, 
-    perCredit: 0.0380 
+    price: 1899, // $18.99 in cents
+    perCredit: 4 // ~$0.04 per credit in cents
   },
   1000: { 
     credits: 1000, 
-    price: 36.99, 
-    perCredit: 0.0370 
+    price: 3699, // $36.99 in cents
+    perCredit: 4 // ~$0.04 per credit in cents
   }
 };
 
 // Subscription plans configuration
+// All prices are stored in cents to avoid floating point precision issues
 export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
   basic: {
     name: "Basic",
     tier: "basic",
-    monthlyPrice: 11.99,
-    annualPrice: 119,
+    monthlyPrice: 1199, // $11.99 in cents
+    annualPrice: 11900, // $119.00 in cents
     monthlyCredits: 200,
     features: [
       "200 créditos mensuales",
@@ -65,8 +67,8 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
   pro: {
     name: "Pro",
     tier: "pro",
-    monthlyPrice: 19.99,
-    annualPrice: 199,
+    monthlyPrice: 1999, // $19.99 in cents
+    annualPrice: 19900, // $199.00 in cents
     monthlyCredits: 500,
     features: [
       "500 créditos mensuales",
@@ -83,8 +85,8 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
   premium: {
     name: "Premium",
     tier: "premium",
-    monthlyPrice: 39.99,
-    annualPrice: 399,
+    monthlyPrice: 3999, // $39.99 in cents
+    annualPrice: 39900, // $399.00 in cents
     monthlyCredits: 1000,
     features: [
       "1,000 créditos mensuales",

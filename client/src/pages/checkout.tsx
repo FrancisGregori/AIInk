@@ -19,9 +19,9 @@ if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 
 const CheckoutForm = ({ credits }: { credits: number }) => {
-  // Get display price from centralized configuration
+  // Get display price from centralized configuration (stored in cents)
   const pack = CREDIT_PACKS[credits];
-  const amount = pack?.price || 0;
+  const amount = pack ? (pack.price / 100).toFixed(2) : '0.00';
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -106,7 +106,7 @@ export default function Checkout() {
   const urlParams = new URLSearchParams(window.location.search);
   const credits = parseInt(urlParams.get('credits') || '0');
   
-  // Get price from centralized configuration
+  // Get price from centralized configuration (stored in cents)
   const pack = CREDIT_PACKS[credits];
   const amount = pack?.price || 0;
 
@@ -142,7 +142,7 @@ export default function Checkout() {
       .finally(() => {
         setLoading(false);
       });
-  }, [amount, credits]);
+  }, [credits, pack]);
 
   if (loading) {
     return (
