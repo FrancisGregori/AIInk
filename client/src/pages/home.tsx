@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Palette, Sparkles, RotateCw, Wand2, ArrowRight, Pen } from "lucide-react";
+import { Palette, Sparkles, RotateCw, Wand2, ArrowRight, Pen, Edit3 } from "lucide-react";
 import { motion } from "framer-motion";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
 import stencilExample1 from "@assets/hub_stencil1.png";
@@ -225,7 +225,7 @@ export default function Home() {
               <ToolCard
                 title="AI Image Editor"
                 description="Advanced AI-powered tattoo generator and image editor"
-                icon={Sparkles}
+                icon={Edit3}
                 imageUrl={aiEditorImage}
                 href="/design-editor"
                 isActive={true}
