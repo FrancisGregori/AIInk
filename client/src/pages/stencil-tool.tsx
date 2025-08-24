@@ -32,7 +32,9 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Trash2
+  Trash2,
+  Grid3X3,
+  LayoutGrid
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import PreviewArea from "@/components/preview-area";
@@ -58,6 +60,7 @@ function StencilTool() {
   const [currentJob, setCurrentJob] = useState<StencilJob | null>(null);
   const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
   const [showFullGallery, setShowFullGallery] = useState(false);
+  const [gridSize, setGridSize] = useState<'small' | 'large'>('small');
   const [processingOptions, setProcessingOptions] = useState<ProcessingOptions>({
     removeBackground: true,
     lineColor: "black"
@@ -541,7 +544,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
             {/* Gallery Header with Toggle */}
             <Card>
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     Galería de Stencils
@@ -555,12 +558,42 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                     {showFullGallery ? 'Ver menos' : `Ver todos (${recentJobs.length})`}
                   </Button>
                 </div>
+                
+                {/* Grid Size Toggle */}
+                <div className="flex items-center justify-center bg-zinc-800 rounded-lg p-1">
+                  <Button
+                    variant={gridSize === 'small' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setGridSize('small')}
+                    className={`h-8 px-3 ${gridSize === 'small' 
+                      ? 'bg-white text-black hover:bg-gray-100' 
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                    }`}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={gridSize === 'large' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setGridSize('large')}
+                    className={`h-8 px-3 ${gridSize === 'large' 
+                      ? 'bg-white text-black hover:bg-gray-100' 
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                    }`}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {recentJobs.length > 0 ? (
                   <div className="space-y-6">
-                    {/* Mobile: Always 2 columns, Desktop: Responsive */}
-                    <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
+                    {/* Grid con tamaño dinámico */}
+                    <div className={`grid gap-3 lg:gap-4 ${
+                      gridSize === 'small' 
+                        ? 'grid-cols-2 lg:grid-cols-2' 
+                        : 'grid-cols-1 lg:grid-cols-1'
+                    }`}>
                       {(showFullGallery ? recentJobs : recentJobs.slice(0, 8)).map((job) => {
                         // Galería siempre accesible, incluso durante procesamiento
                         return (
