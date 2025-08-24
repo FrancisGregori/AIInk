@@ -41,7 +41,9 @@ import {
   ChevronDown,
   Edit,
   Clock,
-  Trash2
+  Trash2,
+  Grid3X3,
+  LayoutGrid
 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
@@ -75,6 +77,7 @@ function DesignEditor() {
   // Estado para trabajo actual y persistencia
   const [currentJob, setCurrentJob] = useState<any>(null);
   const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
+  const [gridSize, setGridSize] = useState<'small' | 'large'>('small');
   
   // Suggested edit prompts organized by category
   const editSuggestions = {
@@ -1146,15 +1149,47 @@ function DesignEditor() {
             {/* History - Mobile Optimized Gallery */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <History className="h-4 w-4" />
-                  {txt.history}
-                </CardTitle>
+                <div className="flex items-center justify-between mb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <History className="h-4 w-4" />
+                    {txt.history}
+                  </CardTitle>
+                </div>
+                
+                {/* Grid Size Toggle */}
+                <div className="flex items-center justify-center bg-zinc-800 rounded-lg p-1">
+                  <Button
+                    variant={gridSize === 'small' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setGridSize('small')}
+                    className={`h-8 px-3 ${gridSize === 'small' 
+                      ? 'bg-white text-black hover:bg-gray-100' 
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                    }`}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={gridSize === 'large' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setGridSize('large')}
+                    className={`h-8 px-3 ${gridSize === 'large' 
+                      ? 'bg-white text-black hover:bg-gray-100' 
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                    }`}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Mobile: 2 columns, Desktop: 2 columns */}
-                  <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
+                  {/* Grid con tamaño dinámico */}
+                  <div className={`grid gap-3 lg:gap-4 ${
+                    gridSize === 'small' 
+                      ? 'grid-cols-2 lg:grid-cols-2' 
+                      : 'grid-cols-1 lg:grid-cols-1'
+                  }`}>
                     {projects.slice(0, 8).map((project) => (
                     <Dialog key={project.id}>
                       <DialogTrigger asChild>
