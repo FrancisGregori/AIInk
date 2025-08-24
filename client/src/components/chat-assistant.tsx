@@ -483,6 +483,26 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
+    
+    // Check if user wrote a technical prompt and auto-apply it
+    if (storedImage && isPromptMessage(userMessage.content)) {
+      console.log('User wrote technical prompt, auto-applying:', userMessage.content);
+      setIsLoading(false); // Don't stay in loading state
+      
+      // Auto-apply the user's prompt after a minimal delay to ensure UI updates
+      setTimeout(() => {
+        applyPrompt(userMessage.content);
+        toast({
+          title: language === 'es' ? "✨ Generando imagen..." : "✨ Generating image...",
+          description: language === 'es' 
+            ? "Tu prompt se aplicó automáticamente"
+            : "Your prompt was applied automatically"
+        });
+      }, 200);
+      
+      return; // Exit early, no need to chat with assistant
+    }
+    
     setIsLoading(true);
 
     try {
