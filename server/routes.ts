@@ -1410,7 +1410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid plan or billing period" });
       }
 
-      // Create subscription
+      // Create subscription with proper payment intent handling
       const subscription = await stripe!.subscriptions.create({
         customer: stripeCustomerId,
         items: [{ price: priceId }],
@@ -1427,10 +1427,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subscriptionTier: plan
       });
   
+      // Extract clientSecret from the expanded invoice - IMPROVED LOGIC
+      let clientSecret = null;
+      
+      // Check if latest_invoice is expanded
+      if (subscription.latest_invoice && typeof subscription.latest_invoice === 'object') {
+        const invoice = subscription.latest_invoice as any;
+        
+        // Check if payment_intent is expanded
+        if (invoice.payment_intent) {
+          if (typeof invoice.payment_intent === 'string') {
+            // If payment_intent is just an ID, retrieve it
+            const paymentIntent = await stripe!.paymentIntents.retrieve(invoice.payment_intent);
+            clientSecret = paymentIntent.client_secret;
+          } else if (typeof invoice.payment_intent === 'object') {
+            // If payment_intent is expanded, get client_secret directly
+            clientSecret = invoice.payment_intent.client_secret;
+          }
+        }
+      }
+      
+      // If still no clientSecret, try retrieving the invoice directly
+      if (!clientSecret && subscription.latest_invoice) {
+        try {
+          const invoiceId = typeof subscription.latest_invoice === 'string' 
+            ? subscription.latest_invoice 
+            : (subscription.latest_invoice as any).id;
+            
+          const invoice = await stripe!.invoices.retrieve(invoiceId, {
+            expand: ['payment_intent']
+          });
+          
+          if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
+            clientSecret = (invoice.payment_intent as any).client_secret;
+          }
+        } catch (error) {
+          console.error('Error retrieving invoice for clientSecret:', error);
+        }
+      }
+      
+      // Log for debugging
+      console.log('Subscription created:', {
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        hasClientSecret: !!clientSecret,
+        plan: plan,
+        billingPeriod: billingPeriod
+      });
+      
+      if (!clientSecret) {
+        console.error('WARNING: No clientSecret obtained for subscription');
+      }
+      
       res.json({
         subscriptionId: subscription.id,
         status: subscription.status,
-        clientSecret: subscription.latest_invoice && typeof subscription.latest_invoice === 'object' ? (subscription.latest_invoice as any)?.payment_intent?.client_secret : null,
+        clientSecret: clientSecret,
       });
     } catch (error: any) {
       console.error("Error creating subscription:", error);
