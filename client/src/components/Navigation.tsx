@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Bot, Menu, X, LogOut, User, CreditCard, Image } from "lucide-react";
+import { Bot, Menu, X, LogOut, User, CreditCard, Image, Home, Wand2, Sparkles, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -51,22 +51,22 @@ export default function Navigation() {
                   className="text-gray-300 hover:text-white transition-colors font-medium"
                   data-testid="button-nav-inicio"
                 >
-                  Home
+                  <Home className="h-5 w-5" />
                 </button>
                 <Link href="/stencil-tool">
                   <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-stencil">
-                    Stencil Tool
+                    <Wand2 className="h-5 w-5" />
                   </span>
                 </Link>
                 <Link href="/design-editor">
                   <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-design">
-                    Design Editor
+                    <Sparkles className="h-5 w-5" />
                   </span>
                 </Link>
                 {isAuthenticated && (
                   <Link href="/gallery">
                     <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-gallery">
-                      Mi Galería
+                      <Images className="h-5 w-5" />
                     </span>
                   </Link>
                 )}
@@ -75,23 +75,23 @@ export default function Navigation() {
               <>
                 <Link href="/">
                   <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-home">
-                    Home
+                    <Home className="h-5 w-5" />
                   </span>
                 </Link>
                 <Link href="/stencil-tool">
                   <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-stencil">
-                    Stencil Tool
+                    <Wand2 className="h-5 w-5" />
                   </span>
                 </Link>
                 <Link href="/design-editor">
                   <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-design">
-                    Design Editor
+                    <Sparkles className="h-5 w-5" />
                   </span>
                 </Link>
                 {isAuthenticated && (
                   <Link href="/gallery">
                     <span className="text-gray-300 hover:text-white transition-colors cursor-pointer font-medium" data-testid="link-nav-gallery">
-                      Mi Galería
+                      <Images className="h-5 w-5" />
                     </span>
                   </Link>
                 )}
@@ -196,23 +196,23 @@ export default function Navigation() {
             <div className="px-2 pt-2 pb-3 space-y-1 bg-black border-t border-gray-800">
               <Link href="/" onClick={() => setIsOpen(false)}>
                 <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-home">
-                  Home
+                  <Home className="h-5 w-5" />
                 </span>
               </Link>
               <Link href="/stencil-tool" onClick={() => setIsOpen(false)}>
                 <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-stencil">
-                  Stencil Tool
+                  <Wand2 className="h-5 w-5" />
                 </span>
               </Link>
               <Link href="/design-editor" onClick={() => setIsOpen(false)}>
                 <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-design">
-                  Design Editor
+                  <Sparkles className="h-5 w-5" />
                 </span>
               </Link>
               {isAuthenticated && (
                 <Link href="/gallery" onClick={() => setIsOpen(false)}>
                   <span className="block px-3 py-2 text-gray-300 hover:text-white transition-colors cursor-pointer" data-testid="link-mobile-nav-gallery">
-                    Mi Galería
+                    <Images className="h-5 w-5" />
                   </span>
                 </Link>
               )}
