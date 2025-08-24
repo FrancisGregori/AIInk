@@ -1,0 +1,113 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index a68ab677f976470f3fc2cf17681304341d57079f..98a2706dfda7831fe2d1da5fe5cf3b7cac0d3c30 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1,38 +1,38 @@
+ import type { Express } from "express";
+ import { createServer, type Server } from "http";
+ import multer from "multer";
+ import { storage } from "./storage";
+ import { setupAuth, isAuthenticated } from "./replitAuth";
+ import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
+ import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
+ import ComfyDeployService from "./comfydeploy";
+ import Replicate from "replicate";
+ import { z } from "zod";
+ import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
+ import Stripe from "stripe";
+-import { CREDIT_PACKS, STRIPE_PRICE_IDS, getCreditPackByCredits, getPriceId } from "../shared/stripe-config";
++import { getCreditPackByCredits, PRICE_ID_TO_TIER } from "../shared/stripe-config";
+ 
+ // Configure multer for file uploads - SECURE DISK STORAGE
+ import fs from 'fs';
+ import path from 'path';
+ 
+ // Ensure temp directory exists
+ const tempDir = path.join(process.cwd(), 'temp');
+ if (!fs.existsSync(tempDir)) {
+   fs.mkdirSync(tempDir, { recursive: true });
+ }
+ 
+ const upload = multer({
+   storage: multer.diskStorage({
+     destination: tempDir,
+     filename: (req, file, cb) => {
+       // Generate unique filename to prevent conflicts
+       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+       cb(null, `upload-${uniqueSuffix}-${file.originalname}`);
+     }
+   }),
+   limits: {
+     fileSize: 10 * 1024 * 1024, // 10MB limit
+     files: 1, // Only 1 file per request
+   },
+   fileFilter: (req, file, cb) => {
+diff --git a/server/routes.ts b/server/routes.ts
+index a68ab677f976470f3fc2cf17681304341d57079f..98a2706dfda7831fe2d1da5fe5cf3b7cac0d3c30 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1369,61 +1369,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
+               });
+               console.log(`✅ Added ${credits} credits to user ${userId}. New balance: ${newCredits}`);
+             }
+           } catch (error) {
+             console.error('Error updating user credits:', error);
+           }
+         }
+         break;
+ 
+       case 'customer.subscription.created':
+       case 'customer.subscription.updated':
+         const subscription = event.data.object;
+         console.log('📅 Subscription event:', {
+           type: event.type,
+           id: subscription.id,
+           status: subscription.status,
+           customer: subscription.customer
+         });
+ 
+         // Update user subscription status
+         try {
+           const users = await storage.getAllUsers();
+           const user = users.find(u => u.stripeCustomerId === subscription.customer);
+           
+           if (user) {
+-            // Determine tier from subscription items
+-            let tier = 'basic';
+-            if (subscription.items?.data?.[0]?.price?.id) {
+-              const priceId = subscription.items.data[0].price.id;
+-              // Map price IDs to tiers
+-              if (priceId.includes('pro') || subscription.items.data[0].price.unit_amount > 2000) {
+-                tier = 'pro';
+-              } else if (priceId.includes('premium') || subscription.items.data[0].price.unit_amount > 3500) {
+-                tier = 'premium';
+-              }
+-            }
++            // Determine tier from subscription items using price ID mapping
++            const priceId = subscription.items?.data?.[0]?.price?.id;
++            const tier = priceId ? PRICE_ID_TO_TIER[priceId] ?? 'basic' : 'basic';
+ 
+             await storage.upsertUser({
+               ...user,
+               stripeSubscriptionId: subscription.id,
+               subscriptionTier: tier,
+               subscriptionStatus: subscription.status
+             });
+             console.log(`✅ Updated subscription for user ${user.id}: ${tier} (${subscription.status})`);
+           }
+         } catch (error) {
+           console.error('Error updating subscription:', error);
+         }
+         break;
+ 
+       case 'customer.subscription.deleted':
+         const deletedSub = event.data.object;
+         console.log('❌ Subscription cancelled:', deletedSub.id);
+ 
+         // Remove subscription from user
+         try {
+           const users = await storage.getAllUsers();
+           const user = users.find(u => u.stripeSubscriptionId === deletedSub.id);
+           
+           if (user) {
+             await storage.upsertUser({

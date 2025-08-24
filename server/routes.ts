@@ -10,7 +10,7 @@ import Replicate from "replicate";
 import { z } from "zod";
 import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
 import Stripe from "stripe";
-import { CREDIT_PACKS, getCreditPackByCredits, getPriceId } from "../shared/stripe-config";
+import { CREDIT_PACKS, getCreditPackByCredits, getPriceId, PRICE_ID_TO_TIER } from "../shared/stripe-config";
 
 // Configure multer for file uploads - SECURE DISK STORAGE
 import fs from 'fs';
@@ -1391,17 +1391,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const user = users.find(u => u.stripeCustomerId === subscription.customer);
           
           if (user) {
-            // Determine tier from subscription items
-            let tier = 'basic';
-            if (subscription.items?.data?.[0]?.price?.id) {
-              const priceId = subscription.items.data[0].price.id;
-              // Map price IDs to tiers
-              if (priceId.includes('pro') || subscription.items.data[0].price.unit_amount > 2000) {
-                tier = 'pro';
-              } else if (priceId.includes('premium') || subscription.items.data[0].price.unit_amount > 3500) {
-                tier = 'premium';
-              }
-            }
+            // Determine tier from subscription items using centralized mapping
+            const priceId = subscription.items?.data?.[0]?.price?.id;
+            const tier = priceId ? (PRICE_ID_TO_TIER[priceId] ?? 'basic') : 'basic';
+            
+            console.log('✅ Mapped price ID to tier:', {
+              priceId,
+              tier,
+              found: priceId ? PRICE_ID_TO_TIER[priceId] !== undefined : false
+            });
 
             await storage.upsertUser({
               ...user,

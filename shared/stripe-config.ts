@@ -122,6 +122,19 @@ export const STRIPE_PRICE_IDS = {
   }
 };
 
+// Reverse mapping: Price ID to Tier (for webhook processing)
+export const PRICE_ID_TO_TIER: Record<string, string> = {
+  // Basic tier
+  "price_1RzfEMIDfLh5OgxChHN9KcSH": "basic", // Basic $11.99/month
+  "price_1RzfEuIDfLh5OgxC0RFsNlvX": "basic", // Basic $119/year
+  // Pro tier  
+  "price_1Rzk7TIDfLh5OgxCABCUNxQ9": "pro",   // Pro $24.99/month
+  "price_1Rzk7zIDfLh5OgxCn6vhQcpw": "pro",   // Pro $249/year
+  // Premium tier
+  "price_1Rzk8PIDfLh5OgxCTSs1FJvt": "premium", // Premium $39.99/month
+  "price_1Rzk8nIDfLh5OgxCZ6YzOkA1": "premium"  // Premium $399/year
+};
+
 // Helper functions
 export function getCreditPackByCredits(credits: number): CreditPack | undefined {
   return CREDIT_PACKS[credits];
