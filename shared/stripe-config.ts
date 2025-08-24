@@ -51,29 +51,32 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     tier: "basic",
     monthlyPrice: 11.99,
     annualPrice: 119,
-    monthlyCredits: 275,
+    monthlyCredits: 200,
     features: [
-      "275 créditos mensuales",
-      "Generación básica de stencils",
-      "Editor de diseños AI",
-      "Galería personal limitada",
-      "Soporte por email"
+      "200 créditos mensuales",
+      "40 stencils profesionales",
+      "66 diseños editados",
+      "Asistente AI (100 mensajes/mes)",
+      "Soporte estándar (48h)",
+      "Historial 30 días",
+      "Rollover 50% créditos"
     ]
   },
   pro: {
     name: "Pro",
     tier: "pro",
-    monthlyPrice: 24.99,
-    annualPrice: 249,
-    monthlyCredits: 750,
+    monthlyPrice: 19.99,
+    annualPrice: 199,
+    monthlyCredits: 500,
     features: [
-      "750 créditos mensuales",
-      "Acceso a todos los estilos AI",
-      "Editor avanzado con FLUX Kontext",
-      "Galería ilimitada",
-      "Exportación en alta resolución",
-      "InkVision AI Assistant",
-      "Soporte prioritario"
+      "500 créditos mensuales",
+      "100 stencils profesionales",
+      "166 diseños editados",
+      "Asistente AI (500 mensajes/mes)",
+      "Soporte rápido (12h)",
+      "Modelo personalizado disponible",
+      "Exportación en lote",
+      "Rollover 50% créditos"
     ],
     popular: true
   },
@@ -82,15 +85,17 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     tier: "premium",
     monthlyPrice: 39.99,
     annualPrice: 399,
-    monthlyCredits: 1500,
+    monthlyCredits: 1000,
     features: [
-      "1,500 créditos mensuales",
-      "Todo lo de Pro",
-      "Modelos AI personalizados",
+      "1,000 créditos mensuales",
+      "200 stencils profesionales",
+      "333 diseños editados",
+      "Asistente AI ilimitado",
+      "Soporte prioritario (4h)",
+      "Modelo personalizado disponible",
       "API access",
-      "Colaboración en equipo",
-      "Training de modelos custom",
-      "Soporte dedicado 24/7"
+      "Auto Top-Up disponible",
+      "Rollover 50% créditos"
     ]
   }
 };

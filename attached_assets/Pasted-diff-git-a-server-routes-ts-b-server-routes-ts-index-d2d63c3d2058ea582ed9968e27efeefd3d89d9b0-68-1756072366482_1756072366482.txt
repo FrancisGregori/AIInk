@@ -1,0 +1,57 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index d2d63c3d2058ea582ed9968e27efeefd3d89d9b0..68ceaeebd30f4fdfa902ee1395d5a70e5d3a8ee0 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -28,51 +28,51 @@ const upload = multer({
+     filename: (req, file, cb) => {
+       // Generate unique filename to prevent conflicts
+       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+       cb(null, `upload-${uniqueSuffix}-${file.originalname}`);
+     }
+   }),
+   limits: {
+     fileSize: 10 * 1024 * 1024, // 10MB limit
+     files: 1, // Only 1 file per request
+   },
+   fileFilter: (req, file, cb) => {
+     if (file.mimetype.startsWith('image/')) {
+       cb(null, true);
+     } else {
+       cb(new Error('Only image files are allowed'));
+     }
+   },
+ });
+ 
+ // Validation schema for Replicate generation
+ // Initialize Stripe - will use environment variables when available
+ let stripe: Stripe | null = null;
+ try {
+   if (process.env.STRIPE_SECRET_KEY) {
+     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+-      apiVersion: "2024-11-20.acacia", // Using stable API version
++      apiVersion: "2024-08-20", // Using stable API version
+     });
+     console.log("✅ Stripe initialized successfully");
+   } else {
+     console.warn("⚠️  STRIPE_SECRET_KEY not found - Stripe functionality disabled");
+   }
+ } catch (error) {
+   console.error("❌ Failed to initialize Stripe:", error);
+ }
+ 
+ const generateImageSchema = z.object({
+   prompt: z.string().min(1, "Prompt is required"),
+   inputImageUrl: z.string().optional().refine((val) => {
+     if (!val || val === "") return true; // Allow empty string
+     try {
+       new URL(val);
+       return true;
+     } catch {
+       // Allow internal API paths and static file paths
+       return val.startsWith('/api/image/') || val.startsWith('/images/');
+     }
+   }, "Invalid URL or file path"),
+   width: z.number().optional().default(1024),
+   height: z.number().optional().default(1024),
+   aspectRatio: z.string().optional().default("match_input_image"),
+   model: z.enum(["pro", "qwen"]).optional().default("pro"),

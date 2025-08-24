@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Check, Crown, Sparkles, Zap } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import Navigation from "@/components/Navigation";
+import { SUBSCRIPTION_PLANS } from "@shared/stripe-config";
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
@@ -82,36 +83,18 @@ const SubscribeForm = ({ plan, billingPeriod }: { plan: string; billingPeriod: s
   );
 };
 
-// Plan configuration for display
-const planConfig = {
-  basic: {
-    name: "Basic",
-    icon: <Sparkles className="h-6 w-6" />,
-    monthlyPrice: 11.99,
-    annualPrice: 119,
-    originalAnnualPrice: 143.88,
-    credits: 200,
-    color: "bg-blue-500/10 border-blue-500/20"
-  },
-  pro: {
-    name: "Pro",
-    icon: <Zap className="h-6 w-6" />,
-    monthlyPrice: 19.99,
-    annualPrice: 199,
-    originalAnnualPrice: 239.88,
-    credits: 500,
-    color: "bg-primary/10 border-primary/20",
-    popular: true
-  },
-  premium: {
-    name: "Premium",
-    icon: <Crown className="h-6 w-6" />,
-    monthlyPrice: 39.99,
-    annualPrice: 399,
-    originalAnnualPrice: 479.88,
-    credits: 1000,
-    color: "bg-purple-500/10 border-purple-500/20"
-  }
+// Icons for plans
+const planIcons: Record<string, JSX.Element> = {
+  basic: <Sparkles className="h-6 w-6" />,
+  pro: <Zap className="h-6 w-6" />,
+  premium: <Crown className="h-6 w-6" />
+};
+
+// Colors for plans
+const planColors: Record<string, string> = {
+  basic: "bg-blue-500/10 border-blue-500/20",
+  pro: "bg-primary/10 border-primary/20",
+  premium: "bg-purple-500/10 border-purple-500/20"
 };
 
 export default function Subscribe() {
@@ -124,8 +107,10 @@ export default function Subscribe() {
   const plan = urlParams.get('plan') || 'basic';
   const billingPeriod = urlParams.get('billing') || 'monthly';
 
-  const currentPlan = planConfig[plan as keyof typeof planConfig];
+  const currentPlan = SUBSCRIPTION_PLANS[plan as keyof typeof SUBSCRIPTION_PLANS];
   const price = billingPeriod === 'monthly' ? currentPlan?.monthlyPrice : currentPlan?.annualPrice;
+  const icon = planIcons[plan as keyof typeof planIcons];
+  const color = planColors[plan as keyof typeof planColors];
 
   useEffect(() => {
     if (!currentPlan) {
@@ -226,7 +211,7 @@ export default function Subscribe() {
           </div>
 
           {/* Plan Summary */}
-          <Card className={`mb-8 ${currentPlan.color} relative`}>
+          <Card className={`mb-8 ${color} relative`}>
             {'popular' in currentPlan && currentPlan.popular && (
               <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
                 Más Popular
@@ -236,21 +221,21 @@ export default function Subscribe() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-background rounded-lg">
-                    {currentPlan.icon}
+                    {icon}
                   </div>
                   <div>
                     <CardTitle className="text-xl">{currentPlan.name}</CardTitle>
                     <CardDescription>
-                      {currentPlan.credits} créditos mensuales
+                      {currentPlan.monthlyCredits} créditos mensuales
                     </CardDescription>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold">
                     ${price}
-                    {billingPeriod === 'annual' && currentPlan.originalAnnualPrice && (
+                    {billingPeriod === 'annual' && (
                       <span className="text-lg text-muted-foreground line-through ml-2">
-                        ${currentPlan.originalAnnualPrice}
+                        ${(currentPlan.monthlyPrice * 12).toFixed(2)}
                       </span>
                     )}
                   </div>
@@ -269,7 +254,7 @@ export default function Subscribe() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>{currentPlan.credits} créditos mensuales incluidos</span>
+                  <span>{currentPlan.monthlyCredits} créditos mensuales incluidos</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-primary" />

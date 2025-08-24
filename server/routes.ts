@@ -50,7 +50,7 @@ let stripe: Stripe | null = null;
 try {
   if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-11-20.acacia", // Using stable API version
+      apiVersion: "2023-10-16", // Using stable API version (latest stable without codename)
     });
     console.log("✅ Stripe initialized successfully");
   } else {

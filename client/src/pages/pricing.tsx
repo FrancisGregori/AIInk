@@ -11,86 +11,25 @@ import { CREDIT_PACKS, SUBSCRIPTION_PLANS } from "@shared/stripe-config";
 export default function Pricing() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
 
-  const plans = [
-    {
-      name: "Basic",
-      icon: <Sparkles className="h-6 w-6" />,
-      price: billingPeriod === "monthly" ? 11.99 : 119,
-      originalPrice: billingPeriod === "annual" ? 143.88 : null,
-      credits: 200,
-      period: billingPeriod === "monthly" ? "mes" : "año",
-      popular: false,
-      features: [
-        "200 créditos mensuales",
-        "40 stencils profesionales",
-        "66 diseños editados",
-        "Asistente AI (100 mensajes/mes)",
-        "Soporte estándar (48h)",
-        "Historial 30 días",
-        "Rollover 50% créditos"
-      ],
-      breakdown: {
-        stencils: "25 stencils (125 cr)",
-        editor: "20 ediciones (60 cr)",
-        free: "15 créditos libres"
-      },
-      cta: "Empezar con Basic",
-      disabled: false
-    },
-    {
-      name: "Pro",
-      icon: <Zap className="h-6 w-6" />,
-      price: billingPeriod === "monthly" ? 19.99 : 199,
-      originalPrice: billingPeriod === "annual" ? 239.88 : null,
-      credits: 500,
-      period: billingPeriod === "monthly" ? "mes" : "año",
-      popular: true,
-      features: [
-        "500 créditos mensuales",
-        "100 stencils profesionales",
-        "166 diseños editados",
-        "Asistente AI (500 mensajes/mes)",
-        "Soporte rápido (12h)",
-        "Modelo personalizado disponible",
-        "Exportación en lote",
-        "Rollover 50% créditos"
-      ],
-      breakdown: {
-        stencils: "60 stencils (300 cr)",
-        editor: "50 ediciones (150 cr)",
-        free: "50 créditos libres"
-      },
-      cta: "Upgrade a Pro",
-      disabled: false
-    },
-    {
-      name: "Premium",
-      icon: <Crown className="h-6 w-6" />,
-      price: billingPeriod === "monthly" ? 39.99 : 399,
-      originalPrice: billingPeriod === "annual" ? 479.88 : null,
-      credits: 1000,
-      period: billingPeriod === "monthly" ? "mes" : "año",
-      popular: false,
-      features: [
-        "1,000 créditos mensuales",
-        "200 stencils profesionales",
-        "333 diseños editados",
-        "Asistente AI ilimitado",
-        "Soporte prioritario (4h)",
-        "Modelo personalizado disponible",
-        "API access",
-        "Auto Top-Up disponible",
-        "Rollover 50% créditos"
-      ],
-      breakdown: {
-        stencils: "120 stencils (600 cr)",
-        editor: "100 ediciones (300 cr)",
-        free: "100 créditos libres"
-      },
-      cta: "Ir Premium",
-      disabled: false
-    }
-  ];
+  // Icons for each plan tier
+  const planIcons: Record<string, JSX.Element> = {
+    basic: <Sparkles className="h-6 w-6" />,
+    pro: <Zap className="h-6 w-6" />,
+    premium: <Crown className="h-6 w-6" />
+  };
+
+  // Get plans from centralized configuration
+  const plans = Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => ({
+    ...plan,
+    tier: key,
+    icon: planIcons[key],
+    price: billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice,
+    originalPrice: billingPeriod === "annual" ? plan.monthlyPrice * 12 : null,
+    period: billingPeriod === "monthly" ? "mes" : "año",
+    credits: plan.monthlyCredits,
+    cta: `Seleccionar ${plan.name}`,
+    disabled: false
+  }));
 
   // Get credit packs from centralized configuration
   const creditPacks = Object.values(CREDIT_PACKS);
@@ -158,11 +97,6 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <CardDescription className="text-sm space-y-1">
-                <div>• {plan.breakdown.stencils}</div>
-                <div>• {plan.breakdown.editor}</div>
-                <div>• {plan.breakdown.free}</div>
-              </CardDescription>
             </CardHeader>
             
             <CardContent>
@@ -177,13 +111,13 @@ export default function Pricing() {
             </CardContent>
             
             <CardFooter>
-              <Link to={`/subscribe?plan=${plan.name.toLowerCase()}&billing=${billingPeriod}`}>
+              <Link to={`/subscribe?plan=${plan.tier}&billing=${billingPeriod}`}>
                 <Button 
                   className="w-full" 
                   variant={plan.popular ? "default" : "outline"}
                   size="lg"
                   disabled={plan.disabled}
-                  data-testid={`button-subscribe-${plan.name.toLowerCase()}`}
+                  data-testid={`button-subscribe-${plan.tier}`}
                 >
                   {plan.cta}
                 </Button>
