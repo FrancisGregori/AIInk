@@ -9,6 +9,7 @@ import ComfyDeployService from "./comfydeploy";
 import Replicate from "replicate";
 import { z } from "zod";
 import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
+import Stripe from "stripe";
 
 // Configure multer for file uploads - SECURE DISK STORAGE
 import fs from 'fs';
@@ -43,6 +44,21 @@ const upload = multer({
 });
 
 // Validation schema for Replicate generation
+// Initialize Stripe - will use environment variables when available
+let stripe: Stripe | null = null;
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-07-30.basil",
+    });
+    console.log("✅ Stripe initialized successfully");
+  } else {
+    console.warn("⚠️  STRIPE_SECRET_KEY not found - Stripe functionality disabled");
+  }
+} catch (error) {
+  console.error("❌ Failed to initialize Stripe:", error);
+}
+
 const generateImageSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
   inputImageUrl: z.string().optional().refine((val) => {
@@ -1266,6 +1282,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error sirviendo imagen privada:', error);
       res.status(404).json({ message: "Imagen no encontrada" });
+    }
+  });
+
+  // ===============================
+  // STRIPE PAYMENT ROUTES
+  // ===============================
+  
+  // Helper function to check if Stripe is available
+  const checkStripe = (res: any) => {
+    if (!stripe) {
+      res.status(503).json({ 
+        error: "Payment system temporarily unavailable",
+        message: "Stripe no está configurado correctamente" 
+      });
+      return false;
+    }
+    return true;
+  };
+
+  // Create payment intent for one-time payments (credit packs)
+  app.post("/api/create-payment-intent", isAuthenticated, async (req: any, res) => {
+    try {
+      if (!checkStripe(res)) return;
+
+      const { amount, credits, type = "credit_pack" } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ error: "Invalid amount" });
+      }
+
+      const paymentIntent = await stripe!.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          userId: req.user.claims.sub,
+          type,
+          credits: credits?.toString() || "0"
+        }
+      });
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ 
+        message: "Error creating payment intent: " + error.message 
+      });
+    }
+  });
+
+  // Get or create subscription for subscription plans
+  app.post('/api/get-or-create-subscription', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!checkStripe(res)) return;
+
+      const userId = req.user.claims.sub;
+      let user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // If user already has a subscription, return it
+      if (user.stripeSubscriptionId) {
+        try {
+          const subscription = await stripe!.subscriptions.retrieve(user.stripeSubscriptionId);
+          
+          if (subscription.status === 'active') {
+            const latestInvoice = await stripe!.invoices.retrieve(subscription.latest_invoice as string, {
+              expand: ['payment_intent']
+            });
+            
+            return res.json({
+              subscriptionId: subscription.id,
+              status: subscription.status,
+              clientSecret: latestInvoice.payment_intent && typeof latestInvoice.payment_intent === 'object' ? (latestInvoice.payment_intent as any).client_secret : null,
+            });
+          }
+        } catch (error) {
+          console.error("Error retrieving existing subscription:", error);
+          // Continue to create new subscription if current one is invalid
+        }
+      }
+      
+      if (!user.email) {
+        return res.status(400).json({ error: 'No user email on file' });
+      }
+
+      // Create or get Stripe customer
+      let stripeCustomerId = user.stripeCustomerId;
+      if (!stripeCustomerId) {
+        const customer = await stripe!.customers.create({
+          email: user.email,
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          metadata: { userId }
+        });
+        
+        stripeCustomerId = customer.id;
+        
+        // Update user with Stripe customer ID
+        await storage.upsertUser({
+          ...user,
+          stripeCustomerId
+        });
+      }
+
+      const { plan = "basic", billingPeriod = "monthly" } = req.body;
+      
+      // Price mapping for different plans and periods
+      const priceMap: Record<string, Record<string, string>> = {
+        basic: {
+          monthly: "price_basic_monthly", // Replace with actual Stripe price IDs
+          annual: "price_basic_annual"
+        },
+        pro: {
+          monthly: "price_pro_monthly",
+          annual: "price_pro_annual"
+        },
+        premium: {
+          monthly: "price_premium_monthly",
+          annual: "price_premium_annual"
+        }
+      };
+
+      const priceId = priceMap[plan]?.[billingPeriod];
+      if (!priceId) {
+        return res.status(400).json({ error: "Invalid plan or billing period" });
+      }
+
+      // Create subscription
+      const subscription = await stripe!.subscriptions.create({
+        customer: stripeCustomerId,
+        items: [{ price: priceId }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+      });
+
+      // Update user with subscription info
+      await storage.upsertUser({
+        ...user,
+        stripeCustomerId,
+        stripeSubscriptionId: subscription.id,
+        subscriptionTier: plan
+      });
+  
+      res.json({
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        clientSecret: subscription.latest_invoice && typeof subscription.latest_invoice === 'object' ? (subscription.latest_invoice as any)?.payment_intent?.client_secret : null,
+      });
+    } catch (error: any) {
+      console.error("Error creating subscription:", error);
+      res.status(500).json({ 
+        error: "Error creating subscription: " + error.message 
+      });
+    }
+  });
+
+  // Get subscription status
+  app.get('/api/subscription/status', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!checkStripe(res)) return;
+
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (!user?.stripeSubscriptionId) {
+        return res.json({ status: 'none', tier: 'free' });
+      }
+
+      const subscription = await stripe!.subscriptions.retrieve(user.stripeSubscriptionId);
+      
+      res.json({
+        status: subscription.status,
+        tier: user.subscriptionTier || 'free',
+        currentPeriodEnd: (subscription as any).current_period_end,
+        cancelAtPeriodEnd: (subscription as any).cancel_at_period_end
+      });
+    } catch (error: any) {
+      console.error("Error getting subscription status:", error);
+      res.status(500).json({ error: "Error retrieving subscription status" });
     }
   });
 

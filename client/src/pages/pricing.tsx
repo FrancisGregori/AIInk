@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import Navigation from "@/components/Navigation";
 
 export default function Pricing() {
@@ -180,14 +180,17 @@ export default function Pricing() {
             </CardContent>
             
             <CardFooter>
-              <Button 
-                className="w-full" 
-                variant={plan.popular ? "default" : "outline"}
-                size="lg"
-                disabled={plan.disabled}
-              >
-                {plan.cta}
-              </Button>
+              <Link to={`/subscribe?plan=${plan.name.toLowerCase()}&billing=${billingPeriod}`}>
+                <Button 
+                  className="w-full" 
+                  variant={plan.popular ? "default" : "outline"}
+                  size="lg"
+                  disabled={plan.disabled}
+                  data-testid={`button-subscribe-${plan.name.toLowerCase()}`}
+                >
+                  {plan.cta}
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
         ))}
@@ -216,9 +219,16 @@ export default function Pricing() {
                 </CardDescription>
               </CardHeader>
               <CardFooter className="pt-0">
-                <Button variant="outline" className="w-full" size="sm">
-                  Comprar
-                </Button>
+                <Link to={`/checkout?amount=${pack.price}&credits=${pack.credits}`}>
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    size="sm"
+                    data-testid={`button-buy-credits-${pack.credits}`}
+                  >
+                    Comprar
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}
@@ -292,7 +302,13 @@ export default function Pricing() {
               <p className="text-sm text-muted-foreground mb-4">
                 Limited to 5 artists per month. Application review takes 24-48 hours.
               </p>
-              <Button className="w-full" variant="default" size="lg">
+              <Button 
+                className="w-full" 
+                variant="default" 
+                size="lg"
+                onClick={() => window.open('mailto:hello@tattoostencilpro.app?subject=Custom AI Model Application&body=Hola! Estoy interesado en el servicio de Custom AI Model Training. Por favor contáctenme para más información.', '_blank')}
+                data-testid="button-apply-custom-model"
+              >
                 Apply for Custom Model
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-2">

@@ -13,6 +13,8 @@ import Pricing from "@/pages/pricing";
 import SimpleLogin from "@/pages/simple-login";
 import Profile from "@/pages/profile";
 import Gallery from "@/pages/gallery";
+import Checkout from "@/pages/checkout";
+import Subscribe from "@/pages/subscribe";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -26,6 +28,8 @@ function Router() {
       <Route path="/gallery" component={Gallery} />
       <Route path="/stencil-tool" component={StencilTool} />
       <Route path="/design-editor" component={DesignEditor} />
+      <Route path="/checkout" component={Checkout} />
+      <Route path="/subscribe" component={Subscribe} />
       
       <Route component={NotFound} />
     </Switch>
