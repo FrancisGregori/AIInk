@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { Image, Grid3X3, Pencil, Minus, ZoomIn, Info, X, BadgeCheck, Brush, Plus, Sparkles } from "lucide-react";
+
+// Import style thumbnails
+import stevenThumbnail from "@/assets/style-thumbnails/steven.png";
+import makiThumbnail from "@/assets/style-thumbnails/maki.png";
+import darwinThumbnail from "@/assets/style-thumbnails/darwin.png";
+import adrianThumbnail from "@/assets/style-thumbnails/adrian.png";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +37,15 @@ const styleIcons: Record<string, any> = {
   neutral: Brush, // Icon for Neutral style
 };
 
+// Map style IDs to thumbnails
+const styleThumbnails: Record<string, string> = {
+  steven: stevenThumbnail,
+  maki: makiThumbnail,
+  makishi: makiThumbnail,
+  darwin: darwinThumbnail,
+  adrian: adrianThumbnail,
+};
+
 // Default hardcoded styles (fallback if API doesn't return data)
 const defaultStyles = [
   {
@@ -38,7 +53,7 @@ const defaultStyles = [
     name: "Stiven Hernandez",
     description: "Clean, classic detail",
     icon: Image,
-    thumbnail: null,
+    thumbnail: stevenThumbnail,
     verified: true,
   },
   {
@@ -46,7 +61,7 @@ const defaultStyles = [
     name: "Andres Makishi",
     description: "Minimalist fine-line",
     icon: Grid3X3,
-    thumbnail: null,
+    thumbnail: makiThumbnail,
     verified: true,
   },
   {
@@ -54,7 +69,7 @@ const defaultStyles = [
     name: "Darwin Enriquez",
     description: "Clean, detailed lines",
     icon: Pencil,
-    thumbnail: null,
+    thumbnail: darwinThumbnail,
     verified: true,
   },
   {
@@ -62,7 +77,7 @@ const defaultStyles = [
     name: "Adrian Rod",
     description: "Detailed & high-contrast",
     icon: Minus,
-    thumbnail: null,
+    thumbnail: adrianThumbnail,
     verified: true,
   },
 ];
@@ -77,7 +92,7 @@ export default function StyleSelector({ selectedStyle, onStyleChange, onOpenHelp
         name: style.name,
         description: style.description || "Professional tattoo stencil",
         icon: styleIcons[style.id] || Brush,
-        thumbnail: style.previewImageUrl || null,
+        thumbnail: styleThumbnails[style.id] || style.previewImageUrl || null,
         verified: style.isActive !== false,
       }))
     : defaultStyles;
