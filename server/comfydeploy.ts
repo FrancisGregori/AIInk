@@ -22,7 +22,7 @@ export class ComfyDeployService {
     }
   }
 
-  // Save processed stencil to protected Object Storage with optimized versions
+  // Save processed stencil to PUBLIC Object Storage with optimized versions
   async saveStencilToStorage(
     outputUrl: string,
     userId: string,
@@ -35,27 +35,27 @@ export class ComfyDeployService {
       const objectStorage = new ObjectStorageService();
       
       if (outputUrl.startsWith('data:')) {
-        // It's already base64, save directly
-        const result = await objectStorage.uploadImageFromBase64(
+        // It's already base64, save directly to PUBLIC storage
+        const result = await objectStorage.uploadPublicImageFromBase64(
           outputUrl,
-          'stencils',
+          'gallery',
           userId,
           true // generateOptimized
         );
-        console.log('Stencil saved to protected storage:', result.imageUrl);
+        console.log('Stencil saved to PUBLIC CDN:', result.imageUrl);
         if (result.variants) {
           console.log('Optimized variants generated:', Object.keys(result.variants));
         }
         return { imageUrl: result.imageUrl, variants: result.variants };
       } else {
-        // It's an external URL, download and save
-        const result = await objectStorage.uploadImageFromUrl(
+        // It's an external URL, download and save to PUBLIC storage
+        const result = await objectStorage.uploadPublicImageFromUrl(
           outputUrl,
-          'stencils',
+          'gallery',
           userId,
           true // generateOptimized
         );
-        console.log('Stencil downloaded and saved to protected storage:', result.imageUrl);
+        console.log('Stencil downloaded and saved to PUBLIC CDN:', result.imageUrl);
         if (result.variants) {
           console.log('Optimized variants generated:', Object.keys(result.variants));
         }

@@ -205,9 +205,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Update job based on ComfyDeploy status
           if (status.status === "completed" && status.outputUrl) {
             console.log("Job completed! Updating with URL:", status.outputUrl);
+            
+            // Subir imagen a almacenamiento PÚBLICO
+            let publicImageUrl = status.outputUrl;
+            let thumbnailUrl = null;
+            let variants = status.variants;
+            
+            try {
+              const objectStorage = new ObjectStorageService();
+              const uploadResult = await objectStorage.uploadPublicImageFromUrl(
+                status.outputUrl,
+                'gallery',
+                job.userId,
+                true // generateOptimized
+              );
+              publicImageUrl = uploadResult.imageUrl;
+              thumbnailUrl = uploadResult.thumbnailUrl;
+              variants = uploadResult.variants || status.variants;
+              console.log('Imagen subida a CDN público:', publicImageUrl);
+            } catch (uploadError) {
+              console.error('Error subiendo a Object Storage público:', uploadError);
+              // Mantener URL original si falla
+            }
+            
             await storage.updateStencilJob(job.id, {
               status: "completed",
-              processedImageUrl: status.outputUrl,
+              processedImageUrl: publicImageUrl,
               completedAt: new Date(),
             });
             
@@ -215,12 +238,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               await storage.addToGallery({
                 userId: job.userId,
-                imageUrl: status.outputUrl,
-                thumbnailUrl: null, // No guardar imagen original
+                imageUrl: publicImageUrl,
+                thumbnailUrl: thumbnailUrl,
                 type: 'stencil',
                 title: `Stencil - ${job.style}`,
                 style: job.style,
-                variants: status.variants, // Save optimized variants
+                variants: variants, // Save optimized variants
                 metadata: {
                   jobId: job.id,
                   processingOptions: job.processingOptions
@@ -430,17 +453,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Save to gallery
         if (result.outputUrl) {
           try {
+            // Subir imagen a almacenamiento PÚBLICO
+            let finalImageUrl = result.outputUrl;
+            let thumbnailUrl = publicImageUrl;
+            let variants = undefined;
+            
+            try {
+              const objectStorage = new ObjectStorageService();
+              const uploadResult = await objectStorage.uploadPublicImageFromUrl(
+                result.outputUrl,
+                'gallery',
+                userId,
+                true // generateOptimized
+              );
+              finalImageUrl = uploadResult.imageUrl;
+              thumbnailUrl = uploadResult.thumbnailUrl;
+              variants = uploadResult.variants;
+              console.log('Stencil subido a CDN público:', finalImageUrl);
+            } catch (uploadError) {
+              console.error('Error subiendo stencil a Object Storage público:', uploadError);
+              // Mantener URL original si falla
+            }
+            
             await storage.addToGallery({
               userId,
-              imageUrl: result.outputUrl,
-              thumbnailUrl: publicImageUrl,
+              imageUrl: finalImageUrl,
+              thumbnailUrl: thumbnailUrl,
               type: 'stencil',
               title: `Stencil - ${style}`,
               style: style,
               metadata: {
                 jobId: job.id,
                 processingOptions: options
-              }
+              },
+              variants
             });
             console.log("Stencil saved to gallery immediately");
           } catch (galleryError) {
