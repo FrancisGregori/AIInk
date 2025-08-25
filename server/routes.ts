@@ -1759,6 +1759,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint para servir imágenes desde Object Storage
+  app.get("/objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    
+    try {
+      // Construir el path completo del objeto
+      const bucketName = OBJECT_STORAGE_BUCKET;
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(`public/${filePath}`);
+      
+      // Verificar si existe
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      
+      // Obtener metadata del archivo
+      const [metadata] = await file.getMetadata();
+      
+      // Configurar headers de respuesta
+      res.set({
+        'Content-Type': metadata.contentType || 'application/octet-stream',
+        'Content-Length': metadata.size,
+        'Cache-Control': 'public, max-age=3600'
+      });
+      
+      // Stream del archivo a la respuesta
+      const stream = file.createReadStream();
+      stream.pipe(res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

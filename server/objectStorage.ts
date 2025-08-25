@@ -16,10 +16,7 @@ export const OBJECT_STORAGE_BUCKET =
 // SIEMPRE usar configuración de Replit (funciona en dev y prod)
 const isDevelopment = false; // Forzar a usar siempre la configuración de producción
 
-console.log('=== OBJECT STORAGE CONFIG ===');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('REPLIT_ENVIRONMENT:', process.env.REPLIT_ENVIRONMENT);
-console.log('Using Replit Sidecar Config: YES');
+// Object Storage configured for Replit
 
 // Object storage client - SIEMPRE usar configuración de Replit
 // El sidecar funciona tanto en desarrollo como en producción
@@ -42,7 +39,7 @@ export const objectStorageClient = new Storage({
   projectId: "",
 });
 
-console.log('Object Storage Client initialized for:', isDevelopment ? 'DEVELOPMENT' : 'DEPLOYMENT');
+// Object Storage client initialized
 
 export class ObjectNotFoundError extends Error {
   constructor() {

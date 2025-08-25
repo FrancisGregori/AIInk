@@ -64,7 +64,6 @@ app.use((req, res, next) => {
   try {
     // Configurar entorno correctamente (ya forzado arriba si es necesario)
     setupEnvironment();
-    console.log('🚀 Final NODE_ENV:', process.env.NODE_ENV);
 
     // Initialize stencil styles on startup
     await initializeStyles();

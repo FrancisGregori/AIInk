@@ -29,10 +29,6 @@ export function setupEnvironment() {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = env;
   }
-  console.log('🔧 Environment Detection:');
-  console.log('  NODE_ENV:', process.env.NODE_ENV || 'not set');
-  console.log('  REPLIT_ENVIRONMENT:', process.env.REPLIT_ENVIRONMENT || 'not set');
-  console.log('  REPLIT_DOMAINS:', process.env.REPLIT_DOMAINS ? 'configured' : 'not set');
-  console.log('  Detected as:', env);
+  // Environment configured
   return env;
 }
