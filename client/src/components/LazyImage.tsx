@@ -58,23 +58,27 @@ export function LazyImage({
     };
   }, [threshold, rootMargin]);
 
+  // Si ya está en vista, renderizar directamente la imagen
+  if (isInView) {
+    return (
+      <AuthenticatedImage
+        src={src}
+        alt={alt}
+        className={className}
+        onLoad={onLoad}
+        onError={onError}
+        loading="lazy"
+        variants={variants}
+      />
+    );
+  }
+
+  // Placeholder mientras no está en vista
   return (
     <div ref={containerRef} className={className}>
-      {isInView ? (
-        <AuthenticatedImage
-          src={src}
-          alt={alt}
-          className={className}
-          onLoad={onLoad}
-          onError={onError}
-          loading="lazy"
-          variants={variants}
-        />
-      ) : (
-        <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
-          <div className="animate-pulse text-xs text-gray-500">...</div>
-        </div>
-      )}
+      <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
+      </div>
     </div>
   );
 }
