@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ImageVariants {
   webp?: Record<number, string>;
@@ -18,19 +18,31 @@ interface AuthenticatedImageProps {
 export function AuthenticatedImage({ src, alt, className, onLoad, onError, loading = 'lazy', variants }: AuthenticatedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isTimeout, setIsTimeout] = useState(false);
+  const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reset loading and error states when the source changes
   useEffect(() => {
     setIsLoading(true);
     setHasError(false);
+    setIsTimeout(false);
+    timeoutId.current = setTimeout(() => {
+      setIsTimeout(true);
+      handleError();
+    }, 10000);
+    return () => {
+      if (timeoutId.current) clearTimeout(timeoutId.current);
+    };
   }, [src]);
 
   const handleLoad = () => {
+    if (timeoutId.current) clearTimeout(timeoutId.current);
     setIsLoading(false);
     onLoad?.();
   };
 
   const handleError = (event?: any) => {
+    if (timeoutId.current) clearTimeout(timeoutId.current);
     console.error('Fallo al cargar imagen:', src);
     setIsLoading(false);
     setHasError(true);
@@ -93,7 +105,9 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
           {isLoading ? (
             <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
           ) : (
-            <div className="text-xs text-red-500">Error al cargar</div>
+            <div className="text-xs text-red-500">
+              {isTimeout ? 'Tiempo de espera agotado' : 'Error al cargar'}
+            </div>
           )}
         </div>
       )}
