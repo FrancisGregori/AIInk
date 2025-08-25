@@ -48,7 +48,7 @@ import {
 import Navigation from "@/components/Navigation";
 import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
 import type { FluxProject, StencilJob } from "@shared/schema";
-import { AuthenticatedImage } from "@/components/AuthenticatedImage";
+import { LazyImage } from "@/components/LazyImage";
 
 function DesignEditor() {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -1030,7 +1030,7 @@ function DesignEditor() {
                         <Dialog>
                           <DialogTrigger asChild>
                             <div className="relative cursor-pointer group">
-                              <AuthenticatedImage
+                              <LazyImage
                                 src={currentJob.processedImageUrl}
                                 alt="Processed design"
                                 className="w-full rounded-lg transition-all group-hover:opacity-90"
@@ -1039,7 +1039,7 @@ function DesignEditor() {
                           </DialogTrigger>
                           <DialogContent className="max-w-4xl max-h-[90vh] p-2">
                             <div className="relative">
-                              <AuthenticatedImage
+                              <LazyImage
                                 src={currentJob.processedImageUrl}
                                 alt="Full size design"
                                 className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
@@ -1058,7 +1058,7 @@ function DesignEditor() {
                         </Dialog>
                       ) : recoveredImageUrl ? (
                         <div className="relative">
-                          <AuthenticatedImage
+                          <LazyImage
                             src={recoveredImageUrl}
                             alt="Processing..."
                             className="w-full rounded-lg opacity-75"
@@ -1194,7 +1194,7 @@ function DesignEditor() {
                     <Dialog key={project.id}>
                       <DialogTrigger asChild>
                         <div className="relative group cursor-pointer">
-                          <AuthenticatedImage
+                          <LazyImage
                             src={project.imageUrl || ""}
                             alt={project.name}
                             className="w-full aspect-[3/4] rounded-lg object-cover transition-opacity"
@@ -1204,7 +1204,7 @@ function DesignEditor() {
                         <DialogContent className="max-w-4xl max-h-[90vh] p-4">
                           <div className="space-y-4">
                             <div className="relative">
-                              <AuthenticatedImage
+                              <LazyImage
                                 src={project.imageUrl || ""}
                                 alt={`${project.name} full size`}
                                 className="w-full h-auto max-h-[70vh] object-contain rounded-lg"

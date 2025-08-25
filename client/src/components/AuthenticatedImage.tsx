@@ -6,9 +6,10 @@ interface AuthenticatedImageProps {
   className?: string;
   onLoad?: () => void;
   onError?: () => void;
+  loading?: 'lazy' | 'eager';
 }
 
-export function AuthenticatedImage({ src, alt, className, onLoad, onError }: AuthenticatedImageProps) {
+export function AuthenticatedImage({ src, alt, className, onLoad, onError, loading = 'lazy' }: AuthenticatedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -37,7 +38,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError }: Aut
         src={src}
         alt={alt}
         className={className}
-        loading="lazy"
+        loading={loading}
         crossOrigin={isInternalAPI ? 'use-credentials' : undefined}
         onLoad={handleLoad}
         onError={handleError}

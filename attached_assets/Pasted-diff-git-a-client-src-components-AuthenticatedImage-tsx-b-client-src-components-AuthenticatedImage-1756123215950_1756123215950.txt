@@ -1,0 +1,76 @@
+diff --git a/client/src/components/AuthenticatedImage.tsx b/client/src/components/AuthenticatedImage.tsx
+index eb1ec5b39a2497702c609d887e013ebbbcfe73da..4a56edf4a1737cd303d1dbf01792ec74c3b19894 100644
+--- a/client/src/components/AuthenticatedImage.tsx
++++ b/client/src/components/AuthenticatedImage.tsx
+@@ -1,36 +1,37 @@
+ import { useState, useEffect } from 'react';
+ 
+ interface AuthenticatedImageProps {
+   src: string;
+   alt: string;
+   className?: string;
+   onLoad?: () => void;
+   onError?: () => void;
++  loading?: 'lazy' | 'eager';
+ }
+ 
+-export function AuthenticatedImage({ src, alt, className, onLoad, onError }: AuthenticatedImageProps) {
++export function AuthenticatedImage({ src, alt, className, onLoad, onError, loading }: AuthenticatedImageProps) {
+   const [imageSrc, setImageSrc] = useState<string>('');
+   const [isLoading, setIsLoading] = useState(true);
+   const [hasError, setHasError] = useState(false);
+ 
+   useEffect(() => {
+     let mounted = true;
+ 
+     const loadImage = async () => {
+       try {
+         setIsLoading(true);
+         setHasError(false);
+         
+         // Check if this is an internal API route that requires authentication
+         const isInternalAPI = src.startsWith('/api/images/');
+         
+         if (isInternalAPI) {
+           // Fetch the image with credentials for internal API routes
+           const response = await fetch(src, {
+             credentials: 'include',
+             mode: 'cors',
+             cache: 'default'
+           });
+           
+           if (!response.ok) {
+             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+diff --git a/client/src/components/AuthenticatedImage.tsx b/client/src/components/AuthenticatedImage.tsx
+index eb1ec5b39a2497702c609d887e013ebbbcfe73da..4a56edf4a1737cd303d1dbf01792ec74c3b19894 100644
+--- a/client/src/components/AuthenticatedImage.tsx
++++ b/client/src/components/AuthenticatedImage.tsx
+@@ -77,27 +78,27 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError }: Aut
+   // Cleanup blob URL when component unmounts
+   useEffect(() => {
+     return () => {
+       if (imageSrc && imageSrc.startsWith('blob:')) {
+         URL.revokeObjectURL(imageSrc);
+       }
+     };
+   }, [imageSrc]);
+ 
+   if (isLoading) {
+     return (
+       <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
+         <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
+       </div>
+     );
+   }
+ 
+   if (hasError) {
+     return (
+       <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
+         <div className="text-xs text-red-500">Error al cargar</div>
+       </div>
+     );
+   }
+ 
+-  return <img src={imageSrc} alt={alt} className={className} />;
++  return <img src={imageSrc} alt={alt} className={className} loading={loading} />;
+ }
