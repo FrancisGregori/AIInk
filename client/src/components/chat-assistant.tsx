@@ -52,6 +52,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isScrollingToImage, setIsScrollingToImage] = useState(false);
 
   // Handle image download
   const downloadImage = (imageUrl: string, filename: string) => {
@@ -275,6 +276,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         timestamp: new Date(),
         image: imageUrl
       };
+      
+      // Disable normal auto-scroll temporarily
+      setIsScrollingToImage(true);
       setMessages(prev => [...prev, imageMessage]);
       
       // Wait for DOM update and image load before scrolling
@@ -297,7 +301,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               // Third scroll to ensure we're at the bottom
               setTimeout(() => {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
-              }, 300);
+                // Re-enable normal scroll after image scroll is complete
+                setIsScrollingToImage(false);
+              }, 500);
             }
           }, 200);
         };
@@ -311,13 +317,15 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           }
         }, 1000);
         
-        // Extra fallback to ensure scroll
+        // Extra fallback to ensure scroll and re-enable normal scroll
         setTimeout(() => {
           const messagesContainer = messagesEndRef.current?.parentElement;
           if (messagesContainer) {
             messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
           }
-        }, 2000);
+          // Ensure we re-enable normal scroll
+          setIsScrollingToImage(false);
+        }, 3000);
       }, 100);
     }
   }));
@@ -356,11 +364,14 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
 
   // Auto-scroll to bottom when new messages arrive or chat opens
   useEffect(() => {
+    // Don't auto-scroll if we're scrolling to an image
+    if (isScrollingToImage) return;
+    
     // Use scrollToBottom function with slight delay for DOM update
     setTimeout(() => {
       scrollToBottom();
     }, 100);
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isScrollingToImage]);
 
   // Detect when a new image is loaded and automatically analyze it
   useEffect(() => {
