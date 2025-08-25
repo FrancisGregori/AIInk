@@ -276,12 +276,18 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         image: imageUrl
       };
       setMessages(prev => [...prev, imageMessage]);
-      // Auto-scroll after image loads - wait longer for image to render
+      // Auto-scroll after image loads with multiple attempts to ensure it works
       setTimeout(() => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
         }
       }, 500);
+      // Second attempt with longer delay in case image is still loading
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+      }, 1200);
     }
   }));
   
@@ -321,8 +327,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      // Only auto-scroll for assistant messages (responses) and when chat opens
-      if (lastMessage.role === 'assistant' || isOpen) {
+      // Only auto-scroll for assistant messages (responses) but not generated images
+      // Generated images have their own scroll in addImageMessage
+      if (lastMessage.role === 'assistant' && !lastMessage.id.startsWith('generated-')) {
         setTimeout(() => {
           scrollToBottom();
         }, 100);
