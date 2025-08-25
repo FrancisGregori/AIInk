@@ -282,25 +282,42 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         // Create a temporary image to detect when it's loaded
         const img = new Image();
         img.onload = () => {
-          // Image is loaded, now scroll all the way to bottom
+          // Image is loaded, scroll multiple times to ensure it reaches bottom
           setTimeout(() => {
-            // Get the messages container element
             const messagesContainer = messagesEndRef.current?.parentElement;
             if (messagesContainer) {
-              // Scroll to the absolute bottom of the container
-              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+              // Force scroll to absolute bottom multiple times
+              messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
+              
+              // Second scroll after a brief pause
+              setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
+              }, 100);
+              
+              // Third scroll to ensure we're at the bottom
+              setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
+              }, 300);
             }
-          }, 200); // Wait for render
+          }, 200);
         };
         img.src = imageUrl;
         
-        // Fallback scroll if image takes too long
+        // Fallback scrolls if image takes too long
         setTimeout(() => {
           const messagesContainer = messagesEndRef.current?.parentElement;
           if (messagesContainer) {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
           }
-        }, 1500);
+        }, 1000);
+        
+        // Extra fallback to ensure scroll
+        setTimeout(() => {
+          const messagesContainer = messagesEndRef.current?.parentElement;
+          if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
+          }
+        }, 2000);
       }, 100);
     }
   }));
