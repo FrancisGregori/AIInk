@@ -33,8 +33,8 @@ export function getSession() {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: true,
-        sameSite: "none" as const,
+        secure: process.env.NODE_ENV === "production", // Solo HTTPS en producción
+        sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
         domain: process.env.COOKIE_DOMAIN, // e.g. '.aiink.com'
         maxAge: sessionTtl,
       },
@@ -57,8 +57,8 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
-      sameSite: "none" as const,
+      secure: process.env.NODE_ENV === "production", // Solo HTTPS en producción
+      sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
       domain: process.env.COOKIE_DOMAIN, // e.g. '.aiink.com'
       maxAge: sessionTtl,
     },
