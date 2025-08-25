@@ -317,13 +317,15 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     }
   }, [currentImage]);
 
-  // Auto-scroll to bottom when new messages arrive or chat opens
+  // Auto-scroll to bottom only when chat opens (not on every message)
   useEffect(() => {
-    // Use scrollToBottom function with slight delay for DOM update
-    setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-  }, [messages, isOpen]);
+    if (isOpen) {
+      // Small delay for DOM update when opening
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    }
+  }, [isOpen]);
 
   // Detect when a new image is loaded and automatically analyze it
   useEffect(() => {
