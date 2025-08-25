@@ -686,7 +686,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             prompt: content,
             inputImageUrl: storedImage, // Send current image as base64
             model: modelVariant, // Use selected model variant
-            aspectRatio: 'match_input_image'
+            aspectRatio: aspectRatio // Use the selected aspect ratio from props
           }),
         });
 

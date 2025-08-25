@@ -826,9 +826,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // Solo para Kontext, manejar aspect ratio
-        if (model !== "qwen" && aspectRatio && aspectRatio !== "match_input_image") {
-          input.aspect_ratio = aspectRatio;
+        // Para Kontext, siempre enviar aspect ratio cuando hay imagen
+        if (model !== "qwen") {
+          // Mapear "Match Input" del frontend a "match_input_image" para Replicate
+          const mappedAspectRatio = aspectRatio === "Match Input" ? "match_input_image" : aspectRatio;
+          input.aspect_ratio = mappedAspectRatio || "match_input_image";
+          console.log("Aspect ratio set to:", input.aspect_ratio);
         }
       } else {
         // Qwen requiere una imagen, no puede generar desde texto puro
@@ -837,9 +840,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             error: "Qwen Image Edit requires a reference image. Please upload an image first." 
           });
         }
-        // Para generación desde texto con Kontext, usar dimensiones específicas
-        input.width = width;
-        input.height = height;
+        // Para generación desde texto con Kontext, usar aspect ratio en lugar de dimensiones
+        // Kontext no acepta width/height, solo aspect_ratio
+        const mappedAspectRatio = aspectRatio === "Match Input" ? "1:1" : aspectRatio;
+        input.aspect_ratio = mappedAspectRatio || "1:1";
+        console.log("Aspect ratio for text-only generation:", input.aspect_ratio);
       }
 
       // Seleccionar el modelo basado en el parámetro

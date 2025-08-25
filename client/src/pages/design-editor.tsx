@@ -592,7 +592,7 @@ function DesignEditor() {
           prompt: prompt,
           inputImageUrl: referencePreview, // Changed from imageData to inputImageUrl like InkVision
           model: modelVariant, // Send 'pro', 'max', or 'qwen'
-          aspectRatio: 'match_input_image'
+          aspectRatio: aspectRatio // Use the selected aspect ratio instead of hardcoding
         }),
       });
 
