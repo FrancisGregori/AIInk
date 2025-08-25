@@ -69,12 +69,80 @@ export class ObjectStorageService {
     return process.env.PRIVATE_OBJECT_DIR || `/${this.bucketName}/.private`;
   }
 
-  // Subir imagen desde base64 a Object Storage
+  // Generar versiones optimizadas de imagen
+  private async generateOptimizedVersions(
+    imageBuffer: Buffer,
+    baseFileName: string,
+    userId: string
+  ): Promise<{
+    variants: Record<string, Record<number, string>>;
+    sizes: number[];
+  }> {
+    const sizes = [400, 800, 1200]; // Diferentes anchos
+    const formats = ['webp', 'avif'] as const;
+    const variants: Record<string, Record<number, string>> = {
+      webp: {},
+      avif: {}
+    };
+    
+    const bucket = objectStorageClient.bucket(this.bucketName);
+    const timestamp = Date.now();
+    const fileId = randomUUID();
+    
+    for (const format of formats) {
+      for (const width of sizes) {
+        try {
+          // Generar versión optimizada
+          let sharpInstance = sharp(imageBuffer)
+            .resize(width, null, {
+              withoutEnlargement: true,
+              fit: 'inside'
+            });
+          
+          // Aplicar formato específico
+          if (format === 'webp') {
+            sharpInstance = sharpInstance.webp({ quality: 85 });
+          } else if (format === 'avif') {
+            sharpInstance = sharpInstance.avif({ quality: 80 });
+          }
+          
+          const optimizedBuffer = await sharpInstance.toBuffer();
+          
+          // Guardar en Object Storage
+          const fileName = `.private/optimized/${userId}/${timestamp}_${fileId}_${width}.${format}`;
+          const file = bucket.file(fileName);
+          
+          await file.save(optimizedBuffer, {
+            metadata: {
+              contentType: format === 'webp' ? 'image/webp' : 'image/avif',
+              cacheControl: 'public, max-age=31536000',
+            },
+          });
+          
+          // Guardar URL en el objeto de variantes
+          variants[format][width] = `/api/images/${encodeURIComponent(fileName)}`;
+          
+          console.log(`Generated ${format} at ${width}px: ${variants[format][width]}`);
+        } catch (error) {
+          console.error(`Error generating ${format} at ${width}px:`, error);
+        }
+      }
+    }
+    
+    return { variants, sizes };
+  }
+
+  // Subir imagen desde base64 a Object Storage con versiones optimizadas
   async uploadImageFromBase64(
     base64Data: string,
     folder: 'designs' | 'stencils' | 'thumbnails',
-    userId: string
-  ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+    userId: string,
+    generateOptimized: boolean = true
+  ): Promise<{ 
+    imageUrl: string; 
+    thumbnailUrl: string;
+    variants?: Record<string, Record<number, string>>;
+  }> {
     try {
       console.log(`=== SUBIENDO IMAGEN A OBJECT STORAGE (PRIVADO) ===`);
       console.log(`Carpeta: ${folder}, Usuario: ${userId}`);
@@ -129,19 +197,40 @@ export class ObjectStorageService {
       console.log(`Tamaño original: ${imageBuffer.length} bytes`);
       console.log(`Tamaño miniatura: ${thumbnailBuffer.length} bytes`);
       
-      return { imageUrl, thumbnailUrl };
+      // Generar versiones optimizadas si se solicita
+      let variants = undefined;
+      if (generateOptimized && folder !== 'thumbnails') {
+        try {
+          const optimized = await this.generateOptimizedVersions(
+            imageBuffer,
+            fileName,
+            userId
+          );
+          variants = optimized.variants;
+          console.log('Versiones optimizadas generadas:', Object.keys(variants));
+        } catch (error) {
+          console.error('Error generando versiones optimizadas:', error);
+        }
+      }
+      
+      return { imageUrl, thumbnailUrl, variants };
     } catch (error) {
       console.error('Error subiendo imagen a Object Storage:', error);
       throw new Error('Failed to upload image to Object Storage');
     }
   }
 
-  // Subir imagen desde URL externa
+  // Subir imagen desde URL externa con versiones optimizadas
   async uploadImageFromUrl(
     sourceUrl: string,
     folder: 'designs' | 'stencils' | 'thumbnails',
-    userId: string
-  ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+    userId: string,
+    generateOptimized: boolean = true
+  ): Promise<{ 
+    imageUrl: string; 
+    thumbnailUrl: string;
+    variants?: Record<string, Record<number, string>>;
+  }> {
     try {
       console.log(`=== DESCARGANDO Y SUBIENDO IMAGEN (PRIVADO) ===`);
       console.log(`URL origen: ${sourceUrl}`);
@@ -199,7 +288,23 @@ export class ObjectStorageService {
       console.log(`URL Original: ${imageUrl}`);
       console.log(`URL Miniatura: ${thumbnailUrl}`);
       
-      return { imageUrl, thumbnailUrl };
+      // Generar versiones optimizadas si se solicita
+      let variants = undefined;
+      if (generateOptimized && folder !== 'thumbnails') {
+        try {
+          const optimized = await this.generateOptimizedVersions(
+            imageBuffer,
+            fileName,
+            userId
+          );
+          variants = optimized.variants;
+          console.log('Versiones optimizadas generadas:', Object.keys(variants));
+        } catch (error) {
+          console.error('Error generando versiones optimizadas:', error);
+        }
+      }
+      
+      return { imageUrl, thumbnailUrl, variants };
     } catch (error) {
       console.error('Error procesando imagen desde URL:', error);
       throw new Error('Failed to process image from URL');

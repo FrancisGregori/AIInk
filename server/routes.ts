@@ -222,10 +222,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 style: job.style,
                 metadata: {
                   jobId: job.id,
-                  processingOptions: job.processingOptions
+                  processingOptions: job.processingOptions,
+                  variants: status.variants // Save optimized variants in metadata
                 }
               });
               console.log("Stencil saved to gallery");
+              if (status.variants) {
+                console.log("Optimized variants saved:", Object.keys(status.variants));
+              }
             } catch (galleryError) {
               console.error("Error saving to gallery:", galleryError);
               // Don't fail the request if gallery save fails
@@ -1017,30 +1021,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('=== PROCESANDO IMAGEN PARA OBJECT STORAGE ===');
         console.log('Tipo de imagen:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
         
-        // Subir la imagen a Object Storage
+        // Subir la imagen a Object Storage con versiones optimizadas
+        let variants = undefined;
         if (imageUrl.startsWith('data:')) {
           // Si es base64, subir directamente
           const uploadResult = await objectStorage.uploadImageFromBase64(
             imageUrl,
             'designs',
-            userId
+            userId,
+            true // generateOptimized
           );
           finalImageUrl = uploadResult.imageUrl;
           thumbnailUrl = uploadResult.thumbnailUrl;
+          variants = uploadResult.variants;
         } else {
           // Si es URL externa, descargar y subir
           const uploadResult = await objectStorage.uploadImageFromUrl(
             imageUrl,
             'designs',
-            userId
+            userId,
+            true // generateOptimized
           );
           finalImageUrl = uploadResult.imageUrl;
           thumbnailUrl = uploadResult.thumbnailUrl;
+          variants = uploadResult.variants;
         }
         
         console.log('=== IMAGEN OPTIMIZADA ===');
         console.log('URL final:', finalImageUrl);
         console.log('URL miniatura:', thumbnailUrl);
+        if (variants) {
+          console.log('Variantes optimizadas generadas:', Object.keys(variants));
+        }
       } catch (uploadError) {
         console.error('Error subiendo a Object Storage, usando URL original:', uploadError);
         // Si falla, mantener la URL original
@@ -1057,7 +1069,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         prompt: prompt,
         metadata: {
           model: modelName,
-          inputImageUrl: inputImageUrl
+          inputImageUrl: inputImageUrl,
+          variants: variants // Save optimized variants in metadata
         }
       });
       

@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { AuthenticatedImage } from './AuthenticatedImage';
 
+interface ImageVariants {
+  webp?: Record<number, string>;
+  avif?: Record<number, string>;
+}
+
 interface LazyImageProps {
   src: string;
   alt: string;
@@ -9,6 +14,7 @@ interface LazyImageProps {
   rootMargin?: string;
   onLoad?: () => void;
   onError?: () => void;
+  variants?: ImageVariants;
 }
 
 export function LazyImage({ 
@@ -18,7 +24,8 @@ export function LazyImage({
   threshold = 0.1,
   rootMargin = '100px',
   onLoad,
-  onError 
+  onError,
+  variants
 }: LazyImageProps) {
   const [isInView, setIsInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -61,6 +68,7 @@ export function LazyImage({
           onLoad={onLoad}
           onError={onError}
           loading="lazy"
+          variants={variants}
         />
       ) : (
         <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>

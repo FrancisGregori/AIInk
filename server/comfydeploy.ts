@@ -22,38 +22,49 @@ export class ComfyDeployService {
     }
   }
 
-  // Save processed stencil to protected Object Storage
+  // Save processed stencil to protected Object Storage with optimized versions
   async saveStencilToStorage(
     outputUrl: string,
     userId: string,
     style: string
-  ): Promise<string> {
+  ): Promise<{
+    imageUrl: string;
+    variants?: Record<string, Record<number, string>>;
+  }> {
     try {
       const objectStorage = new ObjectStorageService();
       
       if (outputUrl.startsWith('data:')) {
         // It's already base64, save directly
-        const { imageUrl } = await objectStorage.uploadImageFromBase64(
+        const result = await objectStorage.uploadImageFromBase64(
           outputUrl,
           'stencils',
-          userId
+          userId,
+          true // generateOptimized
         );
-        console.log('Stencil saved to protected storage:', imageUrl);
-        return imageUrl;
+        console.log('Stencil saved to protected storage:', result.imageUrl);
+        if (result.variants) {
+          console.log('Optimized variants generated:', Object.keys(result.variants));
+        }
+        return { imageUrl: result.imageUrl, variants: result.variants };
       } else {
         // It's an external URL, download and save
-        const { imageUrl } = await objectStorage.uploadImageFromUrl(
+        const result = await objectStorage.uploadImageFromUrl(
           outputUrl,
           'stencils',
-          userId
+          userId,
+          true // generateOptimized
         );
-        console.log('Stencil downloaded and saved to protected storage:', imageUrl);
-        return imageUrl;
+        console.log('Stencil downloaded and saved to protected storage:', result.imageUrl);
+        if (result.variants) {
+          console.log('Optimized variants generated:', Object.keys(result.variants));
+        }
+        return { imageUrl: result.imageUrl, variants: result.variants };
       }
     } catch (error) {
       console.error('Error saving stencil to storage:', error);
       // Return original URL as fallback
-      return outputUrl;
+      return { imageUrl: outputUrl };
     }
   }
 
@@ -74,7 +85,8 @@ export class ComfyDeployService {
       if (userId) {
         const styleName = typeof style === 'string' ? style : style.id;
         try {
-          mockOutputUrl = await this.saveStencilToStorage(imageUrl, userId, styleName);
+          const result = await this.saveStencilToStorage(imageUrl, userId, styleName);
+          mockOutputUrl = result.imageUrl;
         } catch (error) {
           console.error('Failed to save mock stencil to storage:', error);
           // Fallback to original behavior
@@ -165,7 +177,12 @@ export class ComfyDeployService {
     runId: string,
     userId?: string,
     style?: string
-  ): Promise<{ status: string; outputUrl?: string; error?: string }> {
+  ): Promise<{ 
+    status: string; 
+    outputUrl?: string; 
+    error?: string;
+    variants?: Record<string, Record<number, string>>;
+  }> {
     if (!this.apiKey || runId.startsWith("mock-")) {
       return {
         status: "completed",
@@ -244,9 +261,12 @@ export class ComfyDeployService {
       outputUrl = outputUrl || data.output_url;
       
       // If we have an outputUrl and userId, save to protected storage
+      let variants = undefined;
       if (outputUrl && userId && style) {
         try {
-          outputUrl = await this.saveStencilToStorage(outputUrl, userId, style);
+          const result = await this.saveStencilToStorage(outputUrl, userId, style);
+          outputUrl = result.imageUrl;
+          variants = result.variants;
         } catch (error) {
           console.error('Failed to save real stencil to storage:', error);
           // Continue with original URL as fallback
@@ -257,6 +277,7 @@ export class ComfyDeployService {
         status,
         outputUrl,
         error: data.error,
+        variants,
       };
     } catch (error) {
       console.error("Error checking ComfyDeploy status:", error);
