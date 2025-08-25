@@ -31,21 +31,17 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
   };
 
   const handleError = (event?: any) => {
-    console.error('Error loading image:', {
-      src,
-      isInternalAPI,
-      needsCredentials,
-      error: event
-    });
+    console.error('Fallo al cargar imagen:', src);
     setIsLoading(false);
     setHasError(true);
     onError?.();
   };
 
   const url = new URL(src, window.location.origin);
+  const isSameOrigin = url.origin === window.location.origin;
+  // Solo necesitamos credenciales si es API interno Y origen diferente
   const isInternalAPI = url.pathname.startsWith('/api/images/');
-  // SIEMPRE enviar credenciales para URLs internas de imágenes privadas
-  const needsCredentials = isInternalAPI;
+  const needsCredentials = isInternalAPI && !isSameOrigin;
   
   // Build srcSet from variants
   const buildSrcSet = (sources?: Record<number, string>) =>
