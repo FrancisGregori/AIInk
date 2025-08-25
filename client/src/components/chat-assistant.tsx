@@ -282,29 +282,25 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         // Create a temporary image to detect when it's loaded
         const img = new Image();
         img.onload = () => {
-          // Image is loaded, now scroll to show it completely
+          // Image is loaded, now scroll all the way to bottom
           setTimeout(() => {
-            if (messagesEndRef.current) {
-              messagesEndRef.current.scrollIntoView({ 
-                behavior: "smooth", 
-                block: "end",
-                inline: "nearest"
-              });
+            // Get the messages container element
+            const messagesContainer = messagesEndRef.current?.parentElement;
+            if (messagesContainer) {
+              // Scroll to the absolute bottom of the container
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
-          }, 100); // Small delay for render
+          }, 200); // Wait for render
         };
         img.src = imageUrl;
         
         // Fallback scroll if image takes too long
         setTimeout(() => {
-          if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ 
-              behavior: "smooth", 
-              block: "end",
-              inline: "nearest"
-            });
+          const messagesContainer = messagesEndRef.current?.parentElement;
+          if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
           }
-        }, 1000);
+        }, 1500);
       }, 100);
     }
   }));
