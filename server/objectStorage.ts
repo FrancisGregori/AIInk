@@ -13,12 +13,13 @@ export const OBJECT_STORAGE_BUCKET =
   process.env.OBJECT_STORAGE_BUCKET ||
   "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b";
 
-// Detectar entorno usando la función centralizada
-const isDevelopment = detectEnvironment() === 'development';
+// SIEMPRE usar configuración de Replit (funciona en dev y prod)
+const isDevelopment = false; // Forzar a usar siempre la configuración de producción
 
 console.log('=== OBJECT STORAGE CONFIG ===');
-console.log('Environment:', detectEnvironment());
-console.log('Is Development:', isDevelopment);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('REPLIT_ENVIRONMENT:', process.env.REPLIT_ENVIRONMENT);
+console.log('Using Replit Sidecar Config: YES');
 
 // Object storage client - SIEMPRE usar configuración de Replit
 // El sidecar funciona tanto en desarrollo como en producción
