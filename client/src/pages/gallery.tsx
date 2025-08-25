@@ -44,7 +44,7 @@ export default function Gallery() {
   const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
 
   // Fetch gallery items
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: ['/api/gallery', currentPage, selectedType, itemsPerPage],
     queryFn: async () => {
       const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
@@ -136,6 +136,19 @@ export default function Gallery() {
       });
     }
   };
+
+  if (isError && currentPage === 1) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="flex flex-col justify-center items-center min-h-[50vh] gap-4">
+          <p className="text-destructive">No se pudo cargar la galería.</p>
+          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/gallery'] })}>
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading && currentPage === 1) {
     return (
