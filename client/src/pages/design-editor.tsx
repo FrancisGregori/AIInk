@@ -624,7 +624,7 @@ function DesignEditor() {
           thumbnailUrl,
         },
         userId: (user as any)?.id || "anonymous",
-        imageUrl
+        imageUrl: imageUrl // Usar la URL pública optimizada devuelta por el servidor
       };
       
       await apiRequest("POST", "/api/flux/create", projectData);
