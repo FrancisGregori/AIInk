@@ -19,45 +19,117 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isTimeout, setIsTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [currentSrc, setCurrentSrc] = useState(src);
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const MAX_RETRIES = 3;
+  const TIMEOUT_MS = 30000; // Aumentado a 30 segundos
 
   // Reset loading and error states when the source changes
   useEffect(() => {
     setIsLoading(true);
     setHasError(false);
     setIsTimeout(false);
+    setRetryCount(0);
+    setCurrentSrc(src);
+    
+    // Set timeout for loading
+    if (timeoutId.current) clearTimeout(timeoutId.current);
     timeoutId.current = setTimeout(() => {
+      console.warn(`Imagen timeout después de ${TIMEOUT_MS}ms:`, src);
       setIsTimeout(true);
       handleError();
-    }, 10000);
+    }, TIMEOUT_MS);
+    
     return () => {
       if (timeoutId.current) clearTimeout(timeoutId.current);
+      if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
     };
   }, [src]);
 
   const handleLoad = () => {
     if (timeoutId.current) clearTimeout(timeoutId.current);
+    if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
     setIsLoading(false);
+    setHasError(false);
+    console.log('Imagen cargada exitosamente:', src);
     onLoad?.();
   };
 
   const handleError = (event?: any) => {
     if (timeoutId.current) clearTimeout(timeoutId.current);
-    console.error('Fallo al cargar imagen:', src);
-    setIsLoading(false);
-    setHasError(true);
-    onError?.();
+    console.error(`Error al cargar imagen (intento ${retryCount + 1}/${MAX_RETRIES + 1}):`, src);
+    
+    // Implementar retry con backoff exponencial
+    if (retryCount < MAX_RETRIES && !isTimeout) {
+      const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10 segundos
+      console.log(`Reintentando en ${delay}ms...`);
+      
+      retryTimeoutId.current = setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        // Forzar recarga añadiendo timestamp
+        const separator = src.includes('?') ? '&' : '?';
+        setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
+        setIsLoading(true);
+        setHasError(false);
+      }, delay);
+    } else {
+      setIsLoading(false);
+      setHasError(true);
+      onError?.();
+    }
   };
 
-  const url = new URL(src, window.location.origin);
-  const isSameOrigin = url.origin === window.location.origin;
-  // Solo necesitamos credenciales si es API interno Y origen diferente
-  const isInternalAPI = url.pathname.startsWith('/api/images/');
-  const needsCredentials = isInternalAPI && !isSameOrigin;
+  // Mejorar detección de CORS y credenciales
+  const needsCredentials = (() => {
+    try {
+      const url = new URL(src, window.location.origin);
+      
+      // Siempre incluir credenciales para rutas API internas
+      if (url.pathname.startsWith('/api/')) {
+        return true;
+      }
+      
+      // Para subdominios del mismo dominio base
+      const currentHost = window.location.hostname;
+      const imageHost = url.hostname;
+      
+      // Verificar si es el mismo dominio base (ej: *.aiink.com)
+      const currentDomain = currentHost.split('.').slice(-2).join('.');
+      const imageDomain = imageHost.split('.').slice(-2).join('.');
+      
+      if (currentDomain === imageDomain) {
+        return true;
+      }
+      
+      // Para desarrollo local
+      if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+        return true;
+      }
+      
+      return false;
+    } catch {
+      // Si no es una URL válida, asumir que es una ruta relativa
+      return true;
+    }
+  })();
   
   // Build srcSet from variants
-  const buildSrcSet = (sources?: Record<number, string>) =>
-    sources ? Object.entries(sources).map(([w, url]) => `${url} ${w}w`).join(', ') : undefined;
+  const buildSrcSet = (sources?: Record<number, string>) => {
+    if (!sources) return undefined;
+    
+    // Añadir retry param si es necesario
+    if (retryCount > 0) {
+      const entries = Object.entries(sources).map(([w, url]) => {
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}_retry=${Date.now()} ${w}w`;
+      });
+      return entries.join(', ');
+    }
+    
+    return Object.entries(sources).map(([w, url]) => `${url} ${w}w`).join(', ');
+  };
 
   return (
     <div className={`relative ${className || ''}`}>
@@ -79,9 +151,9 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
             />
           )}
           <img
-            src={src}
+            src={currentSrc}
             alt={alt}
-            className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'}`}
+            className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
             loading={loading}
             crossOrigin={needsCredentials ? 'use-credentials' : undefined}
             onLoad={handleLoad}
@@ -91,9 +163,9 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
       ) : (
         // Fallback to regular img element
         <img
-          src={src}
+          src={currentSrc}
           alt={alt}
-          className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
           loading={loading}
           crossOrigin={needsCredentials ? 'use-credentials' : undefined}
           onLoad={handleLoad}
@@ -103,10 +175,20 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
       {(isLoading || hasError) && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
           {isLoading ? (
-            <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 dark:border-gray-100"></div>
+              <div className="text-xs text-gray-500">
+                {retryCount > 0 ? `Reintentando... (${retryCount}/${MAX_RETRIES})` : 'Cargando...'}
+              </div>
+            </div>
           ) : (
-            <div className="text-xs text-red-500">
-              {isTimeout ? 'Tiempo de espera agotado' : 'Error al cargar'}
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-xs text-red-500">
+                {isTimeout ? 'Tiempo de espera agotado' : 'Error al cargar'}
+              </div>
+              {retryCount >= MAX_RETRIES && (
+                <div className="text-xs text-gray-500">Intentos agotados</div>
+              )}
             </div>
           )}
         </div>

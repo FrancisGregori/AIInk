@@ -1257,13 +1257,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Endpoint seguro para servir imágenes privadas con autenticación
   app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
-    // CORS PRIMERO: Establecer antes de cualquier posible error
+    // CORS mejorado para subdominios
     const origin = req.headers.origin;
     if (origin) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      // Permitir todos los orígenes del mismo dominio base
+      const allowedDomains = process.env.ALLOWED_DOMAINS?.split(',') || [];
+      const originHost = new URL(origin).hostname;
+      const baseDomain = originHost.split('.').slice(-2).join('.');
+      
+      // Permitir subdominios del mismo dominio o dominios configurados
+      if (allowedDomains.some(d => originHost.endsWith(d)) || 
+          originHost === 'localhost' || 
+          baseDomain === 'aiink.com' ||
+          baseDomain === 'replit.app' ||
+          baseDomain === 'replit.dev') {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+      }
     }
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Vary', 'Origin');
     
     try {
@@ -1314,9 +1327,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         else if (filename.includes('.svg')) contentType = 'image/svg+xml';
       }
 
-      // Headers correctos para mostrar imágenes con credenciales
+      // Headers optimizados para rendimiento
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
+      res.setHeader('Cache-Control', 'private, max-age=86400, stale-while-revalidate=604800'); // Cache 1 día, revalidar 7 días
+      res.setHeader('X-Content-Type-Options', 'nosniff');
 
       // ETag y soporte If-None-Match
       const etag = metadata.etag || metadata.md5Hash;
@@ -1327,12 +1341,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Stream de lectura para evitar descargar completamente
+      // Stream optimizado con manejo de errores mejorado
       const readStream = file.createReadStream();
       if (metadata.size) {
         res.setHeader('Content-Length', metadata.size);
       }
-      readStream.on('error', () => res.status(500).end());
+      
+      // Manejo mejorado de errores y limpieza
+      readStream.on('error', (error) => {
+        console.error('Error en stream de imagen:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ message: 'Error al transmitir imagen' });
+        }
+        readStream.destroy();
+      });
+      
+      // Limpiar recursos al cerrar conexión
+      res.on('close', () => {
+        readStream.destroy();
+      });
+      
       readStream.pipe(res);
     } catch (error) {
       console.error('Error sirviendo imagen privada:', error);

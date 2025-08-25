@@ -10,6 +10,7 @@ interface LazyImageProps {
   onLoad?: () => void;
   onError?: () => void;
   variants?: ImageVariants;
+  priority?: boolean; // Nueva prop para imágenes prioritarias
 }
 
 export function LazyImage({ 
@@ -20,12 +21,19 @@ export function LazyImage({
   rootMargin = '100px',
   onLoad,
   onError,
-  variants
+  variants,
+  priority = false
 }: LazyImageProps) {
-  const [isInView, setIsInView] = useState(false);
+  const [isInView, setIsInView] = useState(priority); // Si es prioritaria, cargar de inmediato
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Si es prioritaria, no usar intersection observer
+    if (priority) {
+      setIsInView(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -51,29 +59,26 @@ export function LazyImage({
         observer.unobserve(containerRef.current);
       }
     };
-  }, [threshold, rootMargin]);
+  }, [threshold, rootMargin, priority]);
 
-  // Si ya está en vista, renderizar directamente la imagen
-  if (isInView) {
-    return (
-      <AuthenticatedImage
-        src={src}
-        alt={alt}
-        className={className}
-        onLoad={onLoad}
-        onError={onError}
-        loading="lazy"
-        variants={variants}
-      />
-    );
-  }
-
-  // Placeholder mientras no está en vista
   return (
     <div ref={containerRef} className={className}>
-      <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-        <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
-      </div>
+      {!isInView ? (
+        // Placeholder optimizado mientras no está en viewport
+        <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center animate-pulse`}>
+          <div className="w-8 h-8 border-2 border-gray-300 dark:border-gray-600 rounded-full" />
+        </div>
+      ) : (
+        <AuthenticatedImage
+          src={src}
+          alt={alt}
+          className={className}
+          onLoad={onLoad}
+          onError={onError}
+          variants={variants}
+          loading={priority ? 'eager' : 'lazy'}
+        />
+      )}
     </div>
   );
 }
