@@ -276,18 +276,27 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         image: imageUrl
       };
       setMessages(prev => [...prev, imageMessage]);
-      // Auto-scroll after image loads with multiple attempts to ensure it works
+      // Force scroll to bottom after image is added - multiple attempts
+      // First attempt
       setTimeout(() => {
+        const scrollContainer = document.querySelector('[data-chat-scroll-container]');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
         }
-      }, 500);
-      // Second attempt with longer delay in case image is still loading
+      }, 300);
+      // Second attempt with longer delay for image loading
       setTimeout(() => {
+        const scrollContainer = document.querySelector('[data-chat-scroll-container]');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
         }
-      }, 1200);
+      }, 1000);
     }
   }));
   
@@ -911,7 +920,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           </div>
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4" data-chat-scroll-container>
             {messages.map((msg) => (
               <div
                 key={msg.id}
