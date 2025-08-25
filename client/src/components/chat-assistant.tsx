@@ -49,6 +49,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -276,27 +277,21 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         image: imageUrl
       };
       setMessages(prev => [...prev, imageMessage]);
-      // Force scroll to bottom after image is added - multiple attempts
-      // First attempt
-      setTimeout(() => {
-        const scrollContainer = document.querySelector('[data-chat-scroll-container]');
-        if (scrollContainer) {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      // Force scroll to bottom after image is added
+      // Multiple attempts to ensure it works
+      const performScroll = () => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
         }
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-        }
-      }, 300);
-      // Second attempt with longer delay for image loading
-      setTimeout(() => {
-        const scrollContainer = document.querySelector('[data-chat-scroll-container]');
-        if (scrollContainer) {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        }
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-        }
-      }, 1000);
+      };
+      // First attempt immediately
+      performScroll();
+      // Second attempt after state update
+      setTimeout(performScroll, 100);
+      // Third attempt after image likely loaded
+      setTimeout(performScroll, 500);
+      // Fourth attempt for safety
+      setTimeout(performScroll, 1500);
     }
   }));
   
@@ -920,7 +915,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           </div>
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4" data-chat-scroll-container>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollContainerRef}>
             {messages.map((msg) => (
               <div
                 key={msg.id}
