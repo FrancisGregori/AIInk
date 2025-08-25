@@ -276,6 +276,10 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         image: imageUrl
       };
       setMessages(prev => [...prev, imageMessage]);
+      // Auto-scroll to show the generated image
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
   }));
   
