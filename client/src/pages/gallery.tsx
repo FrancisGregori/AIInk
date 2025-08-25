@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { LazyImage } from '@/components/LazyImage';
+import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 import { apiRequest } from '@/lib/queryClient';
 import Navigation from '@/components/Navigation';
 
@@ -289,6 +290,7 @@ export default function Gallery() {
                             className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
                             threshold={0.1}
                             rootMargin="100px"
+                            variants={item.variants}
                           />
                         </div>
                       </DialogTrigger>
@@ -300,10 +302,11 @@ export default function Gallery() {
                         
                         <div className="flex flex-col">
                           <div className={`relative ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} flex items-center justify-center p-3`}>
-                            <img
+                            <AuthenticatedImage
                               src={item.imageUrl}
                               alt={item.title || 'Diseño'}
                               className="max-w-[400px] max-h-[55vh] w-auto h-auto object-contain"
+                              variants={item.variants}
                             />
                           </div>
                           

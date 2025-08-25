@@ -220,10 +220,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 type: 'stencil',
                 title: `Stencil - ${job.style}`,
                 style: job.style,
+                variants: status.variants, // Save optimized variants
                 metadata: {
                   jobId: job.id,
-                  processingOptions: job.processingOptions,
-                  variants: status.variants // Save optimized variants in metadata
+                  processingOptions: job.processingOptions
                 }
               });
               console.log("Stencil saved to gallery");
@@ -1067,10 +1067,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: `${prompt.slice(0, 45)} (${modelAbbr})`,
         description: prompt,
         prompt: prompt,
+        variants, // Save optimized variants
         metadata: {
           model: modelName,
-          inputImageUrl: inputImageUrl,
-          variants: variants // Save optimized variants in metadata
+          inputImageUrl: inputImageUrl
         }
       });
       
@@ -1159,7 +1159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User not authenticated" });
       }
       
-      const { imageUrl, type, title, description, prompt, style, metadata } = req.body;
+      const { imageUrl, type, title, description, prompt, style, metadata, variants } = req.body;
       
       if (!imageUrl || !type) {
         return res.status(400).json({ error: "ImageUrl and type are required" });
@@ -1173,7 +1173,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description,
         prompt,
         style,
-        metadata
+        metadata,
+        variants
       });
       
       res.json(galleryItem);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { AuthenticatedImage, type ImageVariants } from './AuthenticatedImage';
 
 interface LazyGalleryImageProps {
   src: string;
@@ -9,23 +10,21 @@ interface LazyGalleryImageProps {
   rootMargin?: string;
   onLoad?: () => void;
   onError?: () => void;
-  crossOrigin?: 'anonymous' | 'use-credentials';
+  variants?: ImageVariants;
 }
 
-export function LazyGalleryImage({ 
-  src, 
-  alt, 
-  className, 
+export function LazyGalleryImage({
+  src,
+  alt,
+  className,
   containerClassName,
   threshold = 0.01,
   rootMargin = '200px',
   onLoad,
   onError,
-  crossOrigin
+  variants
 }: LazyGalleryImageProps) {
   const [isInView, setIsInView] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,20 +55,6 @@ export function LazyGalleryImage({
     };
   }, [threshold, rootMargin, isInView]);
 
-  const handleLoad = () => {
-    setIsLoaded(true);
-    onLoad?.();
-  };
-
-  const handleError = () => {
-    setHasError(true);
-    setIsLoaded(true);
-    onError?.();
-  };
-
-  const url = src ? new URL(src, window.location.origin) : null;
-  const isInternalAPI = url ? url.pathname.startsWith('/api/images/') : false;
-
   return (
     <div ref={containerRef} className={containerClassName || className}>
       {!isInView ? (
@@ -78,28 +63,14 @@ export function LazyGalleryImage({
           <div className="animate-pulse text-xs text-gray-500">...</div>
         </div>
       ) : (
-        <>
-          {/* Imagen real cuando está en viewport */}
-          <img
-            src={src}
-            alt={alt}
-            className={`${className} ${!isLoaded ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-            loading="lazy"
-            crossOrigin={crossOrigin || (isInternalAPI ? 'use-credentials' : undefined)}
-            onLoad={handleLoad}
-            onError={handleError}
-          />
-          {!isLoaded && !hasError && (
-            <div className={`${className} absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
-              <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
-            </div>
-          )}
-          {hasError && (
-            <div className={`${className} absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
-              <div className="text-xs text-red-500">Error</div>
-            </div>
-          )}
-        </>
+        <AuthenticatedImage
+          src={src}
+          alt={alt}
+          className={className}
+          onLoad={onLoad}
+          onError={onError}
+          variants={variants}
+        />
       )}
     </div>
   );

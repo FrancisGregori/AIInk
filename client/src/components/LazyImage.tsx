@@ -1,10 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { AuthenticatedImage } from './AuthenticatedImage';
-
-interface ImageVariants {
-  webp?: Record<number, string>;
-  avif?: Record<number, string>;
-}
+import { AuthenticatedImage, type ImageVariants } from './AuthenticatedImage';
 
 interface LazyImageProps {
   src: string;

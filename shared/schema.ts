@@ -55,6 +55,7 @@ export const userGallery = pgTable("user_gallery", {
   style: varchar("style"), // for stencils: steven, makishi, etc
   isFavorite: boolean("is_favorite").default(false),
   metadata: jsonb("metadata"), // extra data like processing options
+  variants: jsonb("variants"), // optimized image variants (webp, avif)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

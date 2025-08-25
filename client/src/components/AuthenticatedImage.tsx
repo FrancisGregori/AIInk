@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-interface ImageVariants {
+export interface ImageVariants {
   webp?: Record<number, string>;
   avif?: Record<number, string>;
 }
