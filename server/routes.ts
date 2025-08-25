@@ -1016,13 +1016,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectStorage = new ObjectStorageService();
       let finalImageUrl = imageUrl;
       let thumbnailUrl = null;
+      let variants = undefined; // Mover aquí para que esté disponible fuera del try
       
       try {
         console.log('=== PROCESANDO IMAGEN PARA OBJECT STORAGE ===');
         console.log('Tipo de imagen:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
         
         // Subir la imagen a Object Storage con versiones optimizadas
-        let variants = undefined;
         if (imageUrl.startsWith('data:')) {
           // Si es base64, subir directamente
           const uploadResult = await objectStorage.uploadImageFromBase64(
