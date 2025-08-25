@@ -33,7 +33,9 @@ export function getSession() {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
+        sameSite: "none" as const,
+        domain: process.env.COOKIE_DOMAIN, // e.g. '.aiink.com'
         maxAge: sessionTtl,
       },
     });
@@ -56,6 +58,8 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: true,
+      sameSite: "none" as const,
+      domain: process.env.COOKIE_DOMAIN, // e.g. '.aiink.com'
       maxAge: sessionTtl,
     },
   });

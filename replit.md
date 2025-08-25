@@ -58,6 +58,7 @@ Default AI model: Qwen Edit (for Design Editor)
 ### Authentication and Authorization
 - **Current State**: Basic username/password authentication with unique constraints.
 - **Session Management**: Cookie-based sessions via Express middleware.
+- **COOKIE_DOMAIN**: debe apuntar al dominio base (por ejemplo, '.aiink.com') incluyendo el punto inicial.
 - **Security**: All core AI functionalities (image upload, AI chat, image analysis, design generation, "Apply" button) require user authentication. A freemium model allows free navigation but requires payment for generation.
 
 ### System Design Choices
