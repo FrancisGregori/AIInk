@@ -1256,6 +1256,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Endpoint seguro para servir imágenes privadas con autenticación
   app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
+    // CORS PRIMERO: Establecer antes de cualquier posible error
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
+    res.setHeader('Vary', 'Origin');
+    
     try {
       const filename = decodeURIComponent(req.params.filename);
       console.log('Sirviendo imagen privada:', filename);
@@ -1309,14 +1318,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Length', buffer.length.toString());
       res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
-      
-      // CORS correcto: cuando se usan credenciales, debe especificarse el origen exacto
-      const origin = req.headers.origin;
-      if (origin) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-      }
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
       
       res.end(buffer);
     } catch (error) {
