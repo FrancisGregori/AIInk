@@ -126,10 +126,152 @@ export class ObjectStorageService {
     return { variants, sizes };
   }
 
-  // Subir imagen desde base64 a Object Storage con versiones optimizadas
+  // Subir imagen PÚBLICA desde base64 (sin autenticación requerida)
+  async uploadPublicImageFromBase64(
+    base64Data: string,
+    folder: 'gallery' | 'showcase' | 'stencils',
+    userId: string,
+    generateOptimized: boolean = true
+  ): Promise<{ 
+    imageUrl: string; 
+    thumbnailUrl: string;
+    variants?: Record<string, Record<number, string>>;
+  }> {
+    try {
+      console.log(`=== SUBIENDO IMAGEN PÚBLICA A CDN ===`);
+      console.log(`Carpeta: ${folder}, Usuario: ${userId}`);
+      
+      // Limpiar el prefijo de base64 si existe
+      const base64Clean = base64Data.replace(/^data:image\/\w+;base64,/, '');
+      const imageBuffer = Buffer.from(base64Clean, 'base64');
+      
+      // Generar ID único para el archivo
+      const fileId = randomUUID();
+      const timestamp = Date.now();
+      // PÚBLICO: Accesible sin autenticación
+      const fileName = `public/${folder}/${timestamp}_${fileId}.png`;
+      const thumbnailName = `public/thumbnails/${timestamp}_${fileId}_thumb.png`;
+      
+      // Subir imagen original
+      const bucket = objectStorageClient.bucket(this.bucketName);
+      const file = bucket.file(fileName);
+      
+      await file.save(imageBuffer, {
+        metadata: {
+          contentType: 'image/png',
+          cacheControl: 'public, max-age=31536000', // Cache agresivo para CDN
+          userId: userId, // Metadata para tracking
+        },
+      });
+      
+      // Hacer el archivo público
+      await file.makePublic();
+      
+      // Generar y subir miniatura
+      const thumbnailBuffer = await sharp(imageBuffer)
+        .resize(400, null, {
+          withoutEnlargement: true,
+          fit: 'inside'
+        })
+        .png({ quality: 85 })
+        .toBuffer();
+      
+      const thumbnailFile = bucket.file(thumbnailName);
+      await thumbnailFile.save(thumbnailBuffer, {
+        metadata: {
+          contentType: 'image/png',
+          cacheControl: 'public, max-age=31536000',
+        },
+      });
+      await thumbnailFile.makePublic();
+      
+      // URLs públicas directas (sin autenticación)
+      const publicUrl = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
+      const thumbnailUrl = `https://storage.googleapis.com/${this.bucketName}/${thumbnailName}`;
+      
+      console.log(`=== IMAGEN PÚBLICA SUBIDA ===`);
+      console.log(`URL pública directa: ${publicUrl}`);
+      console.log(`Thumbnail público: ${thumbnailUrl}`);
+      
+      // Generar versiones optimizadas si se solicita
+      let variants = undefined;
+      if (generateOptimized) {
+        try {
+          variants = await this.generatePublicOptimizedVersions(
+            imageBuffer,
+            fileName,
+            timestamp,
+            fileId
+          );
+        } catch (error) {
+          console.error('Error generando versiones optimizadas:', error);
+        }
+      }
+      
+      return { imageUrl: publicUrl, thumbnailUrl, variants };
+    } catch (error) {
+      console.error('Error subiendo imagen pública:', error);
+      throw new Error('Failed to upload public image');
+    }
+  }
+
+  // Generar versiones optimizadas públicas
+  private async generatePublicOptimizedVersions(
+    imageBuffer: Buffer,
+    baseFileName: string,
+    timestamp: number,
+    fileId: string
+  ): Promise<Record<string, Record<number, string>>> {
+    const sizes = [400, 800, 1200];
+    const formats = ['webp', 'avif'] as const;
+    const variants: Record<string, Record<number, string>> = {
+      webp: {},
+      avif: {}
+    };
+    
+    const bucket = objectStorageClient.bucket(this.bucketName);
+    
+    for (const format of formats) {
+      for (const width of sizes) {
+        try {
+          let sharpInstance = sharp(imageBuffer)
+            .resize(width, null, {
+              withoutEnlargement: true,
+              fit: 'inside'
+            });
+          
+          if (format === 'webp') {
+            sharpInstance = sharpInstance.webp({ quality: 85 });
+          } else if (format === 'avif') {
+            sharpInstance = sharpInstance.avif({ quality: 80 });
+          }
+          
+          const optimizedBuffer = await sharpInstance.toBuffer();
+          const fileName = `public/optimized/${timestamp}_${fileId}_${width}.${format}`;
+          const file = bucket.file(fileName);
+          
+          await file.save(optimizedBuffer, {
+            metadata: {
+              contentType: format === 'webp' ? 'image/webp' : 'image/avif',
+              cacheControl: 'public, max-age=31536000',
+            },
+          });
+          
+          await file.makePublic();
+          variants[format][width] = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
+        } catch (error) {
+          console.error(`Error generating public ${format} at ${width}px:`, error);
+        }
+      }
+    }
+    
+    return variants;
+  }
+
+  // Subir imagen PRIVADA desde base64 (requiere autenticación)
   async uploadImageFromBase64(
     base64Data: string,
-    folder: 'designs' | 'stencils' | 'thumbnails',
+    folder: 'designs' | 'stencils' | 'thumbnails' | 'drafts',
     userId: string,
     generateOptimized: boolean = true
   ): Promise<{ 
@@ -193,7 +335,7 @@ export class ObjectStorageService {
       
       // Generar versiones optimizadas si se solicita
       let variants = undefined;
-      if (generateOptimized && folder !== 'thumbnails') {
+      if (generateOptimized) {
         try {
           const optimized = await this.generateOptimizedVersions(
             imageBuffer,
@@ -214,10 +356,102 @@ export class ObjectStorageService {
     }
   }
 
-  // Subir imagen desde URL externa con versiones optimizadas
+  // Subir imagen PÚBLICA desde URL externa (sin autenticación)
+  async uploadPublicImageFromUrl(
+    sourceUrl: string,
+    folder: 'gallery' | 'showcase' | 'stencils',
+    userId: string,
+    generateOptimized: boolean = true
+  ): Promise<{ 
+    imageUrl: string; 
+    thumbnailUrl: string;
+    variants?: Record<string, Record<number, string>>;
+  }> {
+    try {
+      console.log(`=== DESCARGANDO Y SUBIENDO IMAGEN PÚBLICA ===`);
+      console.log(`URL origen: ${sourceUrl}`);
+      
+      // Descargar la imagen
+      const response = await fetch(sourceUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const imageBuffer = Buffer.from(arrayBuffer);
+      
+      // Generar ID único para el archivo
+      const fileId = randomUUID();
+      const timestamp = Date.now();
+      // PÚBLICO: Accesible sin autenticación
+      const fileName = `public/${folder}/${timestamp}_${fileId}.png`;
+      const thumbnailName = `public/thumbnails/${timestamp}_${fileId}_thumb.png`;
+      
+      // Subir imagen original
+      const bucket = objectStorageClient.bucket(this.bucketName);
+      const file = bucket.file(fileName);
+      
+      await file.save(imageBuffer, {
+        metadata: {
+          contentType: 'image/png',
+          cacheControl: 'public, max-age=31536000',
+          userId: userId,
+        },
+      });
+      
+      await file.makePublic();
+      
+      // Generar y subir miniatura
+      const thumbnailBuffer = await sharp(imageBuffer)
+        .resize(400, null, {
+          withoutEnlargement: true,
+          fit: 'inside'
+        })
+        .png({ quality: 85 })
+        .toBuffer();
+      
+      const thumbnailFile = bucket.file(thumbnailName);
+      await thumbnailFile.save(thumbnailBuffer, {
+        metadata: {
+          contentType: 'image/png',
+          cacheControl: 'public, max-age=31536000',
+        },
+      });
+      await thumbnailFile.makePublic();
+      
+      // URLs públicas directas
+      const publicUrl = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
+      const thumbnailUrl = `https://storage.googleapis.com/${this.bucketName}/${thumbnailName}`;
+      
+      console.log(`=== IMAGEN PÚBLICA SUBIDA DESDE URL ===`);
+      console.log(`URL pública: ${publicUrl}`);
+      
+      // Generar versiones optimizadas
+      let variants = undefined;
+      if (generateOptimized) {
+        try {
+          variants = await this.generatePublicOptimizedVersions(
+            imageBuffer,
+            fileName,
+            timestamp,
+            fileId
+          );
+        } catch (error) {
+          console.error('Error generando versiones optimizadas:', error);
+        }
+      }
+      
+      return { imageUrl: publicUrl, thumbnailUrl, variants };
+    } catch (error) {
+      console.error('Error subiendo imagen pública desde URL:', error);
+      throw new Error('Failed to upload public image from URL');
+    }
+  }
+
+  // Subir imagen PRIVADA desde URL externa (requiere autenticación)
   async uploadImageFromUrl(
     sourceUrl: string,
-    folder: 'designs' | 'stencils' | 'thumbnails',
+    folder: 'designs' | 'stencils' | 'thumbnails' | 'drafts',
     userId: string,
     generateOptimized: boolean = true
   ): Promise<{ 
@@ -284,7 +518,7 @@ export class ObjectStorageService {
       
       // Generar versiones optimizadas si se solicita
       let variants = undefined;
-      if (generateOptimized && folder !== 'thumbnails') {
+      if (generateOptimized) {
         try {
           const optimized = await this.generateOptimizedVersions(
             imageBuffer,

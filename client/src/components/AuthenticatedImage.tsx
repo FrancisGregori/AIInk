@@ -81,12 +81,24 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     }
   };
 
-  // Mejorar detección de CORS y credenciales
+  // Detección mejorada de imágenes públicas vs privadas
+  const isPublicCDN = src.startsWith('https://storage.googleapis.com/');
+  
   const needsCredentials = (() => {
+    // Las imágenes de Google Cloud Storage son públicas, no necesitan credenciales
+    if (isPublicCDN) {
+      return false;
+    }
+    
     try {
       const url = new URL(src, window.location.origin);
       
-      // Siempre incluir credenciales para rutas API internas
+      // Imágenes públicas no necesitan credenciales
+      if (url.pathname.startsWith('/api/public/')) {
+        return false;
+      }
+      
+      // Siempre incluir credenciales para rutas API privadas
       if (url.pathname.startsWith('/api/')) {
         return true;
       }
@@ -155,7 +167,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
             alt={alt}
             className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
             loading={loading}
-            crossOrigin={needsCredentials ? 'use-credentials' : undefined}
+            crossOrigin={isPublicCDN ? undefined : (needsCredentials ? 'use-credentials' : undefined)}
             onLoad={handleLoad}
             onError={handleError}
           />

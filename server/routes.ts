@@ -1025,9 +1025,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Subir la imagen a Object Storage con versiones optimizadas
         if (imageUrl.startsWith('data:')) {
           // Si es base64, subir directamente
-          const uploadResult = await objectStorage.uploadImageFromBase64(
+          const uploadResult = await objectStorage.uploadPublicImageFromBase64(
             imageUrl,
-            'designs',
+            'gallery',
             userId,
             true // generateOptimized
           );
@@ -1036,9 +1036,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           variants = uploadResult.variants;
         } else {
           // Si es URL externa, descargar y subir
-          const uploadResult = await objectStorage.uploadImageFromUrl(
+          const uploadResult = await objectStorage.uploadPublicImageFromUrl(
             imageUrl,
-            'designs',
+            'gallery',
             userId,
             true // generateOptimized
           );
@@ -1255,7 +1255,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ADMIN ROUTES COMPLETELY REMOVED FOR SECURITY
   // Any admin functionality requires proper role-based access control implementation
 
-  // Endpoint seguro para servir imágenes privadas con autenticación
+  // Endpoint PÚBLICO para servir imágenes de galería (sin autenticación)
+  app.get('/api/public/images/:filename(*)', async (req, res) => {
+    try {
+      const filename = decodeURIComponent(req.params.filename);
+      console.log('Sirviendo imagen pública:', filename);
+      
+      // Solo servir imágenes del directorio público
+      if (!filename.startsWith('public/')) {
+        return res.status(404).json({ message: "Imagen no encontrada" });
+      }
+      
+      const bucket = objectStorageClient.bucket(OBJECT_STORAGE_BUCKET);
+      const file = bucket.file(filename);
+      
+      // Verificar que el archivo existe
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ message: "Imagen no encontrada" });
+      }
+      
+      // Obtener metadata
+      const [metadata] = await file.getMetadata();
+      
+      // Configurar headers para CDN y caching
+      res.set({
+        'Content-Type': metadata.contentType || 'image/png',
+        'Cache-Control': 'public, max-age=31536000, immutable', // Cache agresivo
+        'Content-Length': metadata.size,
+        'Access-Control-Allow-Origin': '*', // CORS abierto para imágenes públicas
+      });
+      
+      // Stream la imagen
+      const stream = file.createReadStream();
+      stream.pipe(res);
+    } catch (error) {
+      console.error('Error sirviendo imagen pública:', error);
+      res.status(500).json({ message: "Error al cargar imagen" });
+    }
+  });
+
+  // Endpoint PRIVADO para servir imágenes privadas con autenticación
   app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
     // CORS mejorado para subdominios
     const origin = req.headers.origin;
