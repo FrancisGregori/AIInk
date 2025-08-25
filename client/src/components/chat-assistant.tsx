@@ -867,7 +867,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       {isOpen && (
         <div className={embedded 
           ? `w-full bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl flex flex-col transition-all duration-300 ${
-              messages.length > 0 ? 'h-[700px]' : 'h-[500px]'
+              storedImage ? 'h-[700px]' : 'h-[500px]'
             }`
           : "fixed bottom-0 right-0 w-full md:w-96 h-[600px] bg-background border-l border-t rounded-tl-xl shadow-xl z-50 flex flex-col"
         }>
