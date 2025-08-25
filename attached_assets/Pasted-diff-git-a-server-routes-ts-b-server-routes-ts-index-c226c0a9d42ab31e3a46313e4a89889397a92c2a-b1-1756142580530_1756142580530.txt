@@ -1,0 +1,98 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index c226c0a9d42ab31e3a46313e4a89889397a92c2a..b136daa94997d353c9fd5d1e429b2dbd92c36f35 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1276,72 +1276,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
+       }
+       
+       // SEGURIDAD: Solo servir imágenes del directorio privado
+       if (!filename.startsWith('.private/')) {
+         return res.status(404).json({ message: "Imagen no encontrada" });
+       }
+       
+       // SEGURIDAD: Verificar que la imagen pertenece al usuario autenticado
+       // Las rutas son: .private/designs/{userId}/... o .private/uploads/{userId}/... o .private/thumbnails/{userId}/... o .private/stencils/{userId}/...
+       const userPattern = new RegExp(`\\.private/(designs|uploads|thumbnails|stencils)/${userId}/`);
+       if (!userPattern.test(filename)) {
+         console.warn(`Usuario ${userId} intentó acceder a imagen no autorizada: ${filename}`);
+         return res.status(403).json({ message: "No autorizado para ver esta imagen" });
+       }
+       
+       const objectStorage = new ObjectStorageService();
+       const bucket = objectStorageClient.bucket(OBJECT_STORAGE_BUCKET);
+       const file = bucket.file(filename);
+       
+       // Verificar que el archivo existe
+       const [exists] = await file.exists();
+       if (!exists) {
+         return res.status(404).json({ message: "Imagen no encontrada" });
+       }
+       
+-      // Obtener metadata y archivo
++      // Obtener metadata
+       const [metadata] = await file.getMetadata();
+-      const [buffer] = await file.download();
+-      
++
+       // Detectar Content-Type correcto basado en extensión o metadata
+       let contentType = metadata.contentType || 'image/png';
+-      
++
+       // Detectar por extensión si metadata no está disponible
+       if (!metadata.contentType) {
+         if (filename.includes('.webp')) contentType = 'image/webp';
+         else if (filename.includes('.avif')) contentType = 'image/avif';
+         else if (filename.includes('.jpg') || filename.includes('.jpeg')) contentType = 'image/jpeg';
+         else if (filename.includes('.gif')) contentType = 'image/gif';
+         else if (filename.includes('.svg')) contentType = 'image/svg+xml';
+       }
+-      
++
+       // Headers correctos para mostrar imágenes con credenciales
+       res.setHeader('Content-Type', contentType);
+-      res.setHeader('Content-Length', buffer.length.toString());
+       res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
+-      
+-      res.end(buffer);
++
++      // ETag y soporte If-None-Match
++      const etag = metadata.etag || metadata.md5Hash;
++      if (etag) {
++        res.setHeader('ETag', etag);
++        if (req.headers['if-none-match'] === etag) {
++          return res.status(304).end();
++        }
++      }
++
++      // Stream de lectura para evitar descargar completamente
++      const readStream = file.createReadStream();
++      if (metadata.size) {
++        res.setHeader('Content-Length', metadata.size);
++      }
++      readStream.on('error', () => res.status(500).end());
++      readStream.pipe(res);
+     } catch (error) {
+       console.error('Error sirviendo imagen privada:', error);
+       res.status(404).json({ message: "Imagen no encontrada" });
+     }
+   });
+ 
+   // ===============================
+   // STRIPE PAYMENT ROUTES
+   // ===============================
+   
+   // Helper function to check if Stripe is available
+   const checkStripe = (res: any) => {
+     if (!stripe) {
+       res.status(503).json({ 
+         error: "Payment system temporarily unavailable",
+         message: "Stripe no está configurado correctamente" 
+       });
+       return false;
+     }
+     return true;
+   };
+ 
+   // STRIPE WEBHOOK - Procesa eventos de pagos completados
+   app.post('/api/stripe/webhook', async (req, res) => {
+     if (!stripe) {

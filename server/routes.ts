@@ -1298,13 +1298,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Imagen no encontrada" });
       }
       
-      // Obtener metadata y archivo
+      // Obtener metadata
       const [metadata] = await file.getMetadata();
-      const [buffer] = await file.download();
-      
+
       // Detectar Content-Type correcto basado en extensión o metadata
       let contentType = metadata.contentType || 'image/png';
-      
+
       // Detectar por extensión si metadata no está disponible
       if (!metadata.contentType) {
         if (filename.includes('.webp')) contentType = 'image/webp';
@@ -1313,13 +1312,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         else if (filename.includes('.gif')) contentType = 'image/gif';
         else if (filename.includes('.svg')) contentType = 'image/svg+xml';
       }
-      
+
       // Headers correctos para mostrar imágenes con credenciales
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Length', buffer.length.toString());
       res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
-      
-      res.end(buffer);
+
+      // ETag y soporte If-None-Match
+      const etag = metadata.etag || metadata.md5Hash;
+      if (etag) {
+        res.setHeader('ETag', etag);
+        if (req.headers['if-none-match'] === etag) {
+          return res.status(304).end();
+        }
+      }
+
+      // Stream de lectura para evitar descargar completamente
+      const readStream = file.createReadStream();
+      if (metadata.size) {
+        res.setHeader('Content-Length', metadata.size);
+      }
+      readStream.on('error', () => res.status(500).end());
+      readStream.pipe(res);
     } catch (error) {
       console.error('Error sirviendo imagen privada:', error);
       res.status(404).json({ message: "Imagen no encontrada" });
