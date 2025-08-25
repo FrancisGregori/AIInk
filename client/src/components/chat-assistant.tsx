@@ -276,12 +276,36 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         image: imageUrl
       };
       setMessages(prev => [...prev, imageMessage]);
-      // Auto-scroll after image loads - wait longer for image to render
+      
+      // Wait for DOM update and image load before scrolling
       setTimeout(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-        }
-      }, 500);
+        // Create a temporary image to detect when it's loaded
+        const img = new Image();
+        img.onload = () => {
+          // Image is loaded, now scroll to show it completely
+          setTimeout(() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ 
+                behavior: "smooth", 
+                block: "end",
+                inline: "nearest"
+              });
+            }
+          }, 100); // Small delay for render
+        };
+        img.src = imageUrl;
+        
+        // Fallback scroll if image takes too long
+        setTimeout(() => {
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ 
+              behavior: "smooth", 
+              block: "end",
+              inline: "nearest"
+            });
+          }
+        }, 1000);
+      }, 100);
     }
   }));
   
