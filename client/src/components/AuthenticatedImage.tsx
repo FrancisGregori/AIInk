@@ -36,7 +36,8 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     onError?.();
   };
 
-  const isInternalAPI = src.startsWith('/api/images/');
+  const url = new URL(src, window.location.origin);
+  const isInternalAPI = url.pathname.startsWith('/api/images/');
   
   // Build srcSet from variants
   const buildSrcSet = (sources?: Record<number, string>) =>
