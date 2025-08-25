@@ -85,7 +85,12 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
   const isPublicCDN = src.startsWith('https://storage.googleapis.com/');
   
   const needsCredentials = (() => {
-    // Las imágenes de Google Cloud Storage son públicas, no necesitan credenciales
+    // Las imágenes de Google Cloud Storage con /.private/ necesitan credenciales
+    if (isPublicCDN && src.includes('/.private/')) {
+      return true;
+    }
+    
+    // Otras imágenes de Google Cloud Storage son públicas
     if (isPublicCDN) {
       return false;
     }
