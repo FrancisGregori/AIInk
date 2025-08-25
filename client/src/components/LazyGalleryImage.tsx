@@ -67,7 +67,8 @@ export function LazyGalleryImage({
     onError?.();
   };
 
-  const isInternalAPI = src?.startsWith('/api/images/');
+  const url = src ? new URL(src, window.location.origin) : null;
+  const isInternalAPI = url ? url.pathname.startsWith('/api/images/') : false;
 
   return (
     <div ref={containerRef} className={containerClassName || className}>
