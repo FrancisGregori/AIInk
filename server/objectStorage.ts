@@ -371,14 +371,38 @@ export class ObjectStorageService {
       console.log(`=== DESCARGANDO Y SUBIENDO IMAGEN PÚBLICA ===`);
       console.log(`URL origen: ${sourceUrl}`);
       
-      // Descargar la imagen
-      const response = await fetch(sourceUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
+      let imageBuffer: Buffer;
       
-      const arrayBuffer = await response.arrayBuffer();
-      const imageBuffer = Buffer.from(arrayBuffer);
+      // Manejar URLs relativas de nuestro propio API
+      if (sourceUrl.startsWith('/api/images/')) {
+        // Extraer el path del objeto desde la URL
+        const encodedPath = sourceUrl.replace('/api/images/', '');
+        const objectPath = decodeURIComponent(encodedPath);
+        
+        console.log('Detectada imagen interna, leyendo desde Object Storage:', objectPath);
+        
+        // Leer directamente desde Object Storage
+        const bucket = objectStorageClient.bucket(this.bucketName);
+        const file = bucket.file(objectPath);
+        
+        const [exists] = await file.exists();
+        if (!exists) {
+          throw new Error(`Object not found: ${objectPath}`);
+        }
+        
+        // Descargar el archivo a buffer
+        const [buffer] = await file.download();
+        imageBuffer = buffer;
+      } else {
+        // URL externa - descargar normalmente
+        const response = await fetch(sourceUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.statusText}`);
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        imageBuffer = Buffer.from(arrayBuffer);
+      }
       
       // Generar ID único para el archivo
       const fileId = randomUUID();
