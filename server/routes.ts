@@ -1289,11 +1289,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Imagen no encontrada" });
       }
       
-      // Obtener el archivo y enviarlo
+      // Obtener metadata y archivo
+      const [metadata] = await file.getMetadata();
       const [buffer] = await file.download();
       
+      // Detectar Content-Type correcto basado en extensión o metadata
+      let contentType = metadata.contentType || 'image/png';
+      
+      // Detectar por extensión si metadata no está disponible
+      if (!metadata.contentType) {
+        if (filename.includes('.webp')) contentType = 'image/webp';
+        else if (filename.includes('.avif')) contentType = 'image/avif';
+        else if (filename.includes('.jpg') || filename.includes('.jpeg')) contentType = 'image/jpeg';
+        else if (filename.includes('.gif')) contentType = 'image/gif';
+        else if (filename.includes('.svg')) contentType = 'image/svg+xml';
+      }
+      
       // Headers correctos para mostrar imágenes con credenciales
-      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Length', buffer.length.toString());
       res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
       

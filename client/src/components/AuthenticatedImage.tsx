@@ -30,7 +30,14 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     onLoad?.();
   };
 
-  const handleError = () => {
+  const handleError = (event?: any) => {
+    console.error('Error loading image:', {
+      src,
+      isInternalAPI,
+      isDifferentHost,
+      needsCredentials,
+      error: event
+    });
     setIsLoading(false);
     setHasError(true);
     onError?.();
@@ -38,6 +45,8 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
 
   const url = new URL(src, window.location.origin);
   const isInternalAPI = url.pathname.startsWith('/api/images/');
+  const isDifferentHost = url.hostname !== window.location.hostname;
+  const needsCredentials = isInternalAPI && isDifferentHost;
   
   // Build srcSet from variants
   const buildSrcSet = (sources?: Record<number, string>) =>
@@ -67,7 +76,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
             alt={alt}
             className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'}`}
             loading={loading}
-            crossOrigin={isInternalAPI ? 'use-credentials' : undefined}
+            crossOrigin={needsCredentials ? 'use-credentials' : undefined}
             onLoad={handleLoad}
             onError={handleError}
           />
@@ -79,7 +88,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
           alt={alt}
           className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'}`}
           loading={loading}
-          crossOrigin={isInternalAPI ? 'use-credentials' : undefined}
+          crossOrigin={needsCredentials ? 'use-credentials' : undefined}
           onLoad={handleLoad}
           onError={handleError}
         />
