@@ -43,7 +43,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     sources ? Object.entries(sources).map(([w, url]) => `${url} ${w}w`).join(', ') : undefined;
 
   return (
-    <>
+    <div className={`relative ${className || ''}`}>
       {variants && (variants.avif || variants.webp) ? (
         // Use picture element with optimized formats
         <picture>
@@ -64,12 +64,11 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
           <img
             src={src}
             alt={alt}
-            className={className}
+            className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'}`}
             loading={loading}
             crossOrigin={isInternalAPI ? 'use-credentials' : undefined}
             onLoad={handleLoad}
             onError={handleError}
-            style={isLoading || hasError ? { display: 'none' } : undefined}
           />
         </picture>
       ) : (
@@ -77,24 +76,22 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
         <img
           src={src}
           alt={alt}
-          className={className}
+          className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'}`}
           loading={loading}
           crossOrigin={isInternalAPI ? 'use-credentials' : undefined}
           onLoad={handleLoad}
           onError={handleError}
-          style={isLoading || hasError ? { display: 'none' } : undefined}
         />
       )}
-      {isLoading && (
-        <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
-          <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
+      {(isLoading || hasError) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+          {isLoading ? (
+            <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
+          ) : (
+            <div className="text-xs text-red-500">Error al cargar</div>
+          )}
         </div>
       )}
-      {hasError && (
-        <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
-          <div className="text-xs text-red-500">Error al cargar</div>
-        </div>
-      )}
-    </>
+    </div>
   );
 }

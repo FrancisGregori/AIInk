@@ -1296,8 +1296,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Content-Length', buffer.length.toString());
       res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
-      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      
+      // CORS correcto: cuando se usan credenciales, debe especificarse el origen exacto
+      const origin = req.headers.origin;
+      if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+      }
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
       
       res.end(buffer);
