@@ -49,7 +49,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -277,21 +276,12 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         image: imageUrl
       };
       setMessages(prev => [...prev, imageMessage]);
-      // Force scroll to bottom after image is added
-      // Multiple attempts to ensure it works
-      const performScroll = () => {
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      // Auto-scroll after image loads - wait longer for image to render
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
         }
-      };
-      // First attempt immediately
-      performScroll();
-      // Second attempt after state update
-      setTimeout(performScroll, 100);
-      // Third attempt after image likely loaded
-      setTimeout(performScroll, 500);
-      // Fourth attempt for safety
-      setTimeout(performScroll, 1500);
+      }, 500);
     }
   }));
   
@@ -327,18 +317,12 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     }
   }, [currentImage]);
 
-  // Auto-scroll to bottom when assistant messages arrive or chat opens
+  // Auto-scroll to bottom when new messages arrive or chat opens
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      // Only auto-scroll for assistant messages (responses) but not generated images
-      // Generated images have their own scroll in addImageMessage
-      if (lastMessage.role === 'assistant' && !lastMessage.id.startsWith('generated-')) {
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
-      }
-    }
+    // Use scrollToBottom function with slight delay for DOM update
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
   }, [messages, isOpen]);
 
   // Detect when a new image is loaded and automatically analyze it
@@ -915,7 +899,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           </div>
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollContainerRef}>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg) => (
               <div
                 key={msg.id}
