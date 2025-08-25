@@ -555,13 +555,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User not authenticated" });
       }
 
-      const validation = insertFluxProjectSchema.safeParse(req.body);
-      if (!validation.success) {
-        return res.status(400).json({ error: "Invalid project data", details: validation.error });
-      }
+      // Crear datos del proyecto con campos mínimos requeridos
+      const projectData = {
+        userId,
+        name: req.body.name || 'Untitled Design',
+        description: req.body.description || null,
+        prompt: req.body.prompt || null,
+        imageUrl: req.body.imageUrl || null,
+        settings: req.body.settings || null,
+        isPublic: false
+      };
 
-      // Asegurar que el proyecto se asocia al usuario autenticado
-      const projectData = { ...validation.data, userId };
+      console.log('Creating flux project:', projectData);
+
       const project = await storage.createFluxProject(projectData);
       res.json(project);
     } catch (error) {
