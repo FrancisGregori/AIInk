@@ -1759,19 +1759,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint para servir imágenes desde Object Storage
-  app.get("/objects/:filePath(*)", async (req, res) => {
-    const filePath = req.params.filePath;
+  // Endpoint para servir imágenes desde Object Storage - compatible con URLs antiguas
+  // NOTA: Este endpoint es público para permitir que las imágenes se muestren sin autenticación
+  app.get(["/objects/:filePath(*)", "/api/images/:filePath(*)"], async (req, res) => {
+    let filePath = req.params.filePath;
     
     try {
-      // Construir el path completo del objeto
+      // Decodificar URL-encoded paths (por ejemplo: .private%2Fstencils%2F...)
+      filePath = decodeURIComponent(filePath);
+      
+      // Si viene de la ruta /api/images/, buscar en diferentes ubicaciones
       const bucketName = OBJECT_STORAGE_BUCKET;
       const bucket = objectStorageClient.bucket(bucketName);
-      const file = bucket.file(`public/${filePath}`);
       
-      // Verificar si existe
-      const [exists] = await file.exists();
+      // Intentar encontrar el archivo en diferentes rutas
+      let file;
+      let exists = false;
+      
+      // Si la ruta comienza con .private/, buscar ahí primero
+      if (filePath.startsWith('.private/')) {
+        file = bucket.file(filePath);
+        [exists] = await file.exists();
+      }
+      
+      // Si no existe o no es una ruta .private/, buscar en public/
       if (!exists) {
+        // Extraer solo el nombre del archivo de la ruta
+        const fileName = filePath.split('/').pop();
+        if (fileName) {
+          // Buscar en public/ con diferentes patrones
+          const possiblePaths = [
+            `public/${filePath}`,
+            `public/${fileName}`,
+            filePath // Ruta directa
+          ];
+          
+          for (const path of possiblePaths) {
+            file = bucket.file(path);
+            [exists] = await file.exists();
+            if (exists) break;
+          }
+        }
+      }
+      
+      if (!exists || !file) {
+        console.log(`Image not found: ${filePath}`);
         return res.status(404).json({ error: "File not found" });
       }
       
