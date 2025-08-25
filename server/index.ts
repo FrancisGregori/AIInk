@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeStyles } from "./initializeStyles";
+import { setupEnvironment } from "./detectEnvironment";
 
 const app = express();
 
@@ -60,10 +61,8 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Set NODE_ENV if not set
-    if (!process.env.NODE_ENV) {
-      process.env.NODE_ENV = app.get("env") || "development";
-    }
+    // Configurar entorno correctamente
+    setupEnvironment();
 
     // Initialize stencil styles on startup
     await initializeStyles();

@@ -50,7 +50,7 @@ let stripe: Stripe | null = null;
 try {
   if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16", // Using stable API version (latest stable without codename)
+      apiVersion: "2025-07-30.basil" as any, // Usar versión más reciente
     });
     console.log("✅ Stripe initialized successfully");
   } else {
@@ -1485,8 +1485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.upsertUser({
               ...user,
               stripeSubscriptionId: subscription.id,
-              subscriptionTier: tier,
-              subscriptionStatus: subscription.status
+              subscriptionTier: tier
             });
             console.log(`✅ Updated subscription for user ${user.id}: ${tier} (${subscription.status})`);
           }
@@ -1507,8 +1506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.upsertUser({
               ...user,
               stripeSubscriptionId: null,
-              subscriptionTier: 'free',
-              subscriptionStatus: null
+              subscriptionTier: 'free'
             });
             console.log(`✅ Removed subscription for user ${user.id}`);
           }
@@ -1701,8 +1699,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             expand: ['payment_intent']
           });
           
-          if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
-            clientSecret = (invoice.payment_intent as any).client_secret;
+          if ((invoice as any).payment_intent && typeof (invoice as any).payment_intent === 'object') {
+            clientSecret = ((invoice as any).payment_intent as any).client_secret;
           }
         } catch (error) {
           console.error('Error retrieving invoice for clientSecret:', error);
