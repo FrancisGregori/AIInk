@@ -381,12 +381,28 @@ function DesignEditor() {
   // Fetch user's projects (moved before useEffect to avoid initialization error)
   const { data: projectsData } = useQuery<FluxProject[]>({
     queryKey: ["/api/flux/projects"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async (ctx) => {
+      try {
+        return await getQueryFn<FluxProject[]>({ on401: "returnNull" })(ctx);
+      } catch (err: unknown) {
+        console.error("GET /api/flux/projects failed", err);
+        return [];
+      }
+    },
     initialData: [],
     enabled: isAuthenticated, // evita petición antes de autenticarse
     staleTime: 0,              // permite refetch inmediato tras login
   });
-  const projects = projectsData ?? [];
+  
+  // Fallback a galería si flux/projects está vacío o falla
+  const { data: galleryData } = useQuery<any[]>({
+    queryKey: ["/api/gallery?type=design"],
+    enabled: isAuthenticated && (!projectsData || projectsData.length === 0),
+    initialData: [],
+  });
+  
+  // Usar projectsData si tiene datos, sino usar galleryData
+  const projects = (projectsData && projectsData.length > 0 ? projectsData : galleryData) ?? [];
   // Ordenar proyectos por fecha de creación (más reciente primero)
   const sortedProjects = [...projects].sort((a, b) => {
     const dateA = new Date(a.createdAt || 0).getTime();
@@ -628,7 +644,13 @@ function DesignEditor() {
         imageUrl: imageUrl // Usar la URL pública optimizada devuelta por el servidor
       };
       
-      await apiRequest("POST", "/api/flux/create", projectData);
+      // Try to save project to flux/projects, but don't fail if it doesn't work
+      try {
+        await apiRequest("POST", "/api/flux/create", projectData);
+      } catch (err: unknown) {
+        console.error("POST /api/flux/create failed", err);
+        // Continue anyway - the image is already saved to gallery
+      }
       
       // Update job status with the processed image URL
       const completedJob = {
@@ -659,6 +681,7 @@ function DesignEditor() {
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery?type=design"] });
       queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
