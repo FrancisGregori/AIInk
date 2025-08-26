@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Home from "@/pages/home";
 import StencilTool from "@/pages/stencil-tool";
 import DesignEditor from "@/pages/design-editor";
+import DesignEditor2 from "@/pages/design-editor-2";
 import Pricing from "@/pages/pricing";
 import SimpleLogin from "@/pages/simple-login";
 import Profile from "@/pages/profile";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/gallery" component={Gallery} />
       <Route path="/stencil-tool" component={StencilTool} />
       <Route path="/design-editor" component={DesignEditor} />
+      <Route path="/design-editor-2" component={DesignEditor2} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/subscribe" component={Subscribe} />
       

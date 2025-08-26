@@ -5,27 +5,50 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || "" 
 });
 
-export async function chatWithGemini(text: string): Promise<string> {
+export async function chatWithGemini(text: string, imageBase64?: string): Promise<string> {
   try {
     const systemPrompt = "Eres un asistente útil y conciso. Responde de manera breve y directa, máximo 2-3 oraciones. Si necesitas dar una explicación detallada, ofrece resumir los puntos principales.";
     
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      config: {
-        systemInstruction: systemPrompt,
-        maxOutputTokens: 150,
-      },
-      contents: text,
-    });
-
-    let responseText = response.text || "Disculpa, no pude generar una respuesta. Intenta de nuevo.";
+    let contents: any;
     
-    // Truncar si la respuesta es muy larga
-    if (responseText.length > 500) {
-      responseText = responseText.substring(0, 500) + "...";
+    if (imageBase64) {
+      // Chat with image using gemini-2.5-flash-image model
+      contents = [
+        {
+          inlineData: {
+            data: imageBase64,
+            mimeType: "image/png"
+          }
+        },
+        text
+      ];
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-image-preview", // Nombre EXACTO del modelo de tu captura
+        contents: contents,
+      });
+      
+      return response.text || "Disculpa, no pude analizar la imagen. Intenta de nuevo.";
+    } else {
+      // Regular text chat
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: systemPrompt,
+          maxOutputTokens: 150,
+        },
+        contents: text,
+      });
+      
+      let responseText = response.text || "Disculpa, no pude generar una respuesta. Intenta de nuevo.";
+      
+      // Truncar si la respuesta es muy larga
+      if (responseText.length > 500) {
+        responseText = responseText.substring(0, 500) + "...";
+      }
+      
+      return responseText;
     }
-
-    return responseText;
   } catch (error) {
     console.error("Gemini chat error:", error);
     throw new Error(`Failed to get chat response: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -54,7 +77,7 @@ export async function inkVisionChat(message: string, imageBase64?: string): Prom
 }
 
 export async function streamChatResponseGemini(prompt: string, imageBase64?: string): AsyncGenerator<string> {
-  const response = await chatWithGemini(prompt);
+  const response = await chatWithGemini(prompt, imageBase64);
   async function* generator() {
     yield response;
   }
@@ -72,15 +95,40 @@ export async function editImageWithGemini(
   fileUri?: string
 ): Promise<{ mimeType: string; dataBase64: string }> {
   try {
-    // Generate image using the ONLY model that actually generates images
+    let contents: any[];
+
+    if (fileUri) {
+      // Files API mode
+      contents = [
+        {
+          fileData: {
+            fileUri: fileUri,
+          },
+        },
+        prompt,
+      ];
+    } else if (imageBase64 && mimeType) {
+      // Inline data mode - edit existing image
+      contents = [
+        {
+          inlineData: {
+            data: imageBase64,
+            mimeType: mimeType,
+          },
+        },
+        prompt,
+      ];
+    } else {
+      // Text-only mode - generate new image
+      contents = [prompt];
+    }
+
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-preview-image-generation",
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      config: {
-        responseModalities: [Modality.TEXT, Modality.IMAGE],
-      },
+      model: "gemini-2.5-flash-image-preview", // Nombre EXACTO: Gemini 2.5 Flash Image Preview
+      contents: contents,
     });
 
+    // Extract image data from response
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) {
       throw new Error("No candidates in response");
@@ -103,7 +151,7 @@ export async function editImageWithGemini(
 
     throw new Error("No image data found in response");
   } catch (error) {
-    console.error("Gemini image generation error:", error);
-    throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Gemini image edit error:", error);
+    throw new Error(`Failed to edit image: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
