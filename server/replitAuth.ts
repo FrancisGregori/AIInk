@@ -153,8 +153,16 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
+  const path = req.path;
 
-  if (!req.isAuthenticated() || !user?.expires_at) {
+  // Debug logging for authentication issues
+  if (!req.isAuthenticated()) {
+    console.log(`[AUTH] ${path} - req.isAuthenticated() returned false`);
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  if (!user?.expires_at) {
+    console.log(`[AUTH] ${path} - No expires_at found in user:`, user ? Object.keys(user) : 'user is null');
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -165,6 +173,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
+    console.log(`[AUTH] ${path} - Token expired and no refresh_token available`);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
@@ -175,6 +184,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
+    console.log(`[AUTH] ${path} - Failed to refresh token:`, error);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
