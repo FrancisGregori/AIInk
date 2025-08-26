@@ -27,6 +27,11 @@ TattoostencilPro is a professional AI-powered design platform featuring two main
   - Added `/api/upload` endpoint for uploading reference images to Object Storage
   - Modified Design Editor to upload images and use URLs instead of base64 payloads
   - Prevents request size limit issues and improves performance
+- **Optimized handleUseAsReference**: Eliminated unnecessary base64 conversion when using images from history
+  - Function now uses URLs directly without converting to base64
+  - Removed fetchImageAsBase64 function that was causing unnecessary overhead
+  - Consistent with handleFileSelect approach that already uses URLs
+  - Reduces payload size and improves performance
 
 ### Recent Updates (2025-08-24)
 - **Neutral Style Added**: Implemented prompt-based "Neutral" style using line-art conversion without LoRA models
