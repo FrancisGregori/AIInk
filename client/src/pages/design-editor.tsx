@@ -954,7 +954,10 @@ function DesignEditor() {
                   currentImage={referencePreview || undefined}
                   onApplyPrompt={(newPrompt) => {
                     setPrompt(newPrompt);
-                    // No auto-generate - usuario debe presionar "Generar diseño" manualmente
+                    // Auto-generar cuando InkVision aplique un prompt
+                    setTimeout(() => {
+                      handleGenerate();
+                    }, 100); // Pequeño delay para asegurar que el prompt se actualice
                   }}
                   language={language}
                   embedded={true}
