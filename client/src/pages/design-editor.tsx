@@ -54,7 +54,6 @@ function DesignEditor() {
   const { isAuthenticated, user, isLoading } = useAuth();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [prompt, setPrompt] = useState<string>("");
-  const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [referencePreview, setReferencePreview] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>("Match Input");
   const [modelVariant, setModelVariant] = useState<string>("qwen");
@@ -188,8 +187,6 @@ function DesignEditor() {
           if (activeJob.originalImageUrl) {
             setRecoveredImageUrl(activeJob.originalImageUrl);
             setReferencePreview(activeJob.originalImageUrl);
-            const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
-            setReferenceImage(fakeFile);
           }
           
           if (activeJob.style) {
@@ -209,8 +206,6 @@ function DesignEditor() {
             // Restaurar datos del trabajo completado
             if (latestJob.originalImageUrl) {
               setReferencePreview(latestJob.originalImageUrl);
-              const fakeFile = new File([""], "recovered-image.png", { type: "image/png" });
-              setReferenceImage(fakeFile);
             }
             
             if (latestJob.style) {
@@ -431,39 +426,6 @@ function DesignEditor() {
     }
   }, [projects, currentJob, updateJob, toast]);
 
-
-
-  // Create project mutation
-  const createProjectMutation = useMutation({
-    mutationFn: async (data: { prompt: string; settings: any }): Promise<FluxProject> => {
-      const response = await apiRequest("POST", "/api/flux/create", {
-        name: data.prompt.slice(0, 50),
-        description: data.prompt,
-        prompt: data.prompt,
-        settings: data.settings,
-        userId: (user as any)?.id || "anonymous",
-      });
-      return response.json();
-    },
-    onSuccess: (data: FluxProject) => {
-      // Register job in global context
-      addJob({
-        id: data.id,
-        status: 'processing',
-        type: 'design',
-        originalImageUrl: data.settings && typeof data.settings === 'object' && 'referenceImageUrl' in data.settings ? String(data.settings.referenceImageUrl) : undefined,
-        style: data.prompt?.slice(0, 30) || undefined,
-        startedAt: new Date().toISOString()
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
-      setIsGenerating(false);
-    },
-    onError: () => {
-      setIsGenerating(false);
-    },
-  });
-
   // Delete project mutation
   const deleteProjectMutation = useMutation({
     mutationFn: async (projectId: string) => {
@@ -493,8 +455,6 @@ function DesignEditor() {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      setReferenceImage(file);
-      
       // Mostrar estado de carga
       toast({
         title: language === 'es' ? "Subiendo imagen..." : "Uploading image...",
@@ -534,7 +494,6 @@ function DesignEditor() {
           variant: "destructive",
         });
         // Limpiar el estado si falla
-        setReferenceImage(null);
         setReferencePreview(null);
       }
     }
@@ -1012,9 +971,8 @@ function DesignEditor() {
                     setAspectRatio(ratio);
                     setMatchInput(ratio === "Match Input");
                   }}
-                  onImageUpload={(imageUrl, file) => {
+                  onImageUpload={(imageUrl, _file) => {
                     // Manejar carga de imagen desde el chat
-                    setReferenceImage(file);
                     setReferencePreview(imageUrl);
                     setAspectRatio("Match Input");
                     setMatchInput(true);
@@ -1132,7 +1090,6 @@ function DesignEditor() {
                                   setCurrentJob(null);
                                   setIsGenerating(false);
                                   setReferencePreview('');
-                                  setReferenceImage(null);
                                   setRecoveredImageUrl('');
                                   
                                   toast({
