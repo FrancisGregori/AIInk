@@ -17,7 +17,8 @@ import {
   Loader2,
   Grid3x3,
   Grid2x2,
-  LayoutGrid
+  LayoutGrid,
+  AlertCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,12 +29,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { LazyImage } from '@/components/LazyImage';
 import { AuthenticatedImage } from '@/components/AuthenticatedImage';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, getQueryFn } from '@/lib/queryClient';
 import Navigation from '@/components/Navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Gallery() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imageSize, setImageSize] = useState<'small' | 'medium' | 'large'>('small');
@@ -44,15 +47,35 @@ export default function Gallery() {
   const itemsPerPage = 20;
   const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
 
-  // Fetch gallery items
+  // Fetch gallery items - usando getQueryFn con on401: "returnNull"
   const { data, isLoading, isFetching, isError } = useQuery({
     queryKey: ['/api/gallery', currentPage, selectedType, itemsPerPage],
     queryFn: async () => {
-      const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
-      const response = await apiRequest('GET', `/api/gallery?limit=${itemsPerPage}&page=${currentPage}${typeParam}`);
-      const items = await response.json();
-      return items;
+      try {
+        const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
+        const response = await fetch(`/api/gallery?limit=${itemsPerPage}&page=${currentPage}${typeParam}`, {
+          credentials: 'include',
+          cache: 'no-store'
+        });
+        
+        // Si no está autenticado, retornar array vacío
+        if (response.status === 401) {
+          return [];
+        }
+        
+        if (!response.ok) {
+          throw new Error('Error loading gallery');
+        }
+        
+        const items = await response.json();
+        return items || [];
+      } catch (error) {
+        console.error('Gallery fetch error:', error);
+        return [];
+      }
     },
+    enabled: true, // Siempre intentar cargar
+    retry: false
   });
 
   // Update items when data changes
@@ -237,14 +260,34 @@ export default function Gallery() {
         {/* Empty state */}
         {filteredItems.length === 0 && !isLoading && (
           <div className="text-center py-12">
-            <h3 className="text-lg font-semibold mb-2">
-              No se encontraron resultados
-            </h3>
-            <p className="text-muted-foreground">
-              {searchTerm 
-                ? 'Intenta con otros términos de búsqueda' 
-                : 'Comienza generando tu primer diseño o stencil'}
-            </p>
+            {!isAuthenticated ? (
+              <>
+                <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  Inicia sesión para ver tu galería
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Necesitas iniciar sesión para ver tus diseños guardados
+                </p>
+                <Button 
+                  onClick={() => setLocation('/login')}
+                  className="bg-white text-black hover:bg-zinc-200"
+                >
+                  Iniciar sesión
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-semibold mb-2">
+                  No se encontraron resultados
+                </h3>
+                <p className="text-muted-foreground">
+                  {searchTerm 
+                    ? 'Intenta con otros términos de búsqueda' 
+                    : 'Comienza generando tu primer diseño o stencil'}
+                </p>
+              </>
+            )}
           </div>
         )}
 

@@ -190,7 +190,6 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
             alt={alt}
             className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
             loading={loading}
-            crossOrigin={isReplicateURL || isPublicCDN ? undefined : (needsCredentials ? 'use-credentials' : undefined)}
             onLoad={handleLoad}
             onError={handleError}
           />
@@ -202,7 +201,6 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
           alt={alt}
           className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
           loading={loading}
-          crossOrigin={isReplicateURL || isPublicCDN || !needsCredentials ? undefined : 'use-credentials'}
           onLoad={handleLoad}
           onError={handleError}
         />
