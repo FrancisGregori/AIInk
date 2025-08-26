@@ -508,8 +508,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         id: `error-${Date.now()}`,
         role: 'assistant',
         content: language === 'es'
-          ? '❌ Error al analizar la imagen. Por favor verifica que la API key de Gemini esté configurada correctamente.'
-          : '❌ Error analyzing image. Please verify that the Gemini API key is configured correctly.',
+          ? '❌ No pude analizar la imagen. Por favor intenta de nuevo o prueba con otra imagen.'
+          : '❌ Could not analyze the image. Please try again or try with a different image.',
         timestamp: new Date()
       };
       
@@ -636,8 +636,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: language === 'es'
-          ? '❌ Error al procesar el mensaje. Verifica la configuración de la API.'
-          : '❌ Error processing message. Please check API configuration.',
+          ? '❌ No pude procesar tu mensaje. Por favor intenta de nuevo.'
+          : '❌ Could not process your message. Please try again.',
         timestamp: new Date()
       };
       
