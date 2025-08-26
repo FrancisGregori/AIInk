@@ -562,34 +562,81 @@ function DesignEditor() {
         errorMessage: undefined
       });
       
-      // Call the same API that InkVision uses
-      console.log('Sending to generate API:', {
+      // Use new Gemini ChatImageEditor API 
+      console.log('Sending to Gemini edit API:', {
         hasPrompt: !!prompt,
         hasImage: !!referencePreview,
-        imageLength: referencePreview?.length || 0,
-        model: modelVariant
+        imageLength: referencePreview?.length || 0
       });
       
-      const response = await fetch('/api/generate', {
+      // Convert image URL to base64 if needed
+      let imageBase64 = referencePreview;
+      let mimeType = 'image/png';
+      
+      // If it's a URL, fetch and convert to base64
+      if (referencePreview && !referencePreview.startsWith('data:')) {
+        try {
+          const imgResponse = await fetch(referencePreview);
+          const blob = await imgResponse.blob();
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          imageBase64 = await base64Promise;
+          mimeType = blob.type || 'image/png';
+        } catch (error) {
+          console.error('Failed to convert image to base64:', error);
+          throw new Error('Failed to process image');
+        }
+      }
+      
+      const response = await fetch('/api/chat-editor/edit-image', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           prompt: prompt,
-          inputImageUrl: referencePreview, // Changed from imageData to inputImageUrl like InkVision
-          model: modelVariant, // Send 'pro', 'max', or 'qwen'
-          aspectRatio: aspectRatio // Use the selected aspect ratio instead of hardcoding
+          imageBase64: imageBase64,
+          mimeType: mimeType
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       console.log('Generated image data:', data);
-      const { imageUrl, thumbnailUrl } = data;
+      
+      // Convert base64 response to data URL if needed
+      let dataUrl = data.dataBase64;
+      if (!dataUrl.startsWith('data:')) {
+        dataUrl = `data:${data.mimeType};base64,${data.dataBase64}`;
+      }
+      
+      // Save base64 image to Object Storage
+      console.log('Saving generated image to Object Storage...');
+      const saveResponse = await fetch('/api/save-generated-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageData: dataUrl,
+          type: 'design',
+          prompt: prompt
+        }),
+      });
+      
+      if (!saveResponse.ok) {
+        throw new Error('Failed to save generated image');
+      }
+      
+      const { imageUrl, thumbnailUrl } = await saveResponse.json();
+      console.log('Image saved with URLs:', { imageUrl, thumbnailUrl });
 
       // Update chat assistant with the generated image
       if (chatAssistantRef.current && imageUrl) {

@@ -81,7 +81,8 @@ Default AI model: Qwen Edit (for Design Editor)
 
 ### AI and Image Generation
 - **Google Gemini 2.5 Flash and Pro models**: For various AI operations (text, image processing).
-- **Replicate API**: Specifically with FLUX.1 Kontext Pro/Max models for AI-powered image editing.
+- **Google Gemini 2.0 Flash Preview Image Generation**: For AI-powered image editing in Design Editor (replacing Replicate).
+- **Important**: Gemini returns images as base64 data, not URLs. Images are immediately saved to Google Cloud Storage for permanent storage.
 
 ### Development Tools
 - **vite**: Modern build tool.

@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
+import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini, getChatResponseGemini } from "./gemini";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema, userGallery, fluxProjects } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq, sql } from "drizzle-orm";
@@ -17,6 +18,9 @@ import { CREDIT_PACKS, getCreditPackByCredits, getPriceId, PRICE_ID_TO_TIER } fr
 // Configure multer for file uploads - SECURE DISK STORAGE
 import fs from 'fs';
 import path from 'path';
+
+// Initialize Gemini AI for ChatImageEditor
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 // Ensure temp directory exists
 const tempDir = path.join(process.cwd(), 'temp');
@@ -891,6 +895,204 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error in chat stream:", error);
       res.write(`data: ${JSON.stringify({ error: "Failed to process chat" })}\n\n`);
       res.end();
+    }
+  });
+
+  // Endpoint to save generated base64 images to Object Storage
+  app.post("/api/save-generated-image", isAuthenticated, async (req: any, res) => {
+    try {
+      const { imageData, type = 'design', prompt = '' } = req.body;
+      
+      if (!imageData) {
+        return res.status(400).json({ error: "Image data is required" });
+      }
+      
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      // Extract base64 data and mime type
+      let base64Data = imageData;
+      let mimeType = 'image/png';
+      
+      if (imageData.startsWith('data:')) {
+        const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches) {
+          mimeType = matches[1];
+          base64Data = matches[2];
+        }
+      }
+      
+      // Convert base64 to buffer
+      const buffer = Buffer.from(base64Data, 'base64');
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const extension = mimeType.includes('jpeg') ? 'jpg' : 'png';
+      const filename = `.private/designs/${userId}/${timestamp}_${randomId}.${extension}`;
+      
+      // Save to Object Storage
+      const objectStorage = new ObjectStorageService();
+      const bucket = objectStorageClient.bucket(OBJECT_STORAGE_BUCKET);
+      const file = bucket.file(filename);
+      
+      await file.save(buffer, {
+        metadata: {
+          contentType: mimeType,
+          metadata: {
+            userId: userId,
+            type: type,
+            prompt: prompt,
+            createdAt: new Date().toISOString()
+          }
+        }
+      });
+      
+      // Generate thumbnail
+      const thumbnailFilename = `.private/thumbnails/${userId}/${timestamp}_${randomId}_thumb.${extension}`;
+      const thumbnailFile = bucket.file(thumbnailFilename);
+      
+      // For now, use the same image as thumbnail (could resize with sharp later)
+      await thumbnailFile.save(buffer, {
+        metadata: {
+          contentType: mimeType,
+          metadata: {
+            userId: userId,
+            type: 'thumbnail',
+            originalFile: filename
+          }
+        }
+      });
+      
+      // Return the permanent URLs
+      const imageUrl = `/api/images/${encodeURIComponent(filename)}`;
+      const thumbnailUrl = `/api/images/${encodeURIComponent(thumbnailFilename)}`;
+      
+      console.log('Image saved to Object Storage:', { filename, imageUrl });
+      
+      res.json({
+        success: true,
+        imageUrl,
+        thumbnailUrl,
+        filename
+      });
+    } catch (error) {
+      console.error('Error saving generated image:', error);
+      res.status(500).json({ 
+        error: 'Failed to save generated image',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // ChatImageEditor endpoints (replacing Replicate)
+  app.post("/api/chat-editor/chat", async (req, res) => {
+    try {
+      const { messages } = req.body;
+      
+      if (!messages || messages.length === 0) {
+        return res.status(400).json({ 
+          error: "Messages array is required and cannot be empty" 
+        });
+      }
+
+      const latestMessage = messages[messages.length - 1];
+      if (!latestMessage.content) {
+        return res.status(400).json({ 
+          error: "Message content is required" 
+        });
+      }
+
+      // Use the getChatResponseGemini function which already handles image editing context
+      const response = await getChatResponseGemini(messages);
+      
+      res.json({ text: response });
+    } catch (error) {
+      console.error("Chat editor error:", error);
+      res.status(500).json({ 
+        error: "Failed to process chat request",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.post("/api/chat-editor/edit-image", async (req, res) => {
+    try {
+      const { prompt, imageBase64, mimeType } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ 
+          error: "Prompt is required" 
+        });
+      }
+
+      if (!imageBase64) {
+        return res.status(400).json({ 
+          error: "imageBase64 must be provided" 
+        });
+      }
+
+      if (!mimeType) {
+        return res.status(400).json({ 
+          error: "mimeType is required when using imageBase64" 
+        });
+      }
+
+      // Generate the edited image using Gemini
+      const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      
+      // Use generateImage with the combined prompt and image
+      const tempPath = path.join(__dirname, '..', 'temp', `edit_${Date.now()}.png`);
+      
+      // First analyze the image with the prompt
+      const contents = [
+        {
+          inlineData: {
+            data: cleanBase64,
+            mimeType: mimeType,
+          },
+        },
+        prompt,
+      ];
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash-preview-image-generation",
+        contents: contents,
+        config: {
+          responseModalities: [Modality.IMAGE],
+        },
+      });
+
+      // Extract image data from response
+      const candidates = response.candidates;
+      if (!candidates || candidates.length === 0) {
+        throw new Error("No candidates in response");
+      }
+
+      const content = candidates[0].content;
+      if (!content || !content.parts) {
+        throw new Error("No content parts in response");
+      }
+
+      // Find the image part in the response
+      for (const part of content.parts) {
+        if (part.inlineData && part.inlineData.data) {
+          return res.json({
+            mimeType: part.inlineData.mimeType || "image/png",
+            dataBase64: part.inlineData.data
+          });
+        }
+      }
+
+      throw new Error("No image data found in response");
+    } catch (error) {
+      console.error("Edit image error:", error);
+      res.status(500).json({ 
+        error: "Failed to edit image",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
