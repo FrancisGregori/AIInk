@@ -22,7 +22,9 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
       // Extraer la parte después de replicate.delivery/
       const match = url.match(/replicate\.delivery\/(.+)/);
       if (match) {
-        return `/api/proxy/replicate/${match[1]}`;
+        const proxyUrl = `/api/proxy/replicate/${match[1]}`;
+        console.log('[AuthenticatedImage] Converting Replicate URL:', url, '->', proxyUrl);
+        return proxyUrl;
       }
     }
     return url;
@@ -32,7 +34,11 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
   const [hasError, setHasError] = useState(false);
   const [isTimeout, setIsTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [currentSrc, setCurrentSrc] = useState(getProxiedUrl(src));
+  const [currentSrc, setCurrentSrc] = useState(() => {
+    const proxied = getProxiedUrl(src);
+    console.log('[AuthenticatedImage] Initial src:', src, '-> currentSrc:', proxied);
+    return proxied;
+  });
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MAX_RETRIES = 3;
