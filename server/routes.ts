@@ -4,7 +4,9 @@ import multer from "multer";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
-import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
+import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema, userGallery, fluxProjects } from "@shared/schema";
+import { db } from "./db";
+import { desc, eq, sql } from "drizzle-orm";
 import ComfyDeployService from "./comfydeploy";
 import Replicate from "replicate";
 import { z } from "zod";
@@ -87,6 +89,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/health", (req, res) => {
     res.status(200).json({ status: "healthy", timestamp: Date.now() });
+  });
+  
+  // Debug endpoint to identify production issues
+  app.get("/api/debug/test", async (req, res) => {
+    try {
+      const response: any = {
+        server: "running",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        databaseUrl: process.env.DATABASE_URL ? "configured" : "missing",
+      };
+      
+      // Test simple database query
+      try {
+        const testQuery = await db.select({ count: sql<number>`count(*)` }).from(userGallery);
+        response.database = "connected";
+        response.galleryCount = testQuery[0]?.count || 0;
+      } catch (dbError: any) {
+        response.database = "error";
+        response.dbError = dbError.message;
+      }
+      
+      res.json(response);
+    } catch (error: any) {
+      res.status(500).json({ 
+        error: "Debug endpoint failed",
+        message: error.message 
+      });
+    }
   });
 
   // Auth middleware
@@ -530,38 +561,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Flux Kontext Routes - Made PUBLIC for viewing designs without login
+  // Flux Kontext Routes - SIMPLIFIED FOR PUBLIC ACCESS
   app.get("/api/flux/projects", async (req: any, res) => {
     try {
-      // MAKE FLUX PROJECTS PUBLIC - Return recent designs from all users
-      console.log("[FLUX_PROJECTS] Fetching public flux projects");
-      const startTime = Date.now();
+      // SIMPLE: Direct database query without complex methods
+      const projects = await db.select()
+        .from(fluxProjects)
+        .orderBy(desc(fluxProjects.createdAt))
+        .limit(50);
       
-      try {
-        // Get recent flux projects from all users (public gallery)
-        const projects = await storage.getPublicFluxProjects(50);
-        const endTime = Date.now();
-        console.log(`[FLUX_PROJECTS] Found ${projects.length} public projects`);
-        console.log(`[FLUX_PROJECTS] Query took ${endTime - startTime}ms`);
-        
-        if (endTime - startTime > 5000) {
-          console.warn(`[FLUX_PROJECTS] SLOW QUERY DETECTED: took ${endTime - startTime}ms`);
-        }
-        
-        res.json(projects);
-      } catch (storageError: any) {
-        console.error("[FLUX_PROJECTS] Storage error:", storageError?.message);
-        console.error("[FLUX_PROJECTS] Storage error stack:", storageError?.stack);
-        // Return empty array even if storage fails
-        res.status(200).json([]);
-      }
+      console.log(`[FLUX_PROJECTS] Found ${projects.length} projects`);
+      res.json(projects);
     } catch (error: any) {
-      console.error("[FLUX_PROJECTS] CRITICAL ERROR:", error);
-      console.error("[FLUX_PROJECTS] Error message:", error?.message);
-      console.error("[FLUX_PROJECTS] Error stack trace:", error?.stack);
-      console.error("[FLUX_PROJECTS] Error type:", error?.constructor?.name);
-      
-      // ALWAYS return empty array to prevent complete failure
+      console.error("[FLUX_PROJECTS] Error:", error?.message);
+      // Return empty array on error to prevent complete failure
       res.status(200).json([]);
     }
   });
@@ -1213,17 +1226,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Gallery API Routes
   
-  // Get user gallery - Made resilient to auth failures
+  // Get user gallery - SIMPLIFIED FOR PUBLIC ACCESS
   app.get("/api/gallery", async (req: any, res) => {
     try {
-      // MAKE GALLERY PUBLIC - NO AUTH REQUIRED
-      // This allows the app to show gallery images without login
       const type = req.query.type as string;
       
-      // Get public gallery items for all users
-      const galleryItems = await storage.getPublicGalleryItems(type);
-      console.log(`[GALLERY] Returning ${galleryItems.length} public items of type: ${type}`);
+      // SIMPLE: Just get ALL items from gallery without user filtering
+      // Same approach as working endpoints
+      const galleryItems = await db.select()
+        .from(userGallery)
+        .where(type ? eq(userGallery.type, type) : undefined)
+        .orderBy(desc(userGallery.createdAt))
+        .limit(50);
       
+      console.log(`[GALLERY] Returning ${galleryItems.length} items of type: ${type}`);
       res.json(galleryItems);
     } catch (error: any) {
       console.error("[GALLERY] CRITICAL ERROR:", error);

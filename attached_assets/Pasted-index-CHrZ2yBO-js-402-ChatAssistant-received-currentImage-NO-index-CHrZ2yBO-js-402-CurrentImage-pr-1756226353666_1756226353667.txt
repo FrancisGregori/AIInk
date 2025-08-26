@@ -1,0 +1,661 @@
+index-CHrZ2yBO.js:402 ChatAssistant received currentImage: NO
+index-CHrZ2yBO.js:402 CurrentImage preview: none
+index-CHrZ2yBO.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design net::ERR_ABORTED 500 (Internal Server Error)
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+setOptions @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+setTimeout
+i @ index-CHrZ2yBO.js:48
+o @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+qn @ index-CHrZ2yBO.js:48
+setData @ index-CHrZ2yBO.js:48
+onSuccess @ index-CHrZ2yBO.js:48
+p @ index-CHrZ2yBO.js:48
+Promise.then
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+M1 @ index-CHrZ2yBO.js:40
+j @ index-CHrZ2yBO.js:25
+P @ index-CHrZ2yBO.js:25
+index-CHrZ2yBO.js:404 Gallery fetch failed: 500
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+setOptions @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+setTimeout
+i @ index-CHrZ2yBO.js:48
+o @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+qn @ index-CHrZ2yBO.js:48
+setData @ index-CHrZ2yBO.js:48
+onSuccess @ index-CHrZ2yBO.js:48
+p @ index-CHrZ2yBO.js:48
+Promise.then
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+M1 @ index-CHrZ2yBO.js:40
+j @ index-CHrZ2yBO.js:25
+P @ index-CHrZ2yBO.js:25
+index-CHrZ2yBO.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-CHrZ2yBO.js:48
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+setOptions @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+setTimeout
+i @ index-CHrZ2yBO.js:48
+o @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+qn @ index-CHrZ2yBO.js:48
+setData @ index-CHrZ2yBO.js:48
+onSuccess @ index-CHrZ2yBO.js:48
+p @ index-CHrZ2yBO.js:48
+Promise.then
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+M1 @ index-CHrZ2yBO.js:40
+j @ index-CHrZ2yBO.js:25
+P @ index-CHrZ2yBO.js:25
+index-CHrZ2yBO.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-CHrZ2yBO.js:48:42733)
+    at async index-CHrZ2yBO.js:48:43129
+    at async queryFn (index-CHrZ2yBO.js:404:19565)
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+setOptions @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+setTimeout
+i @ index-CHrZ2yBO.js:48
+o @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+qn @ index-CHrZ2yBO.js:48
+setData @ index-CHrZ2yBO.js:48
+onSuccess @ index-CHrZ2yBO.js:48
+p @ index-CHrZ2yBO.js:48
+Promise.then
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+M1 @ index-CHrZ2yBO.js:40
+j @ index-CHrZ2yBO.js:25
+P @ index-CHrZ2yBO.js:25
+index-CHrZ2yBO.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-CHrZ2yBO.js:48
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+setTimeout
+i @ index-CHrZ2yBO.js:48
+o @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+qn @ index-CHrZ2yBO.js:48
+setData @ index-CHrZ2yBO.js:48
+onSuccess @ index-CHrZ2yBO.js:48
+p @ index-CHrZ2yBO.js:48
+Promise.then
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+M1 @ index-CHrZ2yBO.js:40
+j @ index-CHrZ2yBO.js:25
+P @ index-CHrZ2yBO.js:25
+index-CHrZ2yBO.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-CHrZ2yBO.js:48:42733)
+    at async index-CHrZ2yBO.js:48:43129
+    at async queryFn (index-CHrZ2yBO.js:404:19565)
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+setTimeout
+i @ index-CHrZ2yBO.js:48
+o @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+qn @ index-CHrZ2yBO.js:48
+setData @ index-CHrZ2yBO.js:48
+onSuccess @ index-CHrZ2yBO.js:48
+p @ index-CHrZ2yBO.js:48
+Promise.then
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+M1 @ index-CHrZ2yBO.js:40
+j @ index-CHrZ2yBO.js:25
+P @ index-CHrZ2yBO.js:25
+index-CHrZ2yBO.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design 500 (Internal Server Error)
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+setTimeout
+i @ index-CHrZ2yBO.js:48
+o @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+qn @ index-CHrZ2yBO.js:48
+setData @ index-CHrZ2yBO.js:48
+onSuccess @ index-CHrZ2yBO.js:48
+p @ index-CHrZ2yBO.js:48
+Promise.then
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+M1 @ index-CHrZ2yBO.js:40
+j @ index-CHrZ2yBO.js:25
+P @ index-CHrZ2yBO.js:25
+index-CHrZ2yBO.js:404 Gallery fetch failed: 500
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+setTimeout
+i @ index-CHrZ2yBO.js:48
+o @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+qn @ index-CHrZ2yBO.js:48
+setData @ index-CHrZ2yBO.js:48
+onSuccess @ index-CHrZ2yBO.js:48
+p @ index-CHrZ2yBO.js:48
+Promise.then
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+M1 @ index-CHrZ2yBO.js:40
+j @ index-CHrZ2yBO.js:25
+P @ index-CHrZ2yBO.js:25
+index-CHrZ2yBO.js:402 ChatAssistant received currentImage: YES
+index-CHrZ2yBO.js:402 CurrentImage preview: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAA
+index-CHrZ2yBO.js:402 Updating stored image, length: 1540762
+index-CHrZ2yBO.js:402 Analyzing image, storedImage: exists
+index-CHrZ2yBO.js:402 Image data length: 1540762
+index-CHrZ2yBO.js:402 Sending image to chat API, image exists: true
+index-CHrZ2yBO.js:402 Image preview for analysis: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAA
+index-CHrZ2yBO.js:403 Sending message with image: yes
+index-CHrZ2yBO.js:403 Image data preview: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAA
+index-CHrZ2yBO.js:403  POST https://testdtattoostencilpro.replit.app/api/chat/stream 500 (Internal Server Error)
+fe @ index-CHrZ2yBO.js:403
+Y @ index-CHrZ2yBO.js:404
+kN @ index-CHrZ2yBO.js:37
+NN @ index-CHrZ2yBO.js:37
+PN @ index-CHrZ2yBO.js:37
+dv @ index-CHrZ2yBO.js:37
+Fw @ index-CHrZ2yBO.js:37
+(anonymous) @ index-CHrZ2yBO.js:37
+qm @ index-CHrZ2yBO.js:40
+lw @ index-CHrZ2yBO.js:37
+fd @ index-CHrZ2yBO.js:37
+Sm @ index-CHrZ2yBO.js:37
+WN @ index-CHrZ2yBO.js:37
+index-CHrZ2yBO.js:404 Chat error: Error: Failed to get response
+    at fe (index-CHrZ2yBO.js:403:1173)
+fe @ index-CHrZ2yBO.js:404
+await in fe
+Y @ index-CHrZ2yBO.js:404
+kN @ index-CHrZ2yBO.js:37
+NN @ index-CHrZ2yBO.js:37
+PN @ index-CHrZ2yBO.js:37
+dv @ index-CHrZ2yBO.js:37
+Fw @ index-CHrZ2yBO.js:37
+(anonymous) @ index-CHrZ2yBO.js:37
+qm @ index-CHrZ2yBO.js:40
+lw @ index-CHrZ2yBO.js:37
+fd @ index-CHrZ2yBO.js:37
+Sm @ index-CHrZ2yBO.js:37
+WN @ index-CHrZ2yBO.js:37
+index-CHrZ2yBO.js:403 Sending message with image: yes
+index-CHrZ2yBO.js:403 Image data preview: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAA
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make ', isShortPhrase: false, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:401 [AuthenticatedImage] Initial src: /api/public/images/public%2Fgallery%2F1756226286025_5477f68b-2a8d-4190-a6e4-5b75a554336d.png -> currentSrc: /api/public/images/public%2Fgallery%2F1756226286025_5477f68b-2a8d-4190-a6e4-5b75a554336d.png
+index-CHrZ2yBO.js:404 Trabajo completed guardado en localStorage: job-1756226305668
+index-CHrZ2yBO.js:401 Imagen cargada exitosamente: /api/public/images/public%2Fgallery%2F1756226286025_5477f68b-2a8d-4190-a6e4-5b75a554336d.png
+index-CHrZ2yBO.js:404 Project created from InkVision successfully
+index-CHrZ2yBO.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-CHrZ2yBO.js:48
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+me @ index-CHrZ2yBO.js:404
+await in me
+(anonymous) @ index-CHrZ2yBO.js:404
+setTimeout
+fe @ index-CHrZ2yBO.js:404
+await in fe
+Y @ index-CHrZ2yBO.js:404
+kN @ index-CHrZ2yBO.js:37
+NN @ index-CHrZ2yBO.js:37
+PN @ index-CHrZ2yBO.js:37
+dv @ index-CHrZ2yBO.js:37
+Fw @ index-CHrZ2yBO.js:37
+(anonymous) @ index-CHrZ2yBO.js:37
+qm @ index-CHrZ2yBO.js:40
+lw @ index-CHrZ2yBO.js:37
+fd @ index-CHrZ2yBO.js:37
+Sm @ index-CHrZ2yBO.js:37
+WN @ index-CHrZ2yBO.js:37
+index-CHrZ2yBO.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-CHrZ2yBO.js:48:42733)
+    at async index-CHrZ2yBO.js:48:43129
+    at async queryFn (index-CHrZ2yBO.js:404:19565)
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+me @ index-CHrZ2yBO.js:404
+await in me
+(anonymous) @ index-CHrZ2yBO.js:404
+setTimeout
+fe @ index-CHrZ2yBO.js:404
+await in fe
+Y @ index-CHrZ2yBO.js:404
+kN @ index-CHrZ2yBO.js:37
+NN @ index-CHrZ2yBO.js:37
+PN @ index-CHrZ2yBO.js:37
+dv @ index-CHrZ2yBO.js:37
+Fw @ index-CHrZ2yBO.js:37
+(anonymous) @ index-CHrZ2yBO.js:37
+qm @ index-CHrZ2yBO.js:40
+lw @ index-CHrZ2yBO.js:37
+fd @ index-CHrZ2yBO.js:37
+Sm @ index-CHrZ2yBO.js:37
+WN @ index-CHrZ2yBO.js:37
+index-CHrZ2yBO.js:404 isPromptMessage check: {content: 'Make the subject smile, maintaining identity. ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-CHrZ2yBO.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?limit=20&page=1 500 (Internal Server Error)
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404 Gallery fetch error: Error: Error loading gallery
+    at queryFn (index-CHrZ2yBO.js:404:80458)
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:402 ChatAssistant received currentImage: NO
+index-CHrZ2yBO.js:402 CurrentImage preview: none
+index-CHrZ2yBO.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design net::ERR_ABORTED 500 (Internal Server Error)
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404 Gallery fetch failed: 500
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-CHrZ2yBO.js:48
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-CHrZ2yBO.js:48:42733)
+    at async index-CHrZ2yBO.js:48:43129
+    at async queryFn (index-CHrZ2yBO.js:404:19565)
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-CHrZ2yBO.js:48
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-CHrZ2yBO.js:48:42733)
+    at async index-CHrZ2yBO.js:48:43129
+    at async queryFn (index-CHrZ2yBO.js:404:19565)
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
