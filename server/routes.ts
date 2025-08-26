@@ -561,38 +561,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Flux Kontext Routes - RESILIENT PUBLIC ACCESS
+  // Flux Kontext Routes - ULTRA RESILIENT PUBLIC ACCESS
   app.get("/api/flux/projects", async (req: any, res) => {
+    // GARANTIZAR que SIEMPRE devolvamos 200 con array válido
+    // No importa qué error ocurra, nunca devolver 500
+    
+    let projects: any[] = [];
+    
+    // Primer intento: usar storage
     try {
-      // Usar un método más defensivo para obtener proyectos
-      // getFluxProjects acepta userId opcional - si no se proporciona, obtiene todos los públicos
-      let projects: any[] = [];
+      projects = await storage.getFluxProjects();
+      console.log(`[FLUX_PROJECTS] Storage returned ${projects.length} projects`);
+    } catch (storageError: any) {
+      console.error("[FLUX_PROJECTS] Storage error:", storageError?.message || storageError);
       
+      // Segundo intento: consulta directa a DB
       try {
-        // Primero intentar obtener proyectos sin userId (públicos)
-        projects = await storage.getFluxProjects();
-      } catch (storageError: any) {
-        console.error("[FLUX_PROJECTS] Storage error, trying direct DB query:", storageError);
+        projects = await db.select()
+          .from(fluxProjects)
+          .orderBy(desc(fluxProjects.createdAt))
+          .limit(50);
+        console.log(`[FLUX_PROJECTS] DB query returned ${projects.length} projects`);
+      } catch (dbError: any) {
+        console.error("[FLUX_PROJECTS] DB error:", dbError?.message || dbError);
         
-        // Si el storage falla, intentar consulta directa a la base de datos
-        try {
-          projects = await db.select()
-            .from(fluxProjects)
-            .orderBy(desc(fluxProjects.createdAt))
-            .limit(50);
-        } catch (dbError: any) {
-          console.error("[FLUX_PROJECTS] DB error:", dbError);
-          projects = [];
-        }
+        // Tercer intento: usar array vacío como fallback final
+        console.log("[FLUX_PROJECTS] Returning empty array as final fallback");
+        projects = [];
       }
-      
-      console.log(`[FLUX_PROJECTS] Found ${projects.length} projects`);
-      res.json(projects);
-    } catch (error: any) {
-      console.error("[FLUX_PROJECTS] Unexpected error:", error);
-      // SIEMPRE devolver array vacío con status 200 para evitar errores 500
-      res.status(200).json([]);
     }
+    
+    // GARANTÍA FINAL: Siempre devolver un array válido con status 200
+    if (!Array.isArray(projects)) {
+      console.error("[FLUX_PROJECTS] Projects is not an array, returning empty array");
+      projects = [];
+    }
+    
+    // Enviar respuesta con status 200 garantizado
+    res.status(200).json(projects);
   });
 
   app.post("/api/flux/create", isAuthenticated, async (req: any, res) => {
@@ -692,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectStorage = new ObjectStorageService();
       const uploadResult = await objectStorage.uploadPublicImageFromBase64(
         base64Data,
-        'references', // Carpeta específica para imágenes de referencia
+        'gallery', // Usar carpeta gallery para imágenes de referencia
         userId,
         false // No generar versiones optimizadas para referencias
       );
