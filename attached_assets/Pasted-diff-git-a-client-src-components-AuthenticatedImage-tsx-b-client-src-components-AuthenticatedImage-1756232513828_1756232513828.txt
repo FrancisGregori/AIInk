@@ -1,0 +1,191 @@
+diff --git a/client/src/components/AuthenticatedImage.tsx b/client/src/components/AuthenticatedImage.tsx
+index 2aee3a48e26f0f30afbd3316a3be68b4af5dbee4..4265374bedd477dc049563cf6a5ea9cf6fb77089 100644
+--- a/client/src/components/AuthenticatedImage.tsx
++++ b/client/src/components/AuthenticatedImage.tsx
+@@ -83,167 +83,174 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
+     if (retryCount < MAX_RETRIES && !isTimeout) {
+       const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10 segundos
+       console.log(`Reintentando en ${delay}ms...`);
+       
+       retryTimeoutId.current = setTimeout(() => {
+         setRetryCount(prev => prev + 1);
+         // Forzar recarga añadiendo timestamp - usando proxy para Replicate
+         const proxiedUrl = getProxiedUrl(src);
+         const separator = proxiedUrl.includes('?') ? '&' : '?';
+         setCurrentSrc(`${proxiedUrl}${separator}_retry=${Date.now()}`);
+         setIsLoading(true);
+         setHasError(false);
+       }, delay);
+     } else {
+       setIsLoading(false);
+       setHasError(true);
+       onError?.();
+     }
+   };
+ 
+   // Detección mejorada de imágenes públicas vs privadas
+   const isPublicCDN = src.startsWith('https://storage.googleapis.com/');
+   const isReplicateURL = src.includes('replicate.delivery') || src.includes('replicate.com');
+   const isExternalURL = src.startsWith('http://') || src.startsWith('https://');
+   
++  // Determine if the image should include cookies. Private assets such as
++  // same-origin API routes or GCS paths containing "\.private" require
++  // credentials, while public CDN or external URLs do not.
+   const needsCredentials = (() => {
+     // URLs de Replicate son públicas y no necesitan credenciales
+     if (isReplicateURL) {
+       return false;
+     }
+-    
++
+     // Las imágenes de Google Cloud Storage con /.private/ necesitan credenciales
+     if (isPublicCDN && src.includes('/.private/')) {
+       return true;
+     }
+-    
++
+     // Otras imágenes de Google Cloud Storage son públicas
+     if (isPublicCDN) {
+       return false;
+     }
+-    
++
+     try {
+       const url = new URL(src, window.location.origin);
+-      
++
+       // URLs externas (diferentes dominios) generalmente no necesitan credenciales
+       if (isExternalURL && url.hostname !== window.location.hostname) {
+         // Excepto si son subdominios del mismo dominio base
+         const currentDomain = window.location.hostname.split('.').slice(-2).join('.');
+         const imageDomain = url.hostname.split('.').slice(-2).join('.');
+-        
++
+         if (currentDomain !== imageDomain) {
+           return false; // URL externa completamente diferente
+         }
+       }
+-      
++
+       // Imágenes públicas no necesitan credenciales
+       if (url.pathname.startsWith('/api/public/')) {
+         return false;
+       }
+-      
++
+       // Siempre incluir credenciales para rutas API privadas
+       if (url.pathname.startsWith('/api/')) {
+         return true;
+       }
+-      
++
+       // Para subdominios del mismo dominio base
+       const currentHost = window.location.hostname;
+       const imageHost = url.hostname;
+-      
++
+       // Verificar si es el mismo dominio base (ej: *.aiink.com)
+       const currentDomain = currentHost.split('.').slice(-2).join('.');
+       const imageDomain = imageHost.split('.').slice(-2).join('.');
+-      
++
+       if (currentDomain === imageDomain) {
+         return true;
+       }
+-      
++
+       // Para desarrollo local
+       if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+         return true;
+       }
+-      
++
+       return false;
+     } catch {
+       // Si no es una URL válida, asumir que es una ruta relativa
+       return true;
+     }
+   })();
+   
+   // Build srcSet from variants
+   const buildSrcSet = (sources?: Record<number, string>) => {
+     if (!sources) return undefined;
+     
+     // Añadir retry param si es necesario
+     if (retryCount > 0) {
+       const entries = Object.entries(sources).map(([w, url]) => {
+         const separator = url.includes('?') ? '&' : '?';
+         return `${url}${separator}_retry=${Date.now()} ${w}w`;
+       });
+       return entries.join(', ');
+     }
+     
+     return Object.entries(sources).map(([w, url]) => `${url} ${w}w`).join(', ');
+   };
+ 
+   return (
+     <div className={`relative ${className || ''}`}>
+       {variants && (variants.avif || variants.webp) ? (
+         // Use picture element with optimized formats
+         <picture>
+           {variants.avif && (
+             <source 
+               type="image/avif" 
+               srcSet={buildSrcSet(variants.avif)}
+               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+             />
+           )}
+           {variants.webp && (
+             <source 
+               type="image/webp" 
+               srcSet={buildSrcSet(variants.webp)}
+               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+             />
+           )}
+           <img
+             src={currentSrc}
+             alt={alt}
+             className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+             loading={loading}
+             onLoad={handleLoad}
+             onError={handleError}
++            // Private images require cookies; public images omit this attribute
++            crossOrigin={needsCredentials ? 'use-credentials' : undefined}
+           />
+         </picture>
+       ) : (
+         // Fallback to regular img element
+         <img
+           src={currentSrc}
+           alt={alt}
+           className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+           loading={loading}
+           onLoad={handleLoad}
+           onError={handleError}
++          // Private images require cookies; public images omit this attribute
++          crossOrigin={needsCredentials ? 'use-credentials' : undefined}
+         />
+       )}
+       {(isLoading || hasError) && (
+         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+           {isLoading ? (
+             <div className="flex flex-col items-center gap-2">
+               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 dark:border-gray-100"></div>
+               <div className="text-xs text-gray-500">
+                 {retryCount > 0 ? `Reintentando... (${retryCount}/${MAX_RETRIES})` : 'Cargando...'}
+               </div>
+             </div>
+           ) : (
+             <div className="flex flex-col items-center gap-1">
+               <div className="text-xs text-red-500">
+                 {isTimeout ? 'Tiempo de espera agotado' : 'Error al cargar'}
+               </div>
+               {retryCount >= MAX_RETRIES && (
+                 <div className="text-xs text-gray-500">Intentos agotados</div>
+               )}
+             </div>
+           )}
+         </div>
+       )}
+     </div>
+   );

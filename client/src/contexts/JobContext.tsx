@@ -26,10 +26,12 @@ const JobContext = createContext<JobContextType | undefined>(undefined);
 export function JobProvider({ children }: { children: ReactNode }) {
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
 
-  const MAX_STORAGE_BYTES = 4.5 * 1024 * 1024; // ~4.5MB para dejar margen del límite de 5MB
+  // Límite conservador para evitar QuotaExceededError
+  const MAX_STORAGE_BYTES = 2 * 1024 * 1024; // 2MB - mucho más conservador
+  const STORAGE_KEY = 'tattoo-stencil-jobs';
 
   const serializeJobs = (jobs: Job[]) => {
-    // Serializar solo datos esenciales, excluyendo URLs base64 grandes
+    // Serializar solo metadatos esenciales, NUNCA incluir imágenes base64
     const essential = jobs.map(({ id, status, type, style, startedAt, completedAt, errorMessage, originalImageUrl, processedImageUrl }) => ({
       id,
       status,
@@ -38,42 +40,71 @@ export function JobProvider({ children }: { children: ReactNode }) {
       startedAt,
       completedAt,
       errorMessage,
-      // Excluir URLs base64 (data:) que son muy grandes
-      ...(originalImageUrl && !originalImageUrl.startsWith('data:') ? { originalImageUrl } : {}),
-      ...(processedImageUrl && !processedImageUrl.startsWith('data:') ? { processedImageUrl } : {})
+      // Solo incluir URLs si son rutas HTTP/HTTPS normales, NO base64
+      ...(originalImageUrl && originalImageUrl.startsWith('http') ? { originalImageUrl } : {}),
+      ...(processedImageUrl && processedImageUrl.startsWith('http') ? { processedImageUrl } : {})
     }));
     return JSON.stringify(essential);
   };
 
   // Cargar jobs del localStorage al inicializar
   useEffect(() => {
-    const savedJobs = localStorage.getItem('tattoo-stencil-jobs');
-    if (savedJobs) {
-      try {
+    try {
+      const savedJobs = localStorage.getItem(STORAGE_KEY);
+      if (savedJobs) {
         const jobs = JSON.parse(savedJobs);
-        setActiveJobs(jobs);
-      } catch (error) {
-        console.error('Error loading saved jobs:', error);
-        localStorage.removeItem('tattoo-stencil-jobs');
+        // Validar que sea un array antes de usar
+        if (Array.isArray(jobs)) {
+          setActiveJobs(jobs);
+        } else {
+          console.warn('Invalid jobs data in localStorage');
+          localStorage.removeItem(STORAGE_KEY);
+        }
       }
+    } catch (error) {
+      console.error('Error loading saved jobs:', error);
+      localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
   // Guardar jobs en localStorage cuando cambian
   useEffect(() => {
+    // Función helper para guardar de forma segura
+    const safeSetItem = (key: string, value: string): boolean => {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e: any) {
+        // Detectar específicamente QuotaExceededError
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+          console.warn('QuotaExceededError: localStorage is full');
+          // Intentar limpiar y reintentar
+          try {
+            localStorage.removeItem(key);
+            localStorage.setItem(key, value);
+            return true;
+          } catch {
+            return false;
+          }
+        }
+        console.error('localStorage error:', e);
+        return false;
+      }
+    };
+
     try {
-      // Limpiar jobs completados antiguos para evitar llenar el localStorage
+      // Limpiar jobs completados antiguos
       const cleanedJobs = activeJobs.filter(job => {
         if (job.status === 'completed' && job.completedAt) {
           const completedDate = new Date(job.completedAt);
-          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          return completedDate > oneDayAgo; // Mantener solo trabajos completados en las últimas 24h
+          const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000); // Más agresivo: 6h
+          return completedDate > sixHoursAgo;
         }
         return true; // Mantener trabajos en progreso y fallidos
       });
 
-      // Si hay demasiados jobs, mantener solo los más recientes
-      const maxJobs = 20;
+      // Límite más estricto de jobs
+      const maxJobs = 10; // Reducido de 20 a 10
       const finalJobs = cleanedJobs.length > maxJobs
         ? cleanedJobs.slice(-maxJobs)
         : cleanedJobs;
@@ -82,9 +113,12 @@ export function JobProvider({ children }: { children: ReactNode }) {
       const payloadSize = new Blob([serialized]).size;
       
       if (payloadSize <= MAX_STORAGE_BYTES) {
-        localStorage.setItem('tattoo-stencil-jobs', serialized);
+        const saved = safeSetItem(STORAGE_KEY, serialized);
+        if (!saved) {
+          console.warn('Could not save jobs to localStorage (quota exceeded)');
+        }
       } else {
-        console.warn('Skipping job persistence: payload too large for localStorage');
+        console.warn(`Job payload too large: ${(payloadSize / 1024 / 1024).toFixed(2)}MB, max: ${(MAX_STORAGE_BYTES / 1024 / 1024).toFixed(2)}MB`);
       }
 
       // Si los jobs fueron limpiados, actualizar el estado
@@ -92,23 +126,19 @@ export function JobProvider({ children }: { children: ReactNode }) {
         setActiveJobs(finalJobs);
       }
     } catch (error) {
-      console.error('Error saving jobs to localStorage:', error);
-      // Si falla, mantener solo jobs en progreso sin imágenes pesadas
+      console.error('Error in job persistence:', error);
+      // En caso de error crítico, solo mantener jobs en progreso
       try {
         const essentialJobs = activeJobs.filter(job => job.status === 'processing');
-        const serialized = serializeJobs(essentialJobs);
-        const payloadSize = new Blob([serialized]).size;
-        
-        if (payloadSize <= MAX_STORAGE_BYTES) {
-          localStorage.setItem('tattoo-stencil-jobs', serialized);
-          setActiveJobs(essentialJobs);
+        if (essentialJobs.length > 0) {
+          const serialized = serializeJobs(essentialJobs.slice(-5)); // Solo últimos 5
+          safeSetItem(STORAGE_KEY, serialized);
         } else {
-          console.warn('Essential jobs exceed storage limit, clearing localStorage');
-          localStorage.removeItem('tattoo-stencil-jobs');
+          localStorage.removeItem(STORAGE_KEY);
         }
       } catch (fallbackError) {
-        console.error('Failed to save essential jobs, clearing localStorage:', fallbackError);
-        localStorage.removeItem('tattoo-stencil-jobs');
+        console.error('Critical error in job persistence, clearing:', fallbackError);
+        localStorage.removeItem(STORAGE_KEY);
       }
     }
   }, [activeJobs]);

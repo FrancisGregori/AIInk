@@ -9,10 +9,13 @@ TattoostencilPro is a professional AI-powered design platform featuring two main
   - `/api/gallery` endpoint now ultra-resilient with dual fallback system (DB → storage → empty array)
   - Both endpoints ALWAYS return HTTP 200 with valid JSON array even on complete failures
   - Eliminated all unhandled errors that were causing 500 responses
-- **LocalStorage Overflow Protection**: Prevented QuotaExceededError in job persistence
-  - Implemented 4.5MB size limit for localStorage data
-  - Excludes base64 image data from persistence 
-  - Jobs remain in memory if payload exceeds safe limit
+- **LocalStorage Overflow Protection**: Enhanced protection against QuotaExceededError
+  - Reduced limit to conservative 2MB (was 4.5MB) to prevent quota errors
+  - Completely excludes base64 data - only stores HTTP/HTTPS URLs
+  - Added `safeSetItem` function that detects and handles QuotaExceededError specifically
+  - Reduced retention: jobs kept 6 hours (was 24h), max 10 jobs (was 20)
+  - Automatic cleanup and retry on quota errors
+  - Jobs always remain in memory even if localStorage save fails
 - **Replicate URL Direct Access Fixed**: Eliminated proxy system that was breaking Replicate images
   - Removed proxy conversion code from AuthenticatedImage.tsx that was rewriting URLs to `/api/proxy/replicate/...`
   - Deleted proxy endpoint `/api/proxy/replicate/*` from server/routes.ts
