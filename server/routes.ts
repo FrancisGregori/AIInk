@@ -1237,8 +1237,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Título:', savedItem.title);
       
       res.json({
-        imageUrl: imageUrl,  // DEVOLVER LA URL ORIGINAL DE REPLICATE
-        thumbnailUrl: imageUrl,  // USAR LA MISMA URL
+        imageUrl: permanentImageUrl,  // DEVOLVER LA URL PERMANENTE
+        thumbnailUrl: permanentImageUrl,  // USAR LA MISMA URL PERMANENTE
         prompt,
         model: modelName,
         success: true
