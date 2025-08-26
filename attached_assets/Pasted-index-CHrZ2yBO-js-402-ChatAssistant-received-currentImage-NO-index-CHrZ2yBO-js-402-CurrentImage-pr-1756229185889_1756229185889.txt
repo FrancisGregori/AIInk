@@ -1,0 +1,170 @@
+index-CHrZ2yBO.js:402 ChatAssistant received currentImage: NO
+index-CHrZ2yBO.js:402 CurrentImage preview: none
+index-CHrZ2yBO.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-CHrZ2yBO.js:48
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-CHrZ2yBO.js:48:42733)
+    at async index-CHrZ2yBO.js:48:43129
+    at async queryFn (index-CHrZ2yBO.js:404:19565)
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-CHrZ2yBO.js:48
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-CHrZ2yBO.js:48:42733)
+    at async index-CHrZ2yBO.js:48:43129
+    at async queryFn (index-CHrZ2yBO.js:404:19565)
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design net::ERR_ABORTED 500 (Internal Server Error)
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404 Gallery fetch failed: 500
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+Lo @ index-CHrZ2yBO.js:48
+onSubscribe @ index-CHrZ2yBO.js:48
+subscribe @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+e1 @ index-CHrZ2yBO.js:38
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design 500 (Internal Server Error)
+queryFn @ index-CHrZ2yBO.js:404
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
+index-CHrZ2yBO.js:404 Gallery fetch failed: 500
+queryFn @ index-CHrZ2yBO.js:404
+await in queryFn
+s @ index-CHrZ2yBO.js:48
+w @ index-CHrZ2yBO.js:48
+start @ index-CHrZ2yBO.js:48
+fetch @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+refetchQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:48
+batch @ index-CHrZ2yBO.js:48
+invalidateQueries @ index-CHrZ2yBO.js:48
+(anonymous) @ index-CHrZ2yBO.js:404
+lu @ index-CHrZ2yBO.js:40
+Ss @ index-CHrZ2yBO.js:40
+oT @ index-CHrZ2yBO.js:40
+ui @ index-CHrZ2yBO.js:40
+$v @ index-CHrZ2yBO.js:40
+ri @ index-CHrZ2yBO.js:38
+(anonymous) @ index-CHrZ2yBO.js:40
