@@ -1,0 +1,77 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a//dev/null b/server/__tests__/storage-error.test.ts
+index 0000000000000000000000000000000000000000..4d3e141b07199e0a8d35d5b4ebd839a2c34b3237 100644
+--- a//dev/null
++++ b/server/__tests__/storage-error.test.ts
+@@ -0,0 +1,68 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import express from 'express';
++
++// Provide fake database URL so db.ts doesn't throw on import
++process.env.DATABASE_URL = 'postgres://user:pass@localhost/db';
++
++const { registerRoutes } = await import('../routes');
++const { storage } = await import('../storage');
++const { db } = await import('../db');
++
++// Helper stub to avoid hitting real database and return empty array
++function stubDbSelectToEmpty() {
++  const original = db.select;
++  (db as any).select = () => ({
++    from: () => ({
++      where: () => ({
++        orderBy: () => ({ limit: () => [] })
++      }),
++      orderBy: () => ({ limit: () => [] })
++    })
++  });
++  return () => { (db as any).select = original; };
++}
++
++test('GET /api/flux/projects returns 200 [] when storage fails', async () => {
++  const app = express();
++  const httpServer = await registerRoutes(app);
++
++  const restoreDb = stubDbSelectToEmpty();
++  const originalGetFluxProjects = storage.getFluxProjects;
++  (storage as any).getFluxProjects = async () => { throw new Error('storage fail'); };
++
++  const server = httpServer.listen(0);
++  const { port } = server.address() as any;
++
++  const response = await fetch(`http://localhost:${port}/api/flux/projects`);
++  const body = await response.json();
++
++  assert.equal(response.status, 200);
++  assert.deepEqual(body, []);
++
++  server.close();
++  restoreDb();
++  (storage as any).getFluxProjects = originalGetFluxProjects;
++});
++
++test('GET /api/gallery returns 200 [] when storage fails', async () => {
++  const app = express();
++  const httpServer = await registerRoutes(app);
++
++  const restoreDb = stubDbSelectToEmpty();
++  const originalGetUserGallery = storage.getUserGallery;
++  (storage as any).getUserGallery = async () => { throw new Error('storage fail'); };
++
++  const server = httpServer.listen(0);
++  const { port } = server.address() as any;
++
++  const response = await fetch(`http://localhost:${port}/api/gallery`);
++  const body = await response.json();
++
++  assert.equal(response.status, 200);
++  assert.deepEqual(body, []);
++
++  server.close();
++  restoreDb();
++  (storage as any).getUserGallery = originalGetUserGallery;
++});
+ 
+EOF
+)
