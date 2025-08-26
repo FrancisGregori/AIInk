@@ -384,13 +384,14 @@ function DesignEditor() {
   const txt = t[language];
 
   // Fetch user's projects (moved before useEffect to avoid initialization error)
-  const { data: projects = [] } = useQuery<FluxProject[]>({
+  const { data: projectsData } = useQuery<FluxProject[]>({
     queryKey: ["/api/flux/projects"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     initialData: [],
     enabled: isAuthenticated, // evita petición antes de autenticarse
     staleTime: 0,              // permite refetch inmediato tras login
   });
+  const projects = projectsData ?? [];
 
   useEffect(() => {
     if (isAuthenticated) {
