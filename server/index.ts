@@ -5,6 +5,20 @@ import { setupVite, serveStatic, log } from "./vite";
 import { initializeStyles } from "./initializeStyles";
 import { setupEnvironment } from "./detectEnvironment";
 
+// Log unhandled errors early to catch upstream failures
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+});
+
+// Warn if critical environment variables are missing
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is not set. Database features will be disabled.');
+}
+
 const app = express();
 
 // IMPORTANT: Stripe webhook must be registered BEFORE body parsers

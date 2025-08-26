@@ -5,16 +5,32 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
+let pool: Pool | null = null;
+
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+  console.error(
+    "DATABASE_URL must be set. Database features will be disabled.",
   );
+} else {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10, // Aumentar conexiones para producción
+    idleTimeoutMillis: 30000, // 30 segundos
+    connectionTimeoutMillis: 15000, // 15 segundos timeout - AUMENTADO para evitar errores en producción
+  });
 }
 
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  max: 10, // Aumentar conexiones para producción
-  idleTimeoutMillis: 30000, // 30 segundos
-  connectionTimeoutMillis: 15000, // 15 segundos timeout - AUMENTADO para evitar errores en producción
-});
-export const db = drizzle({ client: pool, schema });
+export const db: any = pool
+  ? drizzle({ client: pool, schema })
+  : new Proxy(
+      {},
+      {
+        get() {
+          throw new Error(
+            "Database unavailable: DATABASE_URL not configured",
+          );
+        },
+      },
+    );
+
+export { pool };
