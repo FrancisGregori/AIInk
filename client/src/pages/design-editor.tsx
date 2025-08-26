@@ -391,14 +391,14 @@ function DesignEditor() {
       }
     },
     initialData: [],
-    enabled: isAuthenticated, // evita petición antes de autenticarse
+    enabled: !!isAuthenticated, // Convertir a booleano
     staleTime: 0,              // permite refetch inmediato tras login
     retry: 1,                  // Solo reintentar una vez
   });
   
   // Fallback a galería si flux/projects está vacío, falla o devuelve null
   const shouldUseGallery = isAuthenticated && 
-    (!projectsData || projectsData.length === 0 || projectsError);
+    (!projectsData || !Array.isArray(projectsData) || projectsData.length === 0 || projectsError);
   
   const { data: galleryData } = useQuery<any[]>({
     queryKey: ["/api/gallery", { type: "design" }],
@@ -425,13 +425,15 @@ function DesignEditor() {
         return [];
       }
     },
-    enabled: shouldUseGallery,
+    enabled: !!shouldUseGallery,
     initialData: [],
     staleTime: 0,
   });
   
   // Usar projectsData si tiene datos, sino usar galleryData
-  const projects = (projectsData && projectsData.length > 0 ? projectsData : galleryData) || [];
+  const projects: FluxProject[] = (projectsData && Array.isArray(projectsData) && projectsData.length > 0 
+    ? projectsData 
+    : (Array.isArray(galleryData) ? galleryData : [])) || [];
   // Ordenar proyectos por fecha de creación (más reciente primero)
   const sortedProjects = [...projects].sort((a, b) => {
     const dateA = new Date(a.createdAt || 0).getTime();
