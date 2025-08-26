@@ -15,18 +15,22 @@ interface AuthenticatedImageProps {
   variants?: ImageVariants;
 }
 
-export function AuthenticatedImage({ src, alt, className, onLoad, onError, loading = 'lazy', variants }: AuthenticatedImageProps) {
-  // NO CONVERTIR URLs de Replicate - usar directamente
+export function AuthenticatedImage({
+  src,
+  alt,
+  className,
+  onLoad,
+  onError,
+  loading = 'lazy',
+  variants,
+}: AuthenticatedImageProps) {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isTimeout, setIsTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [currentSrc, setCurrentSrc] = useState(() => {
-    console.log('[AuthenticatedImage] Initial src (NO PROXY):', src);
-    return src;  // USAR LA URL DIRECTAMENTE
-  });
+  const [currentSrc, setCurrentSrc] = useState(() => src);
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MAX_RETRIES = 3;
@@ -38,12 +42,11 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     setHasError(false);
     setIsTimeout(false);
     setRetryCount(0);
-    setCurrentSrc(src);  // USAR LA URL DIRECTAMENTE, SIN PROXY
-    
-    // Set timeout for loading
+    setCurrentSrc(src);
+
     if (timeoutId.current) clearTimeout(timeoutId.current);
     timeoutId.current = setTimeout(() => {
-      console.warn(`Imagen timeout después de ${TIMEOUT_MS}ms:`, src);
+      console.warn(`Image timeout after ${TIMEOUT_MS}ms:`, src);
       setIsTimeout(true);
       handleError();
     }, TIMEOUT_MS);
@@ -54,17 +57,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     };
   }, [src]);
 
-  // Verificar en tiempo de ejecución que las URLs de Replicate NO se transforman
-  useEffect(() => {
-    if (src.includes('replicate.delivery') && imgRef.current) {
-      const emitted = imgRef.current.getAttribute('src');
-      if (emitted !== currentSrc) {
-        console.error('[AuthenticatedImage] ⚠️ URL de Replicate fue modificada:', currentSrc, '->', emitted);
-      } else {
-        console.log('[AuthenticatedImage] ✅ URL de Replicate sin cambios:', currentSrc);
-      }
-    }
-  }, [src, currentSrc]);
+
 
   const handleLoad = () => {
     if (timeoutId.current) clearTimeout(timeoutId.current);
@@ -75,18 +68,16 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     onLoad?.();
   };
 
-  const handleError = (event?: any) => {
+  const handleError = () => {
     if (timeoutId.current) clearTimeout(timeoutId.current);
-    console.error(`Error al cargar imagen (intento ${retryCount + 1}/${MAX_RETRIES + 1}):`, src);
-    
-    // Implementar retry con backoff exponencial
-    if (retryCount < MAX_RETRIES && !isTimeout) {
-      const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10 segundos
-      console.log(`Reintentando en ${delay}ms...`);
-      
+    console.error(`Error loading image (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, src);
+
+    if (!isReplicateURL && retryCount < MAX_RETRIES && !isTimeout) {
+      const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+      console.log(`Retrying in ${delay}ms...`);
+
       retryTimeoutId.current = setTimeout(() => {
         setRetryCount(prev => prev + 1);
-        // Forzar recarga añadiendo timestamp - SIN PROXY
         const separator = src.includes('?') ? '&' : '?';
         setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
         setIsLoading(true);
@@ -99,9 +90,9 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     }
   };
 
-  // Detección mejorada de imágenes públicas vs privadas
+  // Detect public vs private images
   const isPublicCDN = src.startsWith('https://storage.googleapis.com/');
-  const isReplicateURL = src.includes('replicate.delivery') || src.includes('replicate.com');
+  const isReplicateURL = src.includes('replicate.delivery');
   const isExternalURL = src.startsWith('http://') || src.startsWith('https://');
   
   // IMPORTANTE: needsCredentials determina si incluir cookies en solicitudes de imagen
@@ -174,16 +165,20 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
   const buildSrcSet = (sources?: Record<number, string>) => {
     if (!sources) return undefined;
     
-    // Añadir retry param si es necesario
     if (retryCount > 0) {
       const entries = Object.entries(sources).map(([w, url]) => {
+        if (url.includes('replicate.delivery')) {
+          return `${url} ${w}w`;
+        }
         const separator = url.includes('?') ? '&' : '?';
         return `${url}${separator}_retry=${Date.now()} ${w}w`;
       });
       return entries.join(', ');
     }
-    
-    return Object.entries(sources).map(([w, url]) => `${url} ${w}w`).join(', ');
+
+    return Object.entries(sources)
+      .map(([w, url]) => `${url} ${w}w`)
+      .join(', ');
   };
 
   return (
