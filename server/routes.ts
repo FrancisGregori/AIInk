@@ -1036,8 +1036,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Manejar diferentes formatos de output según el modelo
       let imageUrl: string;
-      let optimizedImageBase64: string = "";
-      let thumbnailBase64: string = "";
       
       // Qwen devuelve un array de objetos File con método .url()
       if (model === "qwen" && Array.isArray(output) && output.length > 0) {
@@ -1045,75 +1043,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const file = output[0];
         if (file && typeof file.url === 'function') {
           const urlObject = file.url();
-          // Convert URL object to string
+          // Convert URL object to string - THIS IS THE REAL REPLICATE URL
           imageUrl = urlObject.href || urlObject.toString();
-          console.log("Qwen output URL object:", urlObject);
-          console.log("Qwen final URL string:", imageUrl);
+          console.log("✅ Qwen output - Real Replicate URL:", imageUrl);
         } else if (typeof file === 'string') {
-          // Fallback si ya es string
+          // Fallback si ya es string - THIS IS THE REAL REPLICATE URL
           imageUrl = file;
-          console.log("Qwen output URL (direct string):", imageUrl);
+          console.log("✅ Qwen output - Real Replicate URL (direct string):", imageUrl);
         } else {
           console.error("Unexpected Qwen output format:", file);
           throw new Error("Unexpected Qwen output format");
         }
       } else if (typeof output === 'string') {
+        // FLUX Kontext returns URL directly - USE THE REAL REPLICATE URL
         imageUrl = output;
+        console.log("✅ FLUX Kontext - Real Replicate URL:", imageUrl);
       } else if (Array.isArray(output) && output.length > 0) {
+        // Array with URLs - USE THE REAL REPLICATE URL
         imageUrl = output[0];
+        console.log("✅ FLUX Kontext (array) - Real Replicate URL:", imageUrl);
       } else if (output && typeof (output as any)[Symbol.asyncIterator] === 'function') {
-        // Es un stream iterable - Exacto como en tu repositorio
-        console.log("Processing async iterable stream from Replicate...");
+        // AsyncIterator returns URLs, not streams - handle properly
+        console.log("Processing async iterable from Replicate...");
         
-        const chunks: Buffer[] = [];
+        let finalUrl = null;
         try {
-          for await (const chunk of output as any) {
-            chunks.push(Buffer.from(chunk));
+          for await (const item of output as any) {
+            // The iterator returns URLs, not binary data
+            if (typeof item === 'string') {
+              finalUrl = item;
+              console.log("✅ AsyncIterator returned URL:", finalUrl);
+              break;
+            }
           }
           
-          const imageBuffer = Buffer.concat(chunks);
-          console.log("Original image buffer size:", imageBuffer.length);
-          
-          // Guardar imagen exactamente como la genera Replicate - SIN COMPRESIÓN
-          optimizedImageBase64 = imageBuffer.toString('base64');
-          thumbnailBase64 = optimizedImageBase64;
-          imageUrl = `data:image/png;base64,${optimizedImageBase64}`;
-          
-          console.log("Image saved without any compression or processing");
+          if (finalUrl) {
+            imageUrl = finalUrl;
+          } else {
+            throw new Error("No URL received from async iterator");
+          }
           
         } catch (streamError) {
-          console.error("Error reading async stream:", streamError);
-          throw new Error("Failed to read image stream");
+          console.error("Error reading async iterator:", streamError);
+          throw new Error("Failed to read image URL from async iterator");
         }
       } else if (output && 'getReader' in output) {
-        // Es un ReadableStream estándar - Exacto de tu repositorio
+        // ReadableStream - This is less common, might be binary data
         console.log("Processing ReadableStream from Replicate...");
         
-        const chunks: Buffer[] = [];
+        // Try to read as text first (might be URL)
+        const chunks: string[] = [];
         const reader = (output as any).getReader();
         
         try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(Buffer.from(value));
+          const { done, value } = await reader.read();
+          if (!done && value) {
+            // Check if it's text (URL) or binary
+            const text = new TextDecoder().decode(value);
+            if (text.startsWith('http')) {
+              imageUrl = text.trim();
+              console.log("✅ ReadableStream returned URL:", imageUrl);
+            } else {
+              // If it's binary data, we should NOT process it
+              // Let Object Storage handle the original Replicate URL
+              throw new Error("Unexpected binary stream from Replicate - expected URL");
+            }
           }
-          
-          const imageBuffer = Buffer.concat(chunks);
-          console.log("Image buffer size:", imageBuffer.length);
-          
-          // Convertir a base64 data URL
-          const base64 = imageBuffer.toString('base64');
-          imageUrl = `data:image/png;base64,${base64}`;
-          console.log("Created data URL, length:", imageUrl.length);
         } catch (streamError) {
           console.error("Error reading stream:", streamError);
-          throw new Error("Failed to read image stream");
+          throw new Error("Failed to read image URL from stream");
         } finally {
           reader.releaseLock();
         }
       } else {
-        console.error("Unexpected output format from FLUX Kontext Max:", output);
+        console.error("Unexpected output format from Replicate:", output);
         return res.status(500).json({ 
           error: "No image URL was generated - unexpected output format" 
         });
@@ -1135,51 +1138,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        model === 'max' ? 'M' : 
                        (model as string).charAt(0).toUpperCase();
       
-      // Subir imagen a Object Storage en lugar de guardar base64
-      const objectStorage = new ObjectStorageService();
+      // USE REAL REPLICATE URLS - Don't re-upload to Object Storage
       let finalImageUrl = imageUrl;
-      let thumbnailUrl = null;
-      let variants = undefined; // Mover aquí para que esté disponible fuera del try
+      let thumbnailUrl = imageUrl; // Use same URL for thumbnail temporarily
+      let variants = undefined;
       
-      try {
-        console.log('=== PROCESANDO IMAGEN PARA OBJECT STORAGE ===');
-        console.log('Tipo de imagen:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
-        
-        // Subir la imagen a Object Storage con versiones optimizadas
-        if (imageUrl.startsWith('data:')) {
-          // Si es base64, subir directamente
+      // Check if it's a real Replicate URL
+      const isReplicateUrl = imageUrl.includes('replicate.delivery') || 
+                            imageUrl.includes('replicate.com') ||
+                            imageUrl.includes('pbxt.replicate.delivery');
+      
+      if (isReplicateUrl) {
+        console.log('✅ USING REAL REPLICATE URL DIRECTLY:', imageUrl);
+        console.log('Not re-uploading to Object Storage - using original Replicate URL');
+        // Keep the original Replicate URL
+        finalImageUrl = imageUrl;
+        thumbnailUrl = imageUrl;
+      } else if (imageUrl.startsWith('data:')) {
+        // Only upload to Object Storage if it's base64 (shouldn't happen with fixes above)
+        console.log('⚠️ WARNING: Received base64 instead of URL - this should not happen');
+        const objectStorage = new ObjectStorageService();
+        try {
           const uploadResult = await objectStorage.uploadPublicImageFromBase64(
             imageUrl,
             'gallery',
             userId,
-            true // generateOptimized
+            true
           );
           finalImageUrl = uploadResult.imageUrl;
           thumbnailUrl = uploadResult.thumbnailUrl;
           variants = uploadResult.variants;
-        } else {
-          // Si es URL externa, descargar y subir
-          const uploadResult = await objectStorage.uploadPublicImageFromUrl(
-            imageUrl,
-            'gallery',
-            userId,
-            true // generateOptimized
-          );
-          finalImageUrl = uploadResult.imageUrl;
-          thumbnailUrl = uploadResult.thumbnailUrl;
-          variants = uploadResult.variants;
+        } catch (uploadError) {
+          console.error('Error uploading base64 to Object Storage:', uploadError);
         }
-        
-        console.log('=== IMAGEN OPTIMIZADA ===');
-        console.log('URL final:', finalImageUrl);
-        console.log('URL miniatura:', thumbnailUrl);
-        if (variants) {
-          console.log('Variantes optimizadas generadas:', Object.keys(variants));
-        }
-      } catch (uploadError) {
-        console.error('Error subiendo a Object Storage, usando URL original:', uploadError);
-        // Si falla, mantener la URL original
+      } else {
+        // For other URLs, just use them directly
+        console.log('✅ Using external URL directly:', imageUrl);
+        finalImageUrl = imageUrl;
+        thumbnailUrl = imageUrl;
       }
+      
+      console.log('=== FINAL IMAGE URL ===');
+      console.log('Final URL for gallery:', finalImageUrl);
+      console.log('Thumbnail URL:', thumbnailUrl);
       
       // Save to gallery con URLs optimizadas
       const savedItem = await storage.addToGallery({
