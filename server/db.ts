@@ -13,8 +13,8 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  max: 5, // Reducir conexiones máximas
+  max: 10, // Aumentar conexiones para producción
   idleTimeoutMillis: 30000, // 30 segundos
-  connectionTimeoutMillis: 5000, // 5 segundos timeout
+  connectionTimeoutMillis: 15000, // 15 segundos timeout - AUMENTADO para evitar errores en producción
 });
 export const db = drizzle({ client: pool, schema });

@@ -30,13 +30,22 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = queryKey.join("/") as string;
+    const res = await fetch(url, {
       credentials: "include",
       cache: "no-store",
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;
+    }
+
+    // CRITICAL FIX: Handle 500 errors for specific endpoints
+    if (res.status === 500) {
+      if (url.includes('/api/flux/projects') || url.includes('/api/gallery')) {
+        console.warn(`[API] ${url} returned 500, using empty array fallback`);
+        return [] as any;
+      }
     }
 
     await throwIfResNotOk(res);

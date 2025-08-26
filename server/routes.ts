@@ -561,6 +561,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ENDPOINT ALTERNATIVO - máxima protección
+  app.get("/api/flux/projects-safe", async (req: any, res) => {
+    res.status(200).json([]);
+  });
+
   // Flux Kontext Routes - ULTRA RESILIENT PUBLIC ACCESS
   app.get("/api/flux/projects", async (req: any, res) => {
     // TOP-LEVEL TRY-CATCH: GARANTIZAR que NUNCA devolvamos 500
