@@ -1058,11 +1058,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash-preview-image-generation",
+        model: "gemini-2.5-flash-image-preview",
         contents: contents,
-        config: {
-          responseModalities: [Modality.IMAGE],
-        },
       });
 
       // Extract image data from response

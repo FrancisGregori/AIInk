@@ -80,9 +80,10 @@ Default AI model: Qwen Edit (for Design Editor)
 - **multer**: Express middleware for multipart/form-data.
 
 ### AI and Image Generation
-- **Google Gemini 2.5 Flash and Pro models**: For various AI operations (text, image processing).
-- **Google Gemini 2.0 Flash Preview Image Generation**: For AI-powered image editing in Design Editor (replacing Replicate).
-- **Important**: Gemini returns images as base64 data, not URLs. Images are immediately saved to Google Cloud Storage for permanent storage.
+- **Google Gemini 2.5 Flash**: For chat operations and text processing in Design Editor.
+- **Google Gemini 2.5 Flash Image Preview**: For AI-powered image editing in Design Editor.
+- **Important**: Design Editor now uses ChatImageEditor architecture from https://github.com/darwintattoo/ChatImageEditor - complete replacement of previous Replicate-based system (2025-08-26).
+- **Note**: Gemini returns images as base64 data, not URLs. Images are immediately saved to Google Cloud Storage for permanent storage.
 
 ### Development Tools
 - **vite**: Modern build tool.
