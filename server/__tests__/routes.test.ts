@@ -59,7 +59,7 @@ test('GET /api/flux/projects returns 200 with empty array when dependencies fail
   (db as any).select = originalDbSelect;
 });
 
-test('GET /api/gallery returns 200 with empty array when dependencies fail', async () => {
+test('GET /api/gallery?type=design returns 200 with empty array when dependencies fail', async () => {
   const app = express();
   const httpServer = await registerRoutes(app);
 
@@ -71,7 +71,7 @@ test('GET /api/gallery returns 200 with empty array when dependencies fail', asy
   const server = httpServer.listen(0);
   const { port } = server.address() as any;
 
-  const response = await fetch(`http://localhost:${port}/api/gallery`);
+  const response = await fetch(`http://localhost:${port}/api/gallery?type=design`);
   const body = await response.json();
 
   assert.equal(response.status, 200);
