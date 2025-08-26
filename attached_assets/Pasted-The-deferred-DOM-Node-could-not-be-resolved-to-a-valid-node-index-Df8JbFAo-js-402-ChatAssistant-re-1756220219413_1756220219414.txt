@@ -1,0 +1,191 @@
+The deferred DOM Node could not be resolved to a valid node.
+index-Df8JbFAo.js:402 ChatAssistant received currentImage: NO
+index-Df8JbFAo.js:402 CurrentImage preview: none
+index-Df8JbFAo.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-Df8JbFAo.js:48
+queryFn @ index-Df8JbFAo.js:404
+s @ index-Df8JbFAo.js:48
+w @ index-Df8JbFAo.js:48
+start @ index-Df8JbFAo.js:48
+fetch @ index-Df8JbFAo.js:48
+Fo @ index-Df8JbFAo.js:48
+setOptions @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+cu @ index-Df8JbFAo.js:40
+js @ index-Df8JbFAo.js:40
+oT @ index-Df8JbFAo.js:40
+di @ index-Df8JbFAo.js:40
+$v @ index-Df8JbFAo.js:40
+ri @ index-Df8JbFAo.js:38
+(anonymous) @ index-Df8JbFAo.js:40
+setTimeout
+i @ index-Df8JbFAo.js:48
+o @ index-Df8JbFAo.js:48
+batch @ index-Df8JbFAo.js:48
+qn @ index-Df8JbFAo.js:48
+setData @ index-Df8JbFAo.js:48
+onSuccess @ index-Df8JbFAo.js:48
+p @ index-Df8JbFAo.js:48
+Promise.then
+w @ index-Df8JbFAo.js:48
+start @ index-Df8JbFAo.js:48
+fetch @ index-Df8JbFAo.js:48
+Fo @ index-Df8JbFAo.js:48
+onSubscribe @ index-Df8JbFAo.js:48
+subscribe @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+e1 @ index-Df8JbFAo.js:38
+cu @ index-Df8JbFAo.js:40
+js @ index-Df8JbFAo.js:40
+$v @ index-Df8JbFAo.js:40
+ri @ index-Df8JbFAo.js:38
+oT @ index-Df8JbFAo.js:40
+di @ index-Df8JbFAo.js:40
+M1 @ index-Df8JbFAo.js:40
+j @ index-Df8JbFAo.js:25
+A @ index-Df8JbFAo.js:25
+index-Df8JbFAo.js:404 GET /api/flux/projects failed Error: 500: 
+    at hb (index-Df8JbFAo.js:48:42733)
+    at async index-Df8JbFAo.js:48:43129
+    at async queryFn (index-Df8JbFAo.js:404:19585)
+queryFn @ index-Df8JbFAo.js:404
+await in queryFn
+s @ index-Df8JbFAo.js:48
+w @ index-Df8JbFAo.js:48
+start @ index-Df8JbFAo.js:48
+fetch @ index-Df8JbFAo.js:48
+Fo @ index-Df8JbFAo.js:48
+setOptions @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+cu @ index-Df8JbFAo.js:40
+js @ index-Df8JbFAo.js:40
+oT @ index-Df8JbFAo.js:40
+di @ index-Df8JbFAo.js:40
+$v @ index-Df8JbFAo.js:40
+ri @ index-Df8JbFAo.js:38
+(anonymous) @ index-Df8JbFAo.js:40
+setTimeout
+i @ index-Df8JbFAo.js:48
+o @ index-Df8JbFAo.js:48
+batch @ index-Df8JbFAo.js:48
+qn @ index-Df8JbFAo.js:48
+setData @ index-Df8JbFAo.js:48
+onSuccess @ index-Df8JbFAo.js:48
+p @ index-Df8JbFAo.js:48
+Promise.then
+w @ index-Df8JbFAo.js:48
+start @ index-Df8JbFAo.js:48
+fetch @ index-Df8JbFAo.js:48
+Fo @ index-Df8JbFAo.js:48
+onSubscribe @ index-Df8JbFAo.js:48
+subscribe @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+e1 @ index-Df8JbFAo.js:38
+cu @ index-Df8JbFAo.js:40
+js @ index-Df8JbFAo.js:40
+$v @ index-Df8JbFAo.js:40
+ri @ index-Df8JbFAo.js:38
+oT @ index-Df8JbFAo.js:40
+di @ index-Df8JbFAo.js:40
+M1 @ index-Df8JbFAo.js:40
+j @ index-Df8JbFAo.js:25
+A @ index-Df8JbFAo.js:25
+index-Df8JbFAo.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-Df8JbFAo.js:48
+queryFn @ index-Df8JbFAo.js:404
+s @ index-Df8JbFAo.js:48
+w @ index-Df8JbFAo.js:48
+start @ index-Df8JbFAo.js:48
+fetch @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+batch @ index-Df8JbFAo.js:48
+refetchQueries @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+batch @ index-Df8JbFAo.js:48
+invalidateQueries @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:404
+cu @ index-Df8JbFAo.js:40
+js @ index-Df8JbFAo.js:40
+oT @ index-Df8JbFAo.js:40
+di @ index-Df8JbFAo.js:40
+$v @ index-Df8JbFAo.js:40
+ri @ index-Df8JbFAo.js:38
+(anonymous) @ index-Df8JbFAo.js:40
+setTimeout
+i @ index-Df8JbFAo.js:48
+o @ index-Df8JbFAo.js:48
+batch @ index-Df8JbFAo.js:48
+qn @ index-Df8JbFAo.js:48
+setData @ index-Df8JbFAo.js:48
+onSuccess @ index-Df8JbFAo.js:48
+p @ index-Df8JbFAo.js:48
+Promise.then
+w @ index-Df8JbFAo.js:48
+start @ index-Df8JbFAo.js:48
+fetch @ index-Df8JbFAo.js:48
+Fo @ index-Df8JbFAo.js:48
+onSubscribe @ index-Df8JbFAo.js:48
+subscribe @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+e1 @ index-Df8JbFAo.js:38
+cu @ index-Df8JbFAo.js:40
+js @ index-Df8JbFAo.js:40
+$v @ index-Df8JbFAo.js:40
+ri @ index-Df8JbFAo.js:38
+oT @ index-Df8JbFAo.js:40
+di @ index-Df8JbFAo.js:40
+M1 @ index-Df8JbFAo.js:40
+j @ index-Df8JbFAo.js:25
+A @ index-Df8JbFAo.js:25
+index-Df8JbFAo.js:404 GET /api/flux/projects failed Error: 500: 
+    at hb (index-Df8JbFAo.js:48:42733)
+    at async index-Df8JbFAo.js:48:43129
+    at async queryFn (index-Df8JbFAo.js:404:19585)
+queryFn @ index-Df8JbFAo.js:404
+await in queryFn
+s @ index-Df8JbFAo.js:48
+w @ index-Df8JbFAo.js:48
+start @ index-Df8JbFAo.js:48
+fetch @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+batch @ index-Df8JbFAo.js:48
+refetchQueries @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+batch @ index-Df8JbFAo.js:48
+invalidateQueries @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:404
+cu @ index-Df8JbFAo.js:40
+js @ index-Df8JbFAo.js:40
+oT @ index-Df8JbFAo.js:40
+di @ index-Df8JbFAo.js:40
+$v @ index-Df8JbFAo.js:40
+ri @ index-Df8JbFAo.js:38
+(anonymous) @ index-Df8JbFAo.js:40
+setTimeout
+i @ index-Df8JbFAo.js:48
+o @ index-Df8JbFAo.js:48
+batch @ index-Df8JbFAo.js:48
+qn @ index-Df8JbFAo.js:48
+setData @ index-Df8JbFAo.js:48
+onSuccess @ index-Df8JbFAo.js:48
+p @ index-Df8JbFAo.js:48
+Promise.then
+w @ index-Df8JbFAo.js:48
+start @ index-Df8JbFAo.js:48
+fetch @ index-Df8JbFAo.js:48
+Fo @ index-Df8JbFAo.js:48
+onSubscribe @ index-Df8JbFAo.js:48
+subscribe @ index-Df8JbFAo.js:48
+(anonymous) @ index-Df8JbFAo.js:48
+e1 @ index-Df8JbFAo.js:38
+cu @ index-Df8JbFAo.js:40
+js @ index-Df8JbFAo.js:40
+$v @ index-Df8JbFAo.js:40
+ri @ index-Df8JbFAo.js:38
+oT @ index-Df8JbFAo.js:40
+di @ index-Df8JbFAo.js:40
+M1 @ index-Df8JbFAo.js:40
+j @ index-Df8JbFAo.js:25
+A @ index-Df8JbFAo.js:25

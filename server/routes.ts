@@ -1346,6 +1346,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ADMIN ROUTES COMPLETELY REMOVED FOR SECURITY
   // Any admin functionality requires proper role-based access control implementation
 
+  // Flux projects endpoint - returns user's flux projects
+  app.get("/api/flux/projects", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      // Get projects from database
+      const projects = await storage.getFluxProjects(userId);
+      
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching flux projects:", error);
+      res.status(500).json({ error: "Failed to fetch flux projects" });
+    }
+  });
+  
+  // Create new flux project
+  app.post("/api/flux/create", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const { name, imageUrl, prompt, settings } = req.body;
+      
+      // Create project in database
+      const project = await storage.createFluxProject({
+        userId,
+        name,
+        imageUrl,
+        prompt,
+        settings
+      });
+      
+      res.json(project);
+    } catch (error) {
+      console.error("Error creating flux project:", error);
+      res.status(500).json({ error: "Failed to create flux project" });
+    }
+  });
+
   // Endpoint PÚBLICO para servir imágenes de galería (sin autenticación)
   app.get('/api/public/images/:filename(*)', async (req, res) => {
     try {
