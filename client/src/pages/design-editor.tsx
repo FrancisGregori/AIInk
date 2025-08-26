@@ -392,6 +392,12 @@ function DesignEditor() {
     staleTime: 0,              // permite refetch inmediato tras login
   });
   const projects = projectsData ?? [];
+  // Ordenar proyectos por fecha de creación (más reciente primero)
+  const sortedProjects = [...projects].sort((a, b) => {
+    const dateA = new Date(a.createdAt || 0).getTime();
+    const dateB = new Date(b.createdAt || 0).getTime();
+    return dateB - dateA; // Orden descendente (más reciente primero)
+  });
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -1229,7 +1235,7 @@ function DesignEditor() {
                       ? 'grid-cols-2 lg:grid-cols-2' 
                       : 'grid-cols-1 lg:grid-cols-1'
                   }`}>
-                    {projects.slice(0, 8).map((project) => (
+                    {sortedProjects.slice(0, 8).map((project) => (
                     <Dialog key={project.id}>
                       <DialogTrigger asChild>
                         <div className="relative group cursor-pointer">
