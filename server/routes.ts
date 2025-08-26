@@ -79,6 +79,15 @@ const generateImageSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for deployment
+  app.get("/", (req, res) => {
+    res.status(200).json({ status: "healthy", message: "TattoostencilPro API is running" });
+  });
+
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "healthy", message: "Server is running" });
+  });
+
   // Auth middleware
   await setupAuth(app);
   
