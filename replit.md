@@ -57,6 +57,7 @@ Default AI model: Qwen Edit (for Design Editor)
 - **SPA Navigation**: Fixed white flash issue by replacing `window.location.href` with wouter's `setLocation` for instant SPA navigation in tool cards.
 - **Modal Design**: Compact, content-adaptive modals that respect image aspect ratios with minimal padding and streamlined footers.
 - **Error Handling**: Robust error handling for critical endpoints, ensuring HTTP 200 responses with valid JSON arrays even on total system failure. LocalStorage overflow protection implemented.
+- **Permanent Image Storage**: CRITICAL FIX (2025-08-26) - Replicate URLs expire after 1 hour. Implemented automatic download and permanent storage to Google Cloud Storage. All generated images are now saved to `/objects/designs/` with permanent URLs that never expire. This prevents user work loss.
 
 ## External Dependencies
 

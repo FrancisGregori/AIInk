@@ -1172,22 +1172,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        model === 'max' ? 'M' : 
                        (model as string).charAt(0).toUpperCase();
       
-      // USAR LA URL EXACTAMENTE COMO VIENE DE REPLICATE - NO CAMBIAR NADA
-      console.log('=== URL RECIBIDA DE REPLICATE ===');
-      console.log('URL SIN CAMBIOS:', imageUrl);
+      // IMPORTANTE: Las URLs de Replicate se borran después de 1 hora
+      // Necesitamos descargar y guardar la imagen permanentemente
+      console.log('=== DESCARGANDO IMAGEN DE REPLICATE ===');
+      console.log('URL temporal de Replicate:', imageUrl);
       
-      // Save to gallery - USAR LA URL DIRECTAMENTE
+      let permanentImageUrl = imageUrl;
+      
+      try {
+        // 1. Descargar la imagen de Replicate
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to download image from Replicate: ${imageResponse.status}`);
+        }
+        
+        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+        console.log(`Downloaded image: ${imageBuffer.length} bytes`);
+        
+        // 2. Generar nombre único para la imagen
+        const imageId = `${Date.now()}_${userId}_${Math.random().toString(36).substring(2, 9)}`;
+        const fileName = `designs/${imageId}.png`;
+        
+        // 3. Subir a Object Storage
+        const objectStorageService = new ObjectStorageService();
+        const bucketName = 'replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b';
+        const bucket = objectStorageClient.bucket(bucketName);
+        const file = bucket.file(`.private/${fileName}`);
+        
+        await file.save(imageBuffer, {
+          metadata: {
+            contentType: 'image/png',
+            cacheControl: 'public, max-age=31536000',
+          }
+        });
+        
+        // 4. Generar URL permanente
+        permanentImageUrl = `/objects/${fileName}`;
+        console.log('✅ Imagen guardada permanentemente en:', permanentImageUrl);
+        
+      } catch (saveError: any) {
+        console.error('Error guardando imagen permanentemente:', saveError);
+        // Si falla el guardado, usar la URL temporal (mejor que nada)
+        console.warn('⚠️ Usando URL temporal de Replicate (se borrará en 1 hora)');
+      }
+      
+      // Save to gallery con URL permanente
       const savedItem = await storage.addToGallery({
         userId,
-        imageUrl: imageUrl,  // USAR LA URL ORIGINAL
-        thumbnailUrl: imageUrl, // MISMA URL PARA THUMBNAIL
+        imageUrl: permanentImageUrl,  // USAR URL PERMANENTE
+        thumbnailUrl: permanentImageUrl, // MISMA URL PARA THUMBNAIL
         type: 'design',
         title: `${prompt.slice(0, 45)} (${modelAbbr})`,
         description: prompt,
         prompt: prompt,
         metadata: {
           model: modelName,
-          inputImageUrl: inputImageUrl
+          inputImageUrl: inputImageUrl,
+          originalReplicateUrl: imageUrl // Guardar URL original por si acaso
         }
       });
       

@@ -93,6 +93,7 @@ export function AuthenticatedImage({
   // Detect public vs private images
   const isPublicCDN = src.startsWith('https://storage.googleapis.com/');
   const isReplicateURL = src.includes('replicate.delivery');
+  const isObjectStorageURL = src.startsWith('/objects/');
   const isExternalURL = src.startsWith('http://') || src.startsWith('https://');
   
   // IMPORTANTE: needsCredentials determina si incluir cookies en solicitudes de imagen
@@ -100,6 +101,11 @@ export function AuthenticatedImage({
   const needsCredentials = (() => {
     // URLs de Replicate son públicas y no necesitan credenciales
     if (isReplicateURL) {
+      return false;
+    }
+    
+    // URLs de Object Storage son nuestras propias imágenes, no necesitan credenciales especiales
+    if (isObjectStorageURL) {
       return false;
     }
     
