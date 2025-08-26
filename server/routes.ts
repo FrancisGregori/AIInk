@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini, getChatResponseGemini } from "./gemini";
+import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini, getChatResponseGemini, chatWithGemini, editImageWithGemini } from "./gemini";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema, userGallery, fluxProjects } from "@shared/schema";
 import { db } from "./db";
@@ -1018,9 +1018,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/chat-editor/edit-image", async (req, res) => {
+  // Chat endpoint - EXACT copy from ChatImageEditor repository
+  app.post("/api/chat", async (req, res) => {
     try {
-      const { prompt, imageBase64, mimeType } = req.body;
+      const { messages } = req.body;
+      
+      if (!messages || messages.length === 0) {
+        return res.status(400).json({ 
+          error: "Messages array is required and cannot be empty" 
+        });
+      }
+
+      const latestMessage = messages[messages.length - 1];
+      if (!latestMessage.content) {
+        return res.status(400).json({ 
+          error: "Message content is required" 
+        });
+      }
+
+      const response = await chatWithGemini(latestMessage.content);
+      
+      res.json({ text: response });
+    } catch (error) {
+      console.error("Chat error:", error);
+      res.status(500).json({ 
+        error: "Failed to process chat request",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Image editing endpoint - EXACT copy from ChatImageEditor repository
+  app.post("/api/edit-image", async (req, res) => {
+    try {
+      const { prompt, imageBase64, mimeType, fileUri } = req.body;
       
       if (!prompt) {
         return res.status(400).json({ 
@@ -1028,66 +1059,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      if (!imageBase64) {
+      // Validate that either imageBase64 or fileUri is provided
+      if (!imageBase64 && !fileUri) {
         return res.status(400).json({ 
-          error: "imageBase64 must be provided" 
+          error: "Either imageBase64 or fileUri must be provided" 
         });
       }
 
-      if (!mimeType) {
-        return res.status(400).json({ 
-          error: "mimeType is required when using imageBase64" 
-        });
-      }
+      // Validate imageBase64 format if provided
+      if (imageBase64) {
+        if (!mimeType) {
+          return res.status(400).json({ 
+            error: "mimeType is required when using imageBase64" 
+          });
+        }
 
-      // Generate the edited image using Gemini
-      const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-      
-      // Use generateImage with the combined prompt and image
-      const tempPath = path.join(__dirname, '..', 'temp', `edit_${Date.now()}.png`);
-      
-      // First analyze the image with the prompt
-      const contents = [
-        {
-          inlineData: {
-            data: cleanBase64,
-            mimeType: mimeType,
-          },
-        },
-        prompt,
-      ];
-
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-image-preview",
-        contents: contents,
-      });
-
-      // Extract image data from response
-      const candidates = response.candidates;
-      if (!candidates || candidates.length === 0) {
-        throw new Error("No candidates in response");
-      }
-
-      const content = candidates[0].content;
-      if (!content || !content.parts) {
-        throw new Error("No content parts in response");
-      }
-
-      // Find the image part in the response
-      for (const part of content.parts) {
-        if (part.inlineData && part.inlineData.data) {
-          return res.json({
-            mimeType: part.inlineData.mimeType || "image/png",
-            dataBase64: part.inlineData.data
+        // Basic base64 validation
+        try {
+          const buffer = Buffer.from(imageBase64, 'base64');
+          if (buffer.length > 25 * 1024 * 1024) { // 25MB limit
+            return res.status(400).json({ 
+              error: "Image size exceeds 25MB limit" 
+            });
+          }
+        } catch {
+          return res.status(400).json({ 
+            error: "Invalid base64 image data" 
           });
         }
       }
 
-      throw new Error("No image data found in response");
+      const response = await editImageWithGemini(prompt, imageBase64, mimeType, fileUri);
+      
+      res.json(response);
     } catch (error) {
-      console.error("Edit image error:", error);
+      console.error("Image edit error:", error);
       res.status(500).json({ 
-        error: "Failed to edit image",
+        error: "Failed to process image edit request",
         message: error instanceof Error ? error.message : "Unknown error"
       });
     }

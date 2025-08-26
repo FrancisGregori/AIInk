@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
 import ChatInterface from "@/components/chat/ChatInterface";
-import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
-import { ArrowLeft } from "lucide-react";
 
-export default function DesignEditor() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+export default function Chat() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
     // Initialize theme from localStorage or system preference
@@ -38,21 +35,14 @@ export default function DesignEditor() {
       {/* Header */}
       <header className="border-b border-border bg-card px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          {/* Back button */}
-          <Link href="/">
-            <Button variant="ghost" size="icon" className="mr-2">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <svg className="w-4 h-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832L14 10.202a1 1 0 000-1.732l-4.445-2.832z" clipRule="evenodd" />
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Design Editor</h1>
-            <p className="text-xs text-muted-foreground">Chat & Image Editor with AI</p>
+            <h1 className="text-lg font-semibold text-foreground">Gemini Chat & Image Editor</h1>
+            <p className="text-xs text-muted-foreground">Powered by Gemini 2.5 Flash</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
