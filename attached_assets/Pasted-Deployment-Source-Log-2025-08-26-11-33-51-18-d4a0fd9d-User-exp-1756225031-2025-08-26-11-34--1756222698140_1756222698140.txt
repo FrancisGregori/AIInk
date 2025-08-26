@@ -1,0 +1,155 @@
+Deployment
+Source
+Log
+2025-08-26 11:33:51.18
+d4a0fd9d
+User
+exp: 1756225031,
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+first_name: 'Darwin'
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+},
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+expires_at: 1756225031,
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+access_token: 'wZM5Qu3es7Pnn7L5cO6ejJMgvISCAAj5_WOiUeMYqi1',
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+refresh_token: '4OwdIS2L2jdzSAoxjD2DXIr5vCJsppMcRfWOFS5BQLd'
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+}
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+[GALLERY] Request user claims: {
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+aud: '6eb7ec1e-53b9-4e95-adfd-f718b072b5d7',
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+exp: 1756225031,
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+iat: 1756221431,
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+iss: 'https://replit.com/oidc',
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+sub: '36468537',
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+email: 'darwintattoo@gmail.com',
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+at_hash: 'qr51Sg6Zx371esrOFZy9cw',
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+username: 'darwintattoo1',
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+auth_time: 1756221431,
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+last_name: 'Enriquez',
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+first_name: 'Darwin'
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+}
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+[GALLERY] Fetching gallery for userId: 36468537
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+[GALLERY] Query params - type: design, limit: undefined, page: undefined
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+[GALLERY] Calling storage.getUserGallery with params: { userId: '36468537', type: 'design', requestedLimit: 50, offset: 0 }
+2025-08-26 11:34:02.71
+d4a0fd9d
+User
+[DB] Fetching gallery data for user 36468537, type: design, limit: 50
+2025-08-26 11:34:04.52
+d4a0fd9d
+User
+Gallery query took 1809ms for 50 items
+2025-08-26 11:34:04.55
+d4a0fd9d
+User
+[GALLERY] Query completed in 1842ms for 50 items
+2025-08-26 11:34:04.84
+d4a0fd9d
+System
+starting up user application
+2025-08-26 11:34:05.11
+d4a0fd9d
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-08-26 11:34:05.26
+d4a0fd9d
+System
+system: received signal terminated
+2025-08-26 11:34:05.60
+d4a0fd9d
+User
+3:34:05 PM [express] GET /api/gallery 200 in 2795ms :: [{"id":"6c9e96b6-025e-4599-9663-c091e6f963ad"…
+2025-08-26 11:34:06.69
+d4a0fd9d
+User
+> rest-express@1.0.0 start
+2025-08-26 11:34:06.69
+d4a0fd9d
+User
+> NODE_ENV=production node dist/index.js
+2025-08-26 11:34:08.87
+d4a0fd9d
+User
+✅ Stripe initialized successfully
+2025-08-26 11:34:08.88
+d4a0fd9d
+User
+Initializing stencil styles...
+2025-08-26 11:34:09.27
+d4a0fd9d
+User
+✅ Stencil styles initialized successfully
+2025-08-26 11:34:09.71
+d4a0fd9d
+User
+3:34:09 PM [express] serving on port 5000
+2025-08-26 11:34:09.71
+d4a0fd9d
+User
+Server is running in production mode on port 5000
+
+Wrap
+
+Colors
