@@ -1,4 +1,15 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useToast } from '@/hooks/use-toast';
+
+/**
+ * Job persistence policy
+ * ----------------------
+ * - Only lightweight metadata is stored in localStorage.
+ * - Any base64, blob or data URLs are stripped before serialization.
+ * - Completed jobs older than 6 hours and total jobs over 10 are pruned.
+ * - If the serialized payload exceeds ~1MB it is **not** written to storage and
+ *   the user is warned with a toast.
+ */
 
 interface Job {
   id: string;
@@ -25,13 +36,16 @@ const JobContext = createContext<JobContextType | undefined>(undefined);
 
 export function JobProvider({ children }: { children: ReactNode }) {
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
+  const { toast } = useToast();
 
-  // Límite conservador para evitar QuotaExceededError
-  const MAX_STORAGE_BYTES = 2 * 1024 * 1024; // 2MB - mucho más conservador
+  // Conservative limit (~1MB) to avoid QuotaExceededError
+  const MAX_STORAGE_BYTES = 1 * 1024 * 1024; // 1MB
   const STORAGE_KEY = 'tattoo-stencil-jobs';
 
+  const isHttpUrl = (url?: string) => !!url && /^https?:\/\//.test(url);
+
   const serializeJobs = (jobs: Job[]) => {
-    // Serializar solo metadatos esenciales, NUNCA incluir imágenes base64
+    // Keep only essential metadata and ensure large payloads aren't stored
     const essential = jobs.map(({ id, status, type, style, startedAt, completedAt, errorMessage, originalImageUrl, processedImageUrl }) => ({
       id,
       status,
@@ -39,10 +53,11 @@ export function JobProvider({ children }: { children: ReactNode }) {
       style,
       startedAt,
       completedAt,
-      errorMessage,
-      // Solo incluir URLs si son rutas HTTP/HTTPS normales, NO base64
-      ...(originalImageUrl && originalImageUrl.startsWith('http') ? { originalImageUrl } : {}),
-      ...(processedImageUrl && processedImageUrl.startsWith('http') ? { processedImageUrl } : {})
+      // Truncate possible large error messages
+      ...(errorMessage ? { errorMessage: errorMessage.slice(0, 200) } : {}),
+      // Only include http/https URLs, never base64/blob/data URLs
+      ...(isHttpUrl(originalImageUrl) ? { originalImageUrl } : {}),
+      ...(isHttpUrl(processedImageUrl) ? { processedImageUrl } : {})
     }));
     return JSON.stringify(essential);
   };
@@ -111,14 +126,22 @@ export function JobProvider({ children }: { children: ReactNode }) {
 
       const serialized = serializeJobs(finalJobs);
       const payloadSize = new Blob([serialized]).size;
-      
+
       if (payloadSize <= MAX_STORAGE_BYTES) {
         const saved = safeSetItem(STORAGE_KEY, serialized);
         if (!saved) {
           console.warn('Could not save jobs to localStorage (quota exceeded)');
+          toast({
+            title: 'Storage full',
+            description: 'Could not save job history to your browser.',
+          });
         }
       } else {
         console.warn(`Job payload too large: ${(payloadSize / 1024 / 1024).toFixed(2)}MB, max: ${(MAX_STORAGE_BYTES / 1024 / 1024).toFixed(2)}MB`);
+        toast({
+          title: 'Job history not saved',
+          description: 'Job data exceeds local storage limit and will not persist.',
+        });
       }
 
       // Si los jobs fueron limpiados, actualizar el estado

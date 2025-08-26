@@ -51,7 +51,7 @@ Default AI model: Qwen Edit (for Design Editor)
 ### System Design Choices
 - **Real-time Processing**: Implemented instant loading of in-progress jobs from localStorage and immediate "Processing" status feedback.
 - **Gallery Accessibility**: Gallery remains accessible during processing - users can view completed work while new jobs process.
-- **Performance**: Optimized preview area, temporary job system for instant feedback, and limits on stored jobs. Job data persisted to localStorage now excludes base64 image data and only saves when payload is under ~2MB to prevent `QuotaExceededError`.
+- **Performance**: Optimized preview area, temporary job system for instant feedback, and strict limits on stored jobs. Job data persisted to localStorage now excludes all base64/blob/data URLs and only saves when payload is under ~1MB to prevent `QuotaExceededError`. Jobs older than 6 hours are auto-pruned and maximum 10 jobs retained (reduced from 20). Toast notifications warn users when storage fails.
 - **API Integration**: Replicate API is fully integrated for AI image editing, handling `ReadableStream` and `AsyncIterator`, with retry mechanisms and Zod schema validation.
 - **UI/UX Refinements**: Changed terminology ("Manual Prompt," "Ediciones sugeridas"), intelligent detection of questions vs. prompts, loading animations, and optimized gallery display.
 - **SPA Navigation**: Fixed white flash issue by replacing `window.location.href` with wouter's `setLocation` for instant SPA navigation in tool cards.
