@@ -1,0 +1,143 @@
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index 0e27bd1500264e0ad06ee3f086f7a0c66ead3ffc..4695c376613eb6174a979ad491881561832afbf3 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -462,62 +462,75 @@ function DesignEditor() {
+   const deleteProjectMutation = useMutation({
+     mutationFn: async (projectId: string) => {
+       const response = await fetch(`/api/flux/projects/${projectId}`, {
+         method: 'DELETE',
+       });
+       if (!response.ok) throw new Error('Failed to delete project');
+       return response.json();
+     },
+     onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['/api/flux/projects'] });
+       toast({
+         title: language === 'es' ? 'Imagen eliminada' : 'Image deleted',
+         description: language === 'es' ? 'La imagen se ha eliminado correctamente' : 'The image has been deleted successfully',
+       });
+     },
+     onError: () => {
+       toast({
+         title: language === 'es' ? 'Error' : 'Error',
+         description: language === 'es' ? 'No se pudo eliminar la imagen' : 'Could not delete the image',
+         variant: 'destructive',
+       });
+     },
+   });
+ 
+   // Handle file selection
+-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
++  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0];
+     if (file && file.type.startsWith("image/")) {
+       setReferenceImage(file);
+-      const reader = new FileReader();
+-      reader.onloadend = () => {
+-        setReferencePreview(reader.result as string);
++      const formData = new FormData();
++      formData.append("image", file);
++      try {
++        const res = await fetch("/api/upload", {
++          method: "POST",
++          body: formData,
++        });
++        if (!res.ok) throw new Error("Upload failed");
++        const data = await res.json();
++        setReferencePreview(data.url);
+         // Automatically select Match Input when image is loaded
+         setAspectRatio("Match Input");
+         setMatchInput(true);
+-      };
+-      reader.readAsDataURL(file);
++      } catch (error) {
++        console.error("Error uploading image:", error);
++        toast({
++          title: "Upload failed",
++          description: language === 'es' ? 'No se pudo subir la imagen' : 'Could not upload the image',
++          variant: "destructive",
++        });
++      }
+     }
+   };
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   // Handle design generation
+   const handleGenerate = async () => {
+     // Check authentication before generating
+     if (!isAuthenticated) {
+       setShowAuthDialog(true);
+       return;
+     }
+ 
+     if (!prompt.trim()) {
+       toast({
+         title: "Error",
+         description: language === 'es' ? "Por favor ingresa una descripción del diseño" : "Please enter a design description",
+         variant: "destructive",
+       });
+       return;
+     }
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index 0e27bd1500264e0ad06ee3f086f7a0c66ead3ffc..4695c376613eb6174a979ad491881561832afbf3 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -569,51 +582,51 @@ function DesignEditor() {
+         id: tempJobId,
+         status: 'processing',
+         type: 'design',
+         originalImageUrl: referencePreview,
+         processedImageUrl: undefined,
+         style: prompt.slice(0, 30),
+         startedAt: new Date().toISOString(),
+         errorMessage: undefined
+       });
+       
+       // Call the same API that InkVision uses
+       console.log('Sending to generate API:', {
+         hasPrompt: !!prompt,
+         hasImage: !!referencePreview,
+         imageLength: referencePreview?.length || 0,
+         model: modelVariant
+       });
+       
+       const response = await fetch('/api/generate', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({
+           prompt: prompt,
+-          inputImageUrl: referencePreview, // Changed from imageData to inputImageUrl like InkVision
++          inputImageUrl: referencePreview || undefined,
+           model: modelVariant, // Send 'pro', 'max', or 'qwen'
+           aspectRatio: aspectRatio // Use the selected aspect ratio instead of hardcoding
+         }),
+       });
+ 
+       if (!response.ok) {
+         throw new Error(`HTTP error! status: ${response.status}`);
+       }
+ 
+       const data = await response.json();
+       console.log('Generated image data:', data);
+       const { imageUrl, thumbnailUrl } = data;
+ 
+       // Update chat assistant with the generated image
+       if (chatAssistantRef.current && imageUrl) {
+         chatAssistantRef.current.addImageMessage(imageUrl);
+       }
+       
+       // Create project entry for history
+       const projectData = {
+         name: prompt.slice(0, 50),
+         description: prompt,
+         prompt: prompt,
+         settings: {
+           aspectRatio,

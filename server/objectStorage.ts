@@ -164,8 +164,8 @@ export class ObjectStorageService {
         },
       });
       
-      // Hacer el archivo público
-      await file.makePublic();
+      // No usar makePublic() debido a restricciones del bucket
+      // await file.makePublic();
       
       // Generar y subir miniatura
       const thumbnailBuffer = await sharp(imageBuffer)
@@ -183,15 +183,16 @@ export class ObjectStorageService {
           cacheControl: 'public, max-age=31536000',
         },
       });
-      await thumbnailFile.makePublic();
+      // No usar makePublic() debido a restricciones del bucket
+      // await thumbnailFile.makePublic();
       
-      // URLs públicas directas (sin autenticación)
-      const publicUrl = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
-      const thumbnailUrl = `https://storage.googleapis.com/${this.bucketName}/${thumbnailName}`;
+      // URLs públicas a través del API (el bucket tiene prevención de acceso público)
+      const publicUrl = `/api/public/images/${encodeURIComponent(fileName)}`;
+      const thumbnailUrl = `/api/public/images/${encodeURIComponent(thumbnailName)}`;
       
       console.log(`=== IMAGEN PÚBLICA SUBIDA ===`);
-      console.log(`URL pública directa: ${publicUrl}`);
-      console.log(`Thumbnail público: ${thumbnailUrl}`);
+      console.log(`URL pública API: ${publicUrl}`);
+      console.log(`Thumbnail público API: ${thumbnailUrl}`);
       
       // Generar versiones optimizadas si se solicita
       let variants = undefined;
@@ -257,8 +258,9 @@ export class ObjectStorageService {
             },
           });
           
-          await file.makePublic();
-          variants[format][width] = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
+          // No usar makePublic() debido a restricciones del bucket
+          // await file.makePublic();
+          variants[format][width] = `/api/public/images/${encodeURIComponent(fileName)}`;
         } catch (error) {
           console.error(`Error generating public ${format} at ${width}px:`, error);
         }
@@ -423,7 +425,8 @@ export class ObjectStorageService {
         },
       });
       
-      await file.makePublic();
+      // No usar makePublic() debido a restricciones del bucket
+      // await file.makePublic();
       
       // Generar y subir miniatura
       const thumbnailBuffer = await sharp(imageBuffer)
@@ -441,11 +444,12 @@ export class ObjectStorageService {
           cacheControl: 'public, max-age=31536000',
         },
       });
-      await thumbnailFile.makePublic();
+      // No usar makePublic() debido a restricciones del bucket
+      // await thumbnailFile.makePublic();
       
-      // URLs públicas directas
-      const publicUrl = `https://storage.googleapis.com/${this.bucketName}/${fileName}`;
-      const thumbnailUrl = `https://storage.googleapis.com/${this.bucketName}/${thumbnailName}`;
+      // URLs públicas a través del API (el bucket tiene prevención de acceso público)
+      const publicUrl = `/api/public/images/${encodeURIComponent(fileName)}`;
+      const thumbnailUrl = `/api/public/images/${encodeURIComponent(thumbnailName)}`;
       
       console.log(`=== IMAGEN PÚBLICA SUBIDA DESDE URL ===`);
       console.log(`URL pública: ${publicUrl}`);
