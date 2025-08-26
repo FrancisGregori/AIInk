@@ -2076,6 +2076,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.use((err: any, req: any, res: any, _next: any) => {
+    console.error(err);
+    if (req.path === '/api/flux/projects' || req.path === '/api/gallery') {
+      return res.status(200).json([]);
+    }
+    return res.status(500).json({ error: 'Internal server error' });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
