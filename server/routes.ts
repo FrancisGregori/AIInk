@@ -1212,8 +1212,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       } catch (saveError: any) {
         console.error('Error guardando imagen permanentemente:', saveError);
-        // Si falla el guardado, usar la URL temporal (mejor que nada)
-        console.warn('⚠️ Usando URL temporal de Replicate (se borrará en 1 hora)');
+        // Si falla el guardado permanente, devolver error
+        return res.status(500).json({ 
+          error: "Failed to save image permanently",
+          details: process.env.NODE_ENV === 'development' ? saveError.message : 'Storage error'
+        });
       }
       
       // Save to gallery con URL permanente
@@ -2008,8 +2011,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let file;
       let exists = false;
       
-      // Si la ruta comienza con .private/, buscar ahí primero
-      if (filePath.startsWith('.private/')) {
+      // Si la ruta comienza con designs/, buscar en .private/designs/
+      if (filePath.startsWith('designs/')) {
+        file = bucket.file(`.private/${filePath}`);
+        [exists] = await file.exists();
+      }
+      // Si la ruta comienza con .private/, buscar ahí directamente
+      else if (filePath.startsWith('.private/')) {
         file = bucket.file(filePath);
         [exists] = await file.exists();
       }
@@ -2023,6 +2031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const possiblePaths = [
             `public/${filePath}`,
             `public/${fileName}`,
+            `.private/${filePath}`, // Agregar búsqueda en .private
             filePath // Ruta directa
           ];
           
