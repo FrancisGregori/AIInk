@@ -70,7 +70,7 @@ function DesignEditor() {
   const chatAssistantRef = useRef<ChatAssistantRef>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { addJob, updateJob, getJob } = useJobs();
+  const { activeJobs, addJob, updateJob, removeJob, getJob } = useJobs();
   // const { activeJobsOfType } = useJobRecovery('design'); // Disabled to avoid duplicate polling
 
   // Estado para trabajo actual y persistencia
@@ -125,175 +125,113 @@ function DesignEditor() {
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      // SOLO limpiar trabajos de Design Editor, no todo el localStorage
-      const storageKey = 'tattoo-stencil-jobs';
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        try {
-          const jobs = JSON.parse(stored);
-          // Mantener trabajos de Stencil Tool, eliminar solo los de Design Editor
-          const filteredJobs = jobs.filter((job: any) => job.type !== 'design');
-          localStorage.setItem(storageKey, JSON.stringify(filteredJobs));
-        } catch (error) {
-          console.error('Error filtering jobs:', error);
-        }
-      }
+      activeJobs
+        .filter(job => job.type === 'design')
+        .forEach(job => removeJob(job.id));
       return;
     }
-    // IMPORTANTE: Solo cargar el historial si el usuario está autenticado
-    // Esto evita que usuarios no autenticados vean imágenes privadas
-    
+
     // Limpiar trabajos colgados viejos primero
-    const storageKey = 'tattoo-stencil-jobs';
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const jobs = JSON.parse(stored);
-        const now = Date.now();
-        
-        // Filtrar trabajos: eliminar los que están procesando por más de 5 minutos
-        const cleanedJobs = jobs.map((job: any) => {
-          if (job.type === 'design' && job.status === 'processing') {
-            const startTime = new Date(job.startedAt || job.createdAt).getTime();
-            const timeDiff = (now - startTime) / 1000 / 60; // minutos
-            
-            if (timeDiff > 5) {
-              // Marcar como fallido si lleva más de 5 minutos
-              return {
-                ...job,
-                status: 'failed',
-                errorMessage: 'Timeout - proceso interrumpido',
-                completedAt: new Date().toISOString()
-              };
-            }
-          }
-          return job;
-        });
-        
-        // Guardar los trabajos limpiados
-        localStorage.setItem(storageKey, JSON.stringify(cleanedJobs));
-        
-        // Buscar trabajo activo válido o el último completado
-        const activeJob = cleanedJobs.find((job: any) => 
-          job.status === 'processing' && job.type === 'design'
-        );
-        
-        if (activeJob) {
-          console.log('Design job recovery: Found active job', activeJob.id);
-          setCurrentJob(activeJob);
-          setIsGenerating(true);
-          
-          // Restaurar datos
-          if (activeJob.originalImageUrl) {
-            setRecoveredImageUrl(activeJob.originalImageUrl);
-            setReferencePreview(activeJob.originalImageUrl);
-          }
-          
-          if (activeJob.style) {
-            setPrompt(activeJob.style);
-          }
-        } else {
-          // Si no hay trabajos activos, cargar el último trabajo completado
-          const completedJobs = cleanedJobs
-            .filter((job: any) => job.status === 'completed' && job.type === 'design')
-            .sort((a: any, b: any) => new Date(b.completedAt || b.createdAt).getTime() - new Date(a.completedAt || a.createdAt).getTime());
-          
-          if (completedJobs.length > 0) {
-            const latestJob = completedJobs[0];
-            console.log('Design job recovery: Loading latest completed job', latestJob.id);
-            setCurrentJob(latestJob);
-            
-            // Restaurar datos del trabajo completado
-            if (latestJob.originalImageUrl) {
-              setReferencePreview(latestJob.originalImageUrl);
-            }
-            
-            if (latestJob.style) {
-              setPrompt(latestJob.style);
-            }
-          }
+    activeJobs.forEach(job => {
+      if (job.type === 'design' && job.status === 'processing' && job.startedAt) {
+        const startTime = new Date(job.startedAt).getTime();
+        const timeDiff = (Date.now() - startTime) / 1000 / 60;
+        if (timeDiff > 5) {
+          updateJob(job.id, {
+            status: 'failed',
+            errorMessage: 'Timeout - proceso interrumpido',
+            completedAt: new Date().toISOString()
+          });
         }
-      } catch (error) {
-        console.error('Error parsing localStorage:', error);
+      }
+    });
+
+    // Buscar trabajo activo válido o el último completado
+    const activeJob = activeJobs.find(job => job.status === 'processing' && job.type === 'design');
+
+    if (activeJob) {
+      console.log('Design job recovery: Found active job', activeJob.id);
+      setCurrentJob(activeJob);
+      setIsGenerating(true);
+
+      if (activeJob.originalImageUrl) {
+        setRecoveredImageUrl(activeJob.originalImageUrl);
+        setReferencePreview(activeJob.originalImageUrl);
+      }
+
+      if (activeJob.style) {
+        setPrompt(activeJob.style);
+      }
+    } else {
+      const completedJobs = activeJobs
+        .filter(job => job.status === 'completed' && job.type === 'design')
+        .sort((a, b) => new Date(b.completedAt || b.startedAt || 0).getTime() - new Date(a.completedAt || a.startedAt || 0).getTime());
+
+      if (completedJobs.length > 0) {
+        const latestJob = completedJobs[0];
+        console.log('Design job recovery: Loading latest completed job', latestJob.id);
+        setCurrentJob(latestJob);
+
+        if (latestJob.originalImageUrl) {
+          setReferencePreview(latestJob.originalImageUrl);
+        }
+
+        if (latestJob.style) {
+          setPrompt(latestJob.style);
+        }
       }
     }
-  }, [user, isLoading]); // Ejecutar cuando cambie el usuario o el estado de carga
+  }, [user, isLoading, activeJobs, removeJob, updateJob]); // Ejecutar cuando cambie el usuario o el estado de carga
 
-  // Guardar TODOS los trabajos (processing, completed, failed) en localStorage
+  // Persist job changes using JobContext helpers
   useEffect(() => {
     if (!currentJob) return;
-    
-    const saveJobDirectly = () => {
-      const storageKey = 'tattoo-stencil-jobs';
-      const stored = localStorage.getItem(storageKey);
-      
-      try {
-        const jobs = stored ? JSON.parse(stored) : [];
-        const existingIndex = jobs.findIndex((j: any) => j.id === currentJob.id);
-        
-        if (existingIndex >= 0) {
-          // Actualizar trabajo existente
-          jobs[existingIndex] = currentJob;
-        } else {
-          // Agregar nuevo trabajo
-          jobs.push(currentJob);
-        }
-        
-        localStorage.setItem(storageKey, JSON.stringify(jobs));
-        console.log(`Trabajo ${currentJob.status} guardado en localStorage:`, currentJob.id);
-      } catch (error) {
-        console.error('Error saving job:', error);
+
+    const persist = () => {
+      const sanitized = (({ originalImageUrl, processedImageUrl, ...rest }) => rest)(currentJob);
+      if (getJob(currentJob.id)) {
+        updateJob(currentJob.id, sanitized);
+      } else {
+        addJob({ ...sanitized, type: 'design' });
       }
     };
-    
-    // Guardar inmediatamente cuando cambia el ID o estado
-    const timeoutId = setTimeout(saveJobDirectly, 100);
-    return () => clearTimeout(timeoutId);
-  }, [currentJob?.id, currentJob?.status]); // Se ejecuta para TODOS los estados
 
-  // Verificar si el trabajo actual se completó - usando localStorage polling
+    const timeoutId = setTimeout(persist, 100);
+    return () => clearTimeout(timeoutId);
+  }, [currentJob?.id, currentJob?.status, addJob, updateJob, getJob]);
+
+  // Verificar si el trabajo actual se completó - usando JobContext
   useEffect(() => {
     if (!currentJob || currentJob.status !== 'processing') return;
 
-    // Función para verificar el estado del trabajo desde localStorage
     const checkJobStatus = () => {
-      const storageKey = 'tattoo-stencil-jobs';
-      const stored = localStorage.getItem(storageKey);
+      const job = getJob(currentJob.id);
       
-      if (stored) {
-        try {
-          const jobs = JSON.parse(stored);
-          const jobInStorage = jobs.find((job: any) => job.id === currentJob.id);
+      if (job) {
+        // Si el trabajo cambió de estado en JobContext
+        if (job.status !== currentJob.status) {
+          setCurrentJob(job);
           
-          if (jobInStorage) {
-            // Si el trabajo cambió de estado en localStorage
-            if (jobInStorage.status !== currentJob.status) {
-              setCurrentJob(jobInStorage);
-              
-              if (jobInStorage.status === 'completed') {
-                setIsGenerating(false);
-                
-                // Actualizar la vista con la imagen generada
-                if (chatAssistantRef.current && jobInStorage.processedImageUrl) {
-                  chatAssistantRef.current.addImageMessage(jobInStorage.processedImageUrl);
-                }
-                
-                toast({
-                  title: language === 'es' ? "¡Diseño completado!" : "Design completed!",
-                  description: language === 'es' ? "Tu diseño se ha generado exitosamente" : "Your design has been generated successfully",
-                });
-              } else if (jobInStorage.status === 'failed') {
-                setIsGenerating(false);
-                toast({
-                  title: "Error",
-                  description: jobInStorage.errorMessage || "Error generating design",
-                  variant: "destructive",
-                });
-              }
+          if (job.status === 'completed') {
+            setIsGenerating(false);
+            
+            // Actualizar la vista con la imagen generada
+            if (chatAssistantRef.current && job.processedImageUrl) {
+              chatAssistantRef.current.addImageMessage(job.processedImageUrl);
             }
+            
+            toast({
+              title: language === 'es' ? "¡Diseño completado!" : "Design completed!",
+              description: language === 'es' ? "Tu diseño se ha generado exitosamente" : "Your design has been generated successfully",
+            });
+          } else if (job.status === 'failed') {
+            setIsGenerating(false);
+            toast({
+              title: "Error",
+              description: job.errorMessage || "Error generating design",
+              variant: "destructive",
+            });
           }
-        } catch (error) {
-          console.error('Error checking job status:', error);
         }
       }
       
@@ -306,7 +244,7 @@ function DesignEditor() {
     const checkInterval = setInterval(checkJobStatus, 1000); // Verificar cada 1 segundo para actualización más rápida
 
     return () => clearInterval(checkInterval);
-  }, [currentJob?.id, currentJob?.status, queryClient, language, toast]); // Dependencias específicas
+  }, [currentJob?.id, currentJob?.status, queryClient, language, toast, getJob]); // Dependencias específicas
 
 
 
