@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
  * ----------------------
  * - Only lightweight metadata is stored in localStorage.
  * - Any base64, blob or data URLs are stripped before serialization.
- * - Completed jobs are removed immediately and total jobs over 5 are pruned.
+ * - Completed jobs are removed immediately and total jobs over 3 are pruned.
  * - If the serialized payload exceeds ~0.5MB it is **not** written to storage and
  *   the user is warned with a toast and guidance to clear history.
  */
@@ -112,13 +112,26 @@ export function JobProvider({ children }: { children: ReactNode }) {
       const cleanedJobs = activeJobs.filter(job => job.status !== 'completed');
 
       // Aggressive job limit
-      const maxJobs = 5;
+      const maxJobs = 3;
       const finalJobs = cleanedJobs.length > maxJobs
         ? cleanedJobs.slice(-maxJobs)
         : cleanedJobs;
 
+      // Collect size metrics for each job to monitor storage usage
+      const metrics = finalJobs.map(job => {
+        const fieldSizes: Record<string, number> = {};
+        Object.entries(job).forEach(([key, value]) => {
+          fieldSizes[key] = new Blob([JSON.stringify(value ?? '')]).size;
+        });
+        return { id: job.id, total: new Blob([JSON.stringify(job)]).size, ...fieldSizes };
+      });
+      const aggregateBytes = metrics.reduce((sum, m) => sum + m.total, 0);
+
       const serialized = serializeJobs(finalJobs);
       const payloadSize = new Blob([serialized]).size;
+      console.log(
+        `Job payload size: ${(payloadSize / 1024).toFixed(2)}KB / ${(MAX_STORAGE_BYTES / 1024).toFixed(2)}KB`
+      );
 
       if (payloadSize <= MAX_STORAGE_BYTES) {
         const saved = safeSetItem(STORAGE_KEY, serialized);
@@ -126,23 +139,22 @@ export function JobProvider({ children }: { children: ReactNode }) {
           console.warn('Could not save jobs to localStorage (quota exceeded)');
           toast({
             title: 'Storage full',
-            description: 'Could not save job history. Please clear your job history and try again.',
+            description:
+              'Could not save job history. Please clear your job history and try again.',
           });
         }
       } else {
-        console.warn(`Job payload too large: ${(payloadSize / 1024 / 1024).toFixed(2)}MB, max: ${(MAX_STORAGE_BYTES / 1024 / 1024).toFixed(2)}MB`);
-        // Log detailed size metrics for debugging
-        const metrics = activeJobs.map(job => {
-          const fieldSizes: Record<string, number> = {};
-          Object.entries(job).forEach(([key, value]) => {
-            fieldSizes[key] = new Blob([JSON.stringify(value ?? '')]).size;
-          });
-          return { id: job.id, total: new Blob([JSON.stringify(job)]).size, ...fieldSizes };
-        });
+        console.warn(
+          `Job payload too large: ${(payloadSize / 1024 / 1024).toFixed(2)}MB, max: ${(MAX_STORAGE_BYTES / 1024 / 1024).toFixed(2)}MB`
+        );
         console.table(metrics);
+        console.log(
+          `Aggregate job size: ${(aggregateBytes / 1024).toFixed(2)}KB across ${metrics.length} jobs`
+        );
         toast({
           title: 'Job history not saved',
-          description: 'Storage limit reached. Please clear your job history and try again.',
+          description:
+            'Storage limit reached. Please clear your job history and try again.',
         });
       }
 
@@ -156,7 +168,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       try {
         const essentialJobs = activeJobs.filter(job => job.status === 'processing');
         if (essentialJobs.length > 0) {
-          const serialized = serializeJobs(essentialJobs.slice(-5)); // Solo últimos 5
+          const serialized = serializeJobs(essentialJobs.slice(-3)); // Solo últimos 3
           safeSetItem(STORAGE_KEY, serialized);
         } else {
           localStorage.removeItem(STORAGE_KEY);
