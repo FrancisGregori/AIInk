@@ -1,0 +1,127 @@
+diff --git a/client/src/components/AuthenticatedImage.tsx b/client/src/components/AuthenticatedImage.tsx
+index 2aee3a48e26f0f30afbd3316a3be68b4af5dbee4..6540bf8b43cef23c3d639a3a02d8f44f4765691f 100644
+--- a/client/src/components/AuthenticatedImage.tsx
++++ b/client/src/components/AuthenticatedImage.tsx
+@@ -1,117 +1,101 @@
+ import { useState, useEffect, useRef } from 'react';
+ 
+ export interface ImageVariants {
+   webp?: Record<number, string>;
+   avif?: Record<number, string>;
+ }
+ 
+ interface AuthenticatedImageProps {
+   src: string;
+   alt: string;
+   className?: string;
+   onLoad?: () => void;
+   onError?: () => void;
+   loading?: 'lazy' | 'eager';
+   variants?: ImageVariants;
+ }
+ 
+ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loading = 'lazy', variants }: AuthenticatedImageProps) {
+-  // Convertir URLs de Replicate a usar el proxy para evitar CORS
+-  const getProxiedUrl = (url: string) => {
+-    if (url.includes('replicate.delivery')) {
+-      // Extraer la parte después de replicate.delivery/
+-      const match = url.match(/replicate\.delivery\/(.+)/);
+-      if (match) {
+-        const proxyUrl = `/api/proxy/replicate/${match[1]}`;
+-        console.log('[AuthenticatedImage] Converting Replicate URL:', url, '->', proxyUrl);
+-        return proxyUrl;
+-      }
+-    }
+-    return url;
+-  };
+ 
+   const [isLoading, setIsLoading] = useState(true);
+   const [hasError, setHasError] = useState(false);
+   const [isTimeout, setIsTimeout] = useState(false);
+   const [retryCount, setRetryCount] = useState(0);
+   const [currentSrc, setCurrentSrc] = useState(() => {
+-    const proxied = getProxiedUrl(src);
+-    console.log('[AuthenticatedImage] Initial src:', src, '-> currentSrc:', proxied);
+-    return proxied;
++    console.log('[AuthenticatedImage] Initial src:', src);
++    return src;
+   });
+   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+   const retryTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+   const MAX_RETRIES = 3;
+   const TIMEOUT_MS = 30000; // Aumentado a 30 segundos
+ 
+   // Reset loading and error states when the source changes
+   useEffect(() => {
+     setIsLoading(true);
+     setHasError(false);
+     setIsTimeout(false);
+     setRetryCount(0);
+-    setCurrentSrc(getProxiedUrl(src));
++    setCurrentSrc(src);
+     
+     // Set timeout for loading
+     if (timeoutId.current) clearTimeout(timeoutId.current);
+     timeoutId.current = setTimeout(() => {
+       console.warn(`Imagen timeout después de ${TIMEOUT_MS}ms:`, src);
+       setIsTimeout(true);
+       handleError();
+     }, TIMEOUT_MS);
+     
+     return () => {
+       if (timeoutId.current) clearTimeout(timeoutId.current);
+       if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
+     };
+   }, [src]);
+ 
+   const handleLoad = () => {
+     if (timeoutId.current) clearTimeout(timeoutId.current);
+     if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
+     setIsLoading(false);
+     setHasError(false);
+     console.log('Imagen cargada exitosamente:', src);
+     onLoad?.();
+   };
+ 
+   const handleError = (event?: any) => {
+     if (timeoutId.current) clearTimeout(timeoutId.current);
+     console.error(`Error al cargar imagen (intento ${retryCount + 1}/${MAX_RETRIES + 1}):`, src);
+     
+     // Implementar retry con backoff exponencial
+     if (retryCount < MAX_RETRIES && !isTimeout) {
+       const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10 segundos
+       console.log(`Reintentando en ${delay}ms...`);
+       
+       retryTimeoutId.current = setTimeout(() => {
+         setRetryCount(prev => prev + 1);
+-        // Forzar recarga añadiendo timestamp - usando proxy para Replicate
+-        const proxiedUrl = getProxiedUrl(src);
+-        const separator = proxiedUrl.includes('?') ? '&' : '?';
+-        setCurrentSrc(`${proxiedUrl}${separator}_retry=${Date.now()}`);
++        const separator = src.includes('?') ? '&' : '?';
++        setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
+         setIsLoading(true);
+         setHasError(false);
+       }, delay);
+     } else {
+       setIsLoading(false);
+       setHasError(true);
+       onError?.();
+     }
+   };
+ 
+   // Detección mejorada de imágenes públicas vs privadas
+   const isPublicCDN = src.startsWith('https://storage.googleapis.com/');
+   const isReplicateURL = src.includes('replicate.delivery') || src.includes('replicate.com');
+   const isExternalURL = src.startsWith('http://') || src.startsWith('https://');
+   
+   const needsCredentials = (() => {
+     // URLs de Replicate son públicas y no necesitan credenciales
+     if (isReplicateURL) {
+       return false;
+     }
+     
+     // Las imágenes de Google Cloud Storage con /.private/ necesitan credenciales
+     if (isPublicCDN && src.includes('/.private/')) {
+       return true;
+     }
