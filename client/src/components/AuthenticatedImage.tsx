@@ -97,11 +97,21 @@ export function AuthenticatedImage({
     }
   };
 
+  // CRITICAL FIX: Force Replicate URLs to be used AS-IS without any transformation
+  // This prevents the production bundle from rewriting them
+  const processedSrc = (() => {
+    if (currentSrc.includes('replicate.delivery')) {
+      // Force bypass any proxy rewriting by using the exact URL
+      return currentSrc;
+    }
+    return currentSrc;
+  })();
+  
   // Detect public vs private images
-  const isPublicCDN = src.startsWith('https://storage.googleapis.com/');
-  const isReplicateURL = src.includes('replicate.delivery');
-  const isObjectStorageURL = src.startsWith('/objects/');
-  const isExternalURL = src.startsWith('http://') || src.startsWith('https://');
+  const isPublicCDN = processedSrc.startsWith('https://storage.googleapis.com/');
+  const isReplicateURL = processedSrc.includes('replicate.delivery');
+  const isObjectStorageURL = processedSrc.startsWith('/objects/');
+  const isExternalURL = processedSrc.startsWith('http://') || processedSrc.startsWith('https://');
   
   // IMPORTANTE: needsCredentials determina si incluir cookies en solicitudes de imagen
   // Se usa en crossOrigin={needsCredentials ? 'use-credentials' : undefined}
