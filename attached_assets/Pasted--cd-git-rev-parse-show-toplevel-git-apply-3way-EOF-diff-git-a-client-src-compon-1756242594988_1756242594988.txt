@@ -1,0 +1,75 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/client/src/components/AuthenticatedImage.tsx b/client/src/components/AuthenticatedImage.tsx
+index e3ac3708e89de38761baf6345af8fdaa155803f8..680780c99f526f19a260eaa5f65800ee7ebc192f 100644
+--- a/client/src/components/AuthenticatedImage.tsx
++++ b/client/src/components/AuthenticatedImage.tsx
+@@ -42,50 +42,66 @@ export function AuthenticatedImage({
+ 
+   // Reset loading and error states when the source changes
+   useEffect(() => {
+     // NEVER transform Replicate URLs - use them exactly as provided
+     const finalSrc = src.includes('replicate.delivery') ? src : src;
+     
+     setIsLoading(true);
+     setHasError(false);
+     setIsTimeout(false);
+     setRetryCount(0);
+     setCurrentSrc(finalSrc);
+ 
+     if (timeoutId.current) clearTimeout(timeoutId.current);
+     timeoutId.current = setTimeout(() => {
+       console.warn(`Image timeout after ${TIMEOUT_MS}ms:`, src);
+       setIsTimeout(true);
+       handleError();
+     }, TIMEOUT_MS);
+     
+     return () => {
+       if (timeoutId.current) clearTimeout(timeoutId.current);
+       if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
+     };
+   }, [src]);
+ 
++  // Ensure Replicate URLs remain untouched after render
++  useEffect(() => {
++    if (!src.includes('replicate.delivery')) return;
++
++    const current = imgRef.current?.src;
++    if (current && current !== src) {
++      console.error('Replicate URL mismatch detected:', {
++        expected: src,
++        actual: current,
++      });
++      if (imgRef.current) {
++        imgRef.current.src = src;
++      }
++    }
++  }, [src]);
++
+ 
+ 
+   const handleLoad = () => {
+     if (timeoutId.current) clearTimeout(timeoutId.current);
+     if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
+     setIsLoading(false);
+     setHasError(false);
+     console.log('Imagen cargada exitosamente:', src);
+     onLoad?.();
+   };
+ 
+   const handleError = () => {
+     if (timeoutId.current) clearTimeout(timeoutId.current);
+     console.error(`Error loading image (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, src);
+ 
+     if (!isReplicateURL && retryCount < MAX_RETRIES && !isTimeout) {
+       const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+       console.log(`Retrying in ${delay}ms...`);
+ 
+       retryTimeoutId.current = setTimeout(() => {
+         setRetryCount(prev => prev + 1);
+         const separator = src.includes('?') ? '&' : '?';
+         setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
+         setIsLoading(true);
+         setHasError(false);
+ 
+EOF
+)

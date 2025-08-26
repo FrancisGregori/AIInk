@@ -64,6 +64,22 @@ export function AuthenticatedImage({
     };
   }, [src]);
 
+  // Ensure Replicate URLs remain untouched after render
+  useEffect(() => {
+    if (!src.includes('replicate.delivery')) return;
+
+    const current = imgRef.current?.src;
+    if (current && current !== src) {
+      console.error('Replicate URL mismatch detected:', {
+        expected: src,
+        actual: current,
+      });
+      if (imgRef.current) {
+        imgRef.current.src = src;
+      }
+    }
+  }, [src]);
+
 
 
   const handleLoad = () => {
