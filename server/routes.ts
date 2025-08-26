@@ -561,20 +561,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Flux Kontext Routes - SIMPLIFIED FOR PUBLIC ACCESS
+  // Flux Kontext Routes - RESILIENT PUBLIC ACCESS
   app.get("/api/flux/projects", async (req: any, res) => {
     try {
-      // SIMPLE: Direct database query without complex methods
-      const projects = await db.select()
-        .from(fluxProjects)
-        .orderBy(desc(fluxProjects.createdAt))
-        .limit(50);
+      // Usar un método más defensivo para obtener proyectos
+      // getFluxProjects acepta userId opcional - si no se proporciona, obtiene todos los públicos
+      let projects: any[] = [];
+      
+      try {
+        // Primero intentar obtener proyectos sin userId (públicos)
+        projects = await storage.getFluxProjects();
+      } catch (storageError: any) {
+        console.error("[FLUX_PROJECTS] Storage error, trying direct DB query:", storageError);
+        
+        // Si el storage falla, intentar consulta directa a la base de datos
+        try {
+          projects = await db.select()
+            .from(fluxProjects)
+            .orderBy(desc(fluxProjects.createdAt))
+            .limit(50);
+        } catch (dbError: any) {
+          console.error("[FLUX_PROJECTS] DB error:", dbError);
+          projects = [];
+        }
+      }
       
       console.log(`[FLUX_PROJECTS] Found ${projects.length} projects`);
       res.json(projects);
     } catch (error: any) {
-      console.error("[FLUX_PROJECTS] Error:", error?.message);
-      // Return empty array on error to prevent complete failure
+      console.error("[FLUX_PROJECTS] Unexpected error:", error);
+      // SIEMPRE devolver array vacío con status 200 para evitar errores 500
       res.status(200).json([]);
     }
   });
