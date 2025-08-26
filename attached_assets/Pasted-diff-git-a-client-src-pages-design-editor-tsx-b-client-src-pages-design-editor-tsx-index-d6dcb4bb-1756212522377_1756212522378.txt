@@ -1,0 +1,57 @@
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index d6dcb4bbf73eeacb0db3f758fc8b7eb71111ae07..b8ddcf821c83fbc22a7f68247dedc4d0d810473e 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -1175,51 +1175,51 @@ function DesignEditor() {
+                     variant={gridSize === 'large' ? 'default' : 'ghost'}
+                     size="sm"
+                     onClick={() => setGridSize('large')}
+                     className={`h-8 px-3 ${gridSize === 'large' 
+                       ? 'bg-white text-black hover:bg-gray-100' 
+                       : 'text-zinc-400 hover:text-white hover:bg-zinc-700'
+                     }`}
+                   >
+                     <LayoutGrid className="h-4 w-4" />
+                   </Button>
+                 </div>
+               </CardHeader>
+               <CardContent>
+                 <div className="space-y-4">
+                   {/* Grid con tamaño dinámico */}
+                   <div className={`grid gap-3 lg:gap-4 ${
+                     gridSize === 'small' 
+                       ? 'grid-cols-2 lg:grid-cols-2' 
+                       : 'grid-cols-1 lg:grid-cols-1'
+                   }`}>
+                     {sortedProjects.slice(0, 8).map((project) => (
+                     <Dialog key={project.id}>
+                       <DialogTrigger asChild>
+                         <div className="relative group cursor-pointer">
+                           <LazyImage
+-                            src={project.imageUrl || ""}
++                            src={(project.settings as any)?.thumbnailUrl || project.imageUrl || ""}
+                             alt={project.name}
+                             className="w-full aspect-[3/4] rounded-lg object-cover transition-opacity"
+                           />
+                         </div>
+                       </DialogTrigger>
+                         <DialogContent className="max-w-4xl max-h-[90vh] p-4">
+                           <div className="space-y-4">
+                             <div className="relative">
+                               <LazyImage
+                                 src={project.imageUrl || ""}
+                                 alt={`${project.name} full size`}
+                                 className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+                               />
+                             </div>
+                             <div className="space-y-2">
+                               <p className="text-sm font-medium">{project.name}</p>
+                               <p className="text-xs text-zinc-400">{new Date(project.createdAt || "").toLocaleDateString()}</p>
+                               <div className="flex gap-2 pt-2">
+                                 <Button
+                                   size="sm"
+                                   variant="secondary"
+                                   className="flex-1"
+                                   onClick={() => handleUseAsReference(project.imageUrl || "")}
+                                   data-testid={`button-use-as-reference-history-${project.id}`}
+                                 >

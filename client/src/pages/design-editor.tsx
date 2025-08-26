@@ -379,30 +379,59 @@ function DesignEditor() {
   const txt = t[language];
 
   // Fetch user's projects (moved before useEffect to avoid initialization error)
-  const { data: projectsData } = useQuery<FluxProject[]>({
+  const { data: projectsData, error: projectsError } = useQuery<FluxProject[]>({
     queryKey: ["/api/flux/projects"],
     queryFn: async (ctx) => {
       try {
-        return await getQueryFn<FluxProject[]>({ on401: "returnNull" })(ctx);
+        const result = await getQueryFn<FluxProject[]>({ on401: "returnNull" })(ctx);
+        return result || [];
       } catch (err: unknown) {
-        console.error("GET /api/flux/projects failed", err);
+        console.error("GET /api/flux/projects failed:", err);
         return [];
       }
     },
     initialData: [],
     enabled: isAuthenticated, // evita petición antes de autenticarse
     staleTime: 0,              // permite refetch inmediato tras login
+    retry: 1,                  // Solo reintentar una vez
   });
   
-  // Fallback a galería si flux/projects está vacío o falla
+  // Fallback a galería si flux/projects está vacío, falla o devuelve null
+  const shouldUseGallery = isAuthenticated && 
+    (!projectsData || projectsData.length === 0 || projectsError);
+  
   const { data: galleryData } = useQuery<any[]>({
-    queryKey: ["/api/gallery?type=design"],
-    enabled: isAuthenticated && (!projectsData || projectsData.length === 0),
+    queryKey: ["/api/gallery", { type: "design" }],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/gallery?type=design');
+        if (!response.ok) {
+          console.error('Gallery fetch failed:', response.status);
+          return [];
+        }
+        const data = await response.json();
+        // Transform gallery data to match FluxProject format if needed
+        return data.map((item: any) => ({
+          id: item.id,
+          imageUrl: item.imageUrl || item.url,
+          thumbnailUrl: item.thumbnailUrl,
+          prompt: item.prompt || item.description,
+          name: item.title || item.name,
+          createdAt: item.createdAt,
+          settings: item.settings || {}
+        }));
+      } catch (err) {
+        console.error("GET /api/gallery?type=design failed:", err);
+        return [];
+      }
+    },
+    enabled: shouldUseGallery,
     initialData: [],
+    staleTime: 0,
   });
   
   // Usar projectsData si tiene datos, sino usar galleryData
-  const projects = (projectsData && projectsData.length > 0 ? projectsData : galleryData) ?? [];
+  const projects = (projectsData && projectsData.length > 0 ? projectsData : galleryData) || [];
   // Ordenar proyectos por fecha de creación (más reciente primero)
   const sortedProjects = [...projects].sort((a, b) => {
     const dateA = new Date(a.createdAt || 0).getTime();
@@ -413,6 +442,7 @@ function DesignEditor() {
   useEffect(() => {
     if (isAuthenticated) {
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery", { type: "design" }] });
     }
   }, [isAuthenticated, queryClient]);
 
@@ -681,7 +711,7 @@ function DesignEditor() {
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/gallery?type=design"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery", { type: "design" }] });
       queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });

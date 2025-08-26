@@ -1,0 +1,126 @@
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index d6dcb4bbf73eeacb0db3f758fc8b7eb71111ae07..97b327cce06952b073b4864ae95f4edb84cec476 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -363,52 +363,58 @@ function DesignEditor() {
+       messagePlaceholder: "Ask about designs or request ideas...",
+       apply: "Apply",
+       compareMode: "Compare mode",
+       history: "History",
+       settings: "Settings",
+       analyzing: "Analyzing image...",
+       generating: "Generating design...",
+       suggestions: "Suggested edits",
+       poseChanges: "Pose changes",
+       lightingChanges: "Lighting",
+       styleChanges: "Styles",
+       cameraAngles: "Camera angles",
+       expressions: "Expressions",
+     }
+   };
+ 
+   const txt = t[language];
+ 
+   // Fetch user's projects (moved before useEffect to avoid initialization error)
+   const { data: projectsData } = useQuery<FluxProject[]>({
+     queryKey: ["/api/flux/projects"],
+     queryFn: getQueryFn({ on401: "returnNull" }),
+     initialData: [],
+     enabled: isAuthenticated, // evita petición antes de autenticarse
+     staleTime: 0,              // permite refetch inmediato tras login
++    onError: (err) => console.error('Error fetching projects:', err),
+   });
+-  const projects = projectsData ?? [];
++  const { data: gallery = [] } = useQuery<FluxProject[]>({
++    queryKey: ["/api/gallery?type=design"],
++    enabled: isAuthenticated && (projectsData?.length ?? 0) === 0,
++    initialData: [],
++  });
++  const projects = (projectsData?.length ? projectsData : gallery) ?? [];
+   // Ordenar proyectos por fecha de creación (más reciente primero)
+   const sortedProjects = [...projects].sort((a, b) => {
+     const dateA = new Date(a.createdAt || 0).getTime();
+     const dateB = new Date(b.createdAt || 0).getTime();
+     return dateB - dateA; // Orden descendente (más reciente primero)
+   });
+ 
+   useEffect(() => {
+     if (isAuthenticated) {
+       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+     }
+   }, [isAuthenticated, queryClient]);
+ 
+   // Verificar automáticamente cuando se actualiza la lista de proyectos
+   useEffect(() => {
+     if (!currentJob || currentJob.status !== 'processing' || !projects.length) return;
+ 
+     const completedProject = projects.find((p: any) => p.id === currentJob.id);
+     if (completedProject && completedProject.imageUrl && !completedProject.imageUrl.includes('placeholder')) {
+       console.log('Design job completed, updating state');
+       setIsGenerating(false);
+       updateJob(currentJob.id, {
+         status: 'completed',
+         processedImageUrl: completedProject.imageUrl,
+         completedAt: new Date().toISOString()
+diff --git a/client/src/pages/design-editor.tsx b/client/src/pages/design-editor.tsx
+index d6dcb4bbf73eeacb0db3f758fc8b7eb71111ae07..97b327cce06952b073b4864ae95f4edb84cec476 100644
+--- a/client/src/pages/design-editor.tsx
++++ b/client/src/pages/design-editor.tsx
+@@ -606,51 +612,56 @@ function DesignEditor() {
+       const { imageUrl, thumbnailUrl } = data;
+ 
+       // Update chat assistant with the generated image
+       if (chatAssistantRef.current && imageUrl) {
+         chatAssistantRef.current.addImageMessage(imageUrl);
+       }
+       
+       // Create project entry for history
+       const projectData = {
+         name: prompt.slice(0, 50),
+         description: prompt,
+         prompt: prompt,
+         settings: {
+           aspectRatio,
+           modelVariant,
+           width,
+           height,
+           ...(referencePreview ? { referenceImageUrl: referencePreview } : {}),
+           matchInput,
+           thumbnailUrl,
+         },
+         userId: (user as any)?.id || "anonymous",
+         imageUrl: imageUrl // Usar la URL pública optimizada devuelta por el servidor
+       };
+       
+-      await apiRequest("POST", "/api/flux/create", projectData);
++      try {
++        await apiRequest("POST", "/api/flux/create", projectData);
++      } catch (error) {
++        console.error('Error creating project:', error);
++        throw error;
++      }
+       
+       // Update job status with the processed image URL
+       const completedJob = {
+         ...tempJob,
+         status: 'completed' as const,
+         completedAt: new Date().toISOString(),
+         processedImageUrl: imageUrl,
+         originalImageUrl: referencePreview, // Mantener la imagen original
+         startedAt: typeof tempJob.startedAt === 'string' ? tempJob.startedAt : new Date().toISOString(), // Ensure startedAt is string
+         errorMessage: tempJob.errorMessage || undefined // Convert null to undefined
+       };
+       
+       updateJob(tempJobId, completedJob);
+       setCurrentJob(completedJob);
+       
+       // Don't clear the job - keep it visible until next generation
+       
+       // Save to gallery
+       await apiRequest("POST", "/api/gallery", {
+         imageUrl,
+         thumbnailUrl,
+         type: "design",
+         title: prompt.slice(0, 50),
+         description: prompt,
+         prompt,
