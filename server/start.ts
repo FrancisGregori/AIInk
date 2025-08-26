@@ -16,17 +16,17 @@ if (isProduction) {
   
   // Primero construir
   console.log('📦 Building for production...');
-  const build = spawn('npm', ['run', 'build'], { stdio: 'inherit', shell: true });
+  const build = spawn('npm', ['run', 'build'], { stdio: 'inherit' });
   
   build.on('close', (code) => {
     if (code !== 0) {
       console.error('❌ Build failed');
-      process.exit(code);
+      process.exit(code || 1);
     }
     
     console.log('✅ Build successful, starting server...');
     // Luego iniciar en producción
-    const start = spawn('npm', ['run', 'start'], { stdio: 'inherit', shell: true });
+    const start = spawn('npm', ['run', 'start'], { stdio: 'inherit' });
     
     start.on('close', (code) => {
       process.exit(code);
@@ -38,8 +38,7 @@ if (isProduction) {
   
   // Iniciar en desarrollo
   const dev = spawn('tsx', ['server/index.ts'], { 
-    stdio: 'inherit', 
-    shell: true,
+    stdio: 'inherit',
     env: { ...process.env, NODE_ENV: 'development' }
   });
   
