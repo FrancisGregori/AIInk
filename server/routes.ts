@@ -523,32 +523,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Flux Kontext Routes
   app.get("/api/flux/projects", isAuthenticated, async (req: any, res) => {
     try {
+      console.log("[FLUX_PROJECTS] Request user object:", req.user);
+      console.log("[FLUX_PROJECTS] Request user claims:", req.user?.claims);
+      
       // SEGURIDAD: Obtener userId del usuario autenticado
       const userId = req.user?.claims?.sub;
       if (!userId) {
-        console.error("[FLUX_PROJECTS] No userId found in req.user:", req.user);
+        console.error("[FLUX_PROJECTS] No userId found. User object:", req.user);
         return res.status(401).json({ error: "User not authenticated" });
       }
 
       // Solo devolver proyectos del usuario autenticado
-      console.log(`[FLUX_PROJECTS] Fetching projects for user: ${userId}`);
+      console.log(`[FLUX_PROJECTS] Fetching projects for userId: ${userId}`);
       const startTime = Date.now();
-      const projects = await storage.getFluxProjects(userId);
-      const endTime = Date.now();
-      console.log(`[FLUX_PROJECTS] Found ${projects.length} projects for user ${userId}`);
-      console.log(`[FLUX_PROJECTS] Query took ${endTime - startTime}ms`);
       
-      if (endTime - startTime > 5000) {
-        console.warn(`[FLUX_PROJECTS] SLOW QUERY DETECTED: flux projects took ${endTime - startTime}ms - investigating...`);
+      try {
+        const projects = await storage.getFluxProjects(userId);
+        const endTime = Date.now();
+        console.log(`[FLUX_PROJECTS] Found ${projects.length} projects for user ${userId}`);
+        console.log(`[FLUX_PROJECTS] Query took ${endTime - startTime}ms`);
+        
+        if (endTime - startTime > 5000) {
+          console.warn(`[FLUX_PROJECTS] SLOW QUERY DETECTED: took ${endTime - startTime}ms`);
+        }
+        
+        res.json(projects);
+      } catch (storageError: any) {
+        console.error("[FLUX_PROJECTS] Storage error:", storageError?.message);
+        console.error("[FLUX_PROJECTS] Storage error stack:", storageError?.stack);
+        // Return empty array even if storage fails
+        res.status(200).json([]);
       }
+    } catch (error: any) {
+      console.error("[FLUX_PROJECTS] CRITICAL ERROR:", error);
+      console.error("[FLUX_PROJECTS] Error message:", error?.message);
+      console.error("[FLUX_PROJECTS] Error stack trace:", error?.stack);
+      console.error("[FLUX_PROJECTS] Error type:", error?.constructor?.name);
       
-      res.json(projects);
-    } catch (error) {
-      console.error("[FLUX_PROJECTS] Error details:", error);
-      console.error("[FLUX_PROJECTS] Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
-      
-      // Return empty array instead of 500 to allow graceful degradation
-      res.json([]);
+      // ALWAYS return empty array to prevent complete failure
+      res.status(200).json([]);
     }
   });
 
@@ -1202,12 +1215,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user gallery
   app.get("/api/gallery", isAuthenticated, async (req: any, res) => {
     try {
+      console.log("[GALLERY] Request user object:", req.user);
+      console.log("[GALLERY] Request user claims:", req.user?.claims);
+      
       const userId = req.user?.claims?.sub;
       if (!userId) {
+        console.error("[GALLERY] No userId found. User object:", req.user);
         return res.status(401).json({ error: "User not authenticated" });
       }
       
+      console.log(`[GALLERY] Fetching gallery for userId: ${userId}`);
       const { type, limit, page } = req.query;
+      console.log(`[GALLERY] Query params - type: ${type}, limit: ${limit}, page: ${page}`);
+      
       // Paginación: 50 items por página por defecto, máximo 100
       const requestedLimit = limit ? Math.min(parseInt(limit as string), 100) : 50;
       const requestedPage = page ? Math.max(parseInt(page as string), 1) : 1;
@@ -1216,6 +1236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Iniciar timer para medir performance
       const startTime = Date.now();
       
+      console.log(`[GALLERY] Calling storage.getUserGallery with params:`, { userId, type, requestedLimit, offset });
       const galleryItems = await storage.getUserGallery(
         userId, 
         type as string | undefined,
@@ -1227,7 +1248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalItems = await storage.getGalleryItemCount(userId, type as string | undefined);
       
       const queryTime = Date.now() - startTime;
-      console.log(`Gallery query took ${queryTime}ms for ${galleryItems.length} items`);
+      console.log(`[GALLERY] Query completed in ${queryTime}ms for ${galleryItems.length} items`);
       
       // Cache y metadata de paginación
       const totalCount = totalItems || 0;
@@ -1241,12 +1262,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(galleryItems);
-    } catch (error) {
-      console.error("[GALLERY] Error details:", error);
-      console.error("[GALLERY] Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
+    } catch (error: any) {
+      console.error("[GALLERY] CRITICAL ERROR:", error);
+      console.error("[GALLERY] Error message:", error?.message);
+      console.error("[GALLERY] Error stack trace:", error?.stack);
+      console.error("[GALLERY] Error type:", error?.constructor?.name);
       
-      // Return empty array instead of 500 to allow graceful degradation
-      res.json([]);
+      // ALWAYS return empty array to prevent complete failure
+      res.status(200).json([]);
     }
   });
   
