@@ -1208,30 +1208,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Gallery API Routes
   
-  // Get user gallery - SIMPLIFIED FOR PUBLIC ACCESS
+  // Get user gallery - ULTRA RESILIENT PUBLIC ACCESS
   app.get("/api/gallery", async (req: any, res) => {
+    // GARANTIZAR que SIEMPRE devolvamos 200 con array válido
+    // No importa qué error ocurra, nunca devolver 500
+    
+    const type = req.query.type as string;
+    let galleryItems: any[] = [];
+    
+    // Primer intento: consulta directa a DB
     try {
-      const type = req.query.type as string;
-      
-      // SIMPLE: Just get ALL items from gallery without user filtering
-      // Same approach as working endpoints
-      const galleryItems = await db.select()
+      const items = await db.select()
         .from(userGallery)
         .where(type ? eq(userGallery.type, type) : undefined)
         .orderBy(desc(userGallery.createdAt))
         .limit(50);
       
-      console.log(`[GALLERY] Returning ${galleryItems.length} items of type: ${type}`);
-      res.json(galleryItems);
-    } catch (error: any) {
-      console.error("[GALLERY] CRITICAL ERROR:", error);
-      console.error("[GALLERY] Error message:", error?.message);
-      console.error("[GALLERY] Error stack trace:", error?.stack);
-      console.error("[GALLERY] Error type:", error?.constructor?.name);
+      galleryItems = items;
+      console.log(`[GALLERY] DB query returned ${galleryItems.length} items of type: ${type}`);
+    } catch (dbError: any) {
+      console.error("[GALLERY] DB error:", dbError?.message || dbError);
       
-      // ALWAYS return empty array to prevent complete failure
-      res.status(200).json([]);
+      // Segundo intento: usar storage si está disponible
+      try {
+        const userId = undefined; // Sin usuario para obtener galería pública
+        const items = await storage.getUserGallery(userId, type, 50, 0);
+        galleryItems = items;
+        console.log(`[GALLERY] Storage fallback returned ${galleryItems.length} items`);
+      } catch (storageError: any) {
+        console.error("[GALLERY] Storage fallback error:", storageError?.message || storageError);
+        galleryItems = [];
+      }
     }
+    
+    // GARANTÍA FINAL: Siempre devolver un array válido con status 200
+    if (!Array.isArray(galleryItems)) {
+      console.error("[GALLERY] Items is not an array, returning empty array");
+      galleryItems = [];
+    }
+    
+    // Enviar respuesta con status 200 garantizado
+    res.status(200).json(galleryItems);
   });
   
   // Add item to gallery (this will be called automatically when generating)

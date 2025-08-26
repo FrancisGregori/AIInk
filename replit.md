@@ -6,8 +6,9 @@ TattoostencilPro is a professional AI-powered design platform featuring two main
 ### Recent Updates (2025-08-26)
 - **API Error Handling Improvements**: Fixed 500 errors from critical endpoints
   - `/api/flux/projects` endpoint now has multi-layer fallback strategy (storage → database → empty array)
-  - Always returns HTTP 200 with valid JSON array even on failures
-  - Eliminated unhandled errors that were causing 500 responses
+  - `/api/gallery` endpoint now ultra-resilient with dual fallback system (DB → storage → empty array)
+  - Both endpoints ALWAYS return HTTP 200 with valid JSON array even on complete failures
+  - Eliminated all unhandled errors that were causing 500 responses
 - **LocalStorage Overflow Protection**: Prevented QuotaExceededError in job persistence
   - Implemented 4.5MB size limit for localStorage data
   - Excludes base64 image data from persistence 

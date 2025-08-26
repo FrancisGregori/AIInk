@@ -1,0 +1,344 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index 45b95ed833df8715566463d06487538f4c420321..da5f07dea10cbb72d3d2fb8c4712d464828953ac 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1,41 +1,43 @@
+ import type { Express } from "express";
+ import { createServer, type Server } from "http";
+ import multer from "multer";
+ import { storage } from "./storage";
+ import { setupAuth, isAuthenticated } from "./replitAuth";
+ import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
+ import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema, userGallery, fluxProjects } from "@shared/schema";
+-import { db } from "./db";
+ import { desc, eq, sql } from "drizzle-orm";
+ import ComfyDeployService from "./comfydeploy";
+ import Replicate from "replicate";
+ import { z } from "zod";
+ import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
+ import Stripe from "stripe";
+ import { CREDIT_PACKS, getCreditPackByCredits, getPriceId, PRICE_ID_TO_TIER } from "../shared/stripe-config";
+ 
++type Database = typeof import("./db")['db'];
++let db: Database | null = null;
++
+ // Configure multer for file uploads - SECURE DISK STORAGE
+ import fs from 'fs';
+ import path from 'path';
+ 
+ // Ensure temp directory exists
+ const tempDir = path.join(process.cwd(), 'temp');
+ if (!fs.existsSync(tempDir)) {
+   fs.mkdirSync(tempDir, { recursive: true });
+ }
+ 
+ const upload = multer({
+   storage: multer.diskStorage({
+     destination: tempDir,
+     filename: (req, file, cb) => {
+       // Generate unique filename to prevent conflicts
+       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+       cb(null, `upload-${uniqueSuffix}-${file.originalname}`);
+     }
+   }),
+   limits: {
+     fileSize: 10 * 1024 * 1024, // 10MB limit
+     files: 1, // Only 1 file per request
+   },
+   fileFilter: (req, file, cb) => {
+     if (file.mimetype.startsWith('image/')) {
+diff --git a/server/routes.ts b/server/routes.ts
+index 45b95ed833df8715566463d06487538f4c420321..da5f07dea10cbb72d3d2fb8c4712d464828953ac 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -59,72 +61,82 @@ try {
+     console.warn("⚠️  STRIPE_SECRET_KEY not found - Stripe functionality disabled");
+   }
+ } catch (error) {
+   console.error("❌ Failed to initialize Stripe:", error);
+ }
+ 
+ const generateImageSchema = z.object({
+   prompt: z.string().min(1, "Prompt is required"),
+   inputImageUrl: z.string().optional().refine((val) => {
+     if (!val || val === "") return true; // Allow empty string
+     try {
+       new URL(val);
+       return true;
+     } catch {
+       // Allow internal API paths and static file paths
+       return val.startsWith('/api/image/') || val.startsWith('/images/');
+     }
+   }, "Invalid URL or file path"),
+   width: z.number().optional().default(1024),
+   height: z.number().optional().default(1024),
+   aspectRatio: z.string().optional().default("match_input_image"),
+   model: z.enum(["pro", "qwen"]).optional().default("pro"),
+ });
+ 
+ export async function registerRoutes(app: Express): Promise<Server> {
++  try {
++    if (!db) {
++      const dbModule = await import("./db");
++      db = dbModule.db;
++    }
++  } catch (error) {
++    console.error("[DB_INIT] Error:", (error as Error).message);
++  }
++
+   // Health check endpoints for deployment
+   // NOTE: "/" route is handled by Vite/static files to serve the React app
+   app.get("/health", (req, res) => {
+     res.status(200).json({ status: "healthy", message: "Server is running" });
+   });
+   
+   app.get("/api/health", (req, res) => {
+     res.status(200).json({ status: "healthy", timestamp: Date.now() });
+   });
+   
+   // Debug endpoint to identify production issues
+   app.get("/api/debug/test", async (req, res) => {
+     try {
+       const response: any = {
+         server: "running",
+         timestamp: new Date().toISOString(),
+         environment: process.env.NODE_ENV,
+         databaseUrl: process.env.DATABASE_URL ? "configured" : "missing",
+       };
+       
+       // Test simple database query
+       try {
++        if (!db) throw new Error("Database not initialized");
+         const testQuery = await db.select({ count: sql<number>`count(*)` }).from(userGallery);
+         response.database = "connected";
+         response.galleryCount = testQuery[0]?.count || 0;
+       } catch (dbError: any) {
+         response.database = "error";
+         response.dbError = dbError.message;
+       }
+       
+       res.json(response);
+     } catch (error: any) {
+       res.status(500).json({ 
+         error: "Debug endpoint failed",
+         message: error.message 
+       });
+     }
+   });
+ 
+   // Auth middleware
+   await setupAuth(app);
+   
+   // Initialize services
+   const comfyDeploy = new ComfyDeployService();
+   
+   // Auth routes
+   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+diff --git a/server/routes.ts b/server/routes.ts
+index 45b95ed833df8715566463d06487538f4c420321..da5f07dea10cbb72d3d2fb8c4712d464828953ac 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -142,53 +154,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
+   app.get('/api/credits', isAuthenticated, async (req: any, res) => {
+     try {
+       const userId = req.user.claims.sub;
+       const user = await storage.getUser(userId);
+       const credits = await storage.getUserCredits(userId);
+       
+       res.json({
+         available: credits,
+         monthlyAllowance: user?.monthlyCredits || 10,
+         used: user?.creditsUsed || 0,
+         subscriptionTier: user?.subscriptionTier || 'free'
+       });
+     } catch (error) {
+       console.error("Error fetching credits:", error);
+       res.status(500).json({ message: "Failed to fetch credits" });
+     }
+   });
+   
+   // Stencil Tool Routes
+   
+   // Get available stencil styles
+   app.get("/api/stencil/styles", async (req, res) => {
+     try {
+       const styles = await storage.getStencilStyles();
+       res.json(styles);
+-    } catch (error) {
+-      console.error("Error fetching stencil styles:", error);
+-      res.status(500).json({ error: "Internal server error" });
++    } catch (error: any) {
++      console.error("[GET /api/stencil/styles] Error:", error?.message);
++      res.status(200).json([]);
+     }
+   });
+ 
+   // Create a new stencil job - PROTEGIDO CON AUTENTICACIÓN
+   app.post("/api/stencil/jobs", isAuthenticated, upload.single('image'), async (req: any, res) => {
+     try {
+       // SEGURIDAD: Obtener userId del usuario autenticado
+       const userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+ 
+       if (!req.file) {
+         return res.status(400).json({ error: "No image file provided" });
+       }
+ 
+       const { style = "steven", quality = 90, transparentBg = false } = req.body;
+       
+       // For now, use a placeholder URL for the uploaded image
+       // In production, this would upload to Supabase Storage
+       const originalImageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+       
+       // Create the stencil job - usando el userId real
+       const job = await storage.createStencilJob({
+         userId, // SEGURIDAD: Usar el ID del usuario autenticado
+diff --git a/server/routes.ts b/server/routes.ts
+index 45b95ed833df8715566463d06487538f4c420321..da5f07dea10cbb72d3d2fb8c4712d464828953ac 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -542,60 +554,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
+         // If ComfyDeploy fails, refund credits and return the job with error status
+         if (creditsDeducted) {
+           await storage.addCredits(userId, STENCIL_COST);
+           creditsDeducted = false;
+         }
+         await storage.updateStencilJob(job.id, {
+           status: "failed",
+           errorMessage: String(processError),
+         });
+ 
+         const updatedJob = await storage.getStencilJob(job.id);
+         res.json(updatedJob);
+       }
+     } catch (error) {
+       if (creditsDeducted) {
+         await storage.addCredits(userId, STENCIL_COST);
+       }
+       console.error("Error processing stencil:", error);
+       res.status(500).json({ error: "Error processing image" });
+     }
+   });
+ 
+   // Flux Kontext Routes - SIMPLIFIED FOR PUBLIC ACCESS
+   app.get("/api/flux/projects", async (req: any, res) => {
+     try {
++      if (!db) throw new Error("Database not initialized");
+       // SIMPLE: Direct database query without complex methods
+       const projects = await db.select()
+         .from(fluxProjects)
+         .orderBy(desc(fluxProjects.createdAt))
+         .limit(50);
+-      
+-      console.log(`[FLUX_PROJECTS] Found ${projects.length} projects`);
++
++      console.log(`[GET /api/flux/projects] Found ${projects.length} projects`);
+       res.json(projects);
+     } catch (error: any) {
+-      console.error("[FLUX_PROJECTS] Error:", error?.message);
++      console.error("[GET /api/flux/projects] Error:", error?.message);
+       // Return empty array on error to prevent complete failure
+       res.status(200).json([]);
+     }
+   });
+ 
+   app.post("/api/flux/create", isAuthenticated, async (req: any, res) => {
+     try {
+       // SEGURIDAD: Obtener userId del usuario autenticado
+       const userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+ 
+       // Crear datos del proyecto con campos mínimos requeridos
+       const projectData = {
+         userId,
+         name: req.body.name || 'Untitled Design',
+         description: req.body.description || null,
+         prompt: req.body.prompt || null,
+         imageUrl: req.body.imageUrl || null,
+         settings: req.body.settings || null,
+         isPublic: false
+       };
+ 
+       console.log('Creating flux project:', projectData);
+diff --git a/server/routes.ts b/server/routes.ts
+index 45b95ed833df8715566463d06487538f4c420321..da5f07dea10cbb72d3d2fb8c4712d464828953ac 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -1209,67 +1222,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
+         model: modelName,
+         success: true
+       });
+       
+     } catch (error: any) {
+       if (creditsDeducted) {
+         await storage.addCredits(userId, DESIGN_COST);
+       }
+       console.error("DETAILED ERROR in /api/generate:", error);
+       console.error("Error stack:", error.stack);
+       console.error("Error message:", error.message);
+       
+       res.status(500).json({ 
+         error: "Failed to generate image",
+         details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+       });
+     }
+   });
+ 
+   // Gallery API Routes
+   
+   // Get user gallery - SIMPLIFIED FOR PUBLIC ACCESS
+   app.get("/api/gallery", async (req: any, res) => {
+     try {
+       const type = req.query.type as string;
+-      
++
+       // SIMPLE: Just get ALL items from gallery without user filtering
+       // Same approach as working endpoints
++      if (!db) throw new Error("Database not initialized");
+       const galleryItems = await db.select()
+         .from(userGallery)
+         .where(type ? eq(userGallery.type, type) : undefined)
+         .orderBy(desc(userGallery.createdAt))
+         .limit(50);
+-      
+-      console.log(`[GALLERY] Returning ${galleryItems.length} items of type: ${type}`);
++
++      console.log(`[GET /api/gallery] Returning ${galleryItems.length} items of type: ${type}`);
+       res.json(galleryItems);
+     } catch (error: any) {
+-      console.error("[GALLERY] CRITICAL ERROR:", error);
+-      console.error("[GALLERY] Error message:", error?.message);
+-      console.error("[GALLERY] Error stack trace:", error?.stack);
+-      console.error("[GALLERY] Error type:", error?.constructor?.name);
+-      
++      console.error("[GET /api/gallery] Error:", error?.message);
++
+       // ALWAYS return empty array to prevent complete failure
+       res.status(200).json([]);
+     }
+   });
+   
+   // Add item to gallery (this will be called automatically when generating)
+   app.post("/api/gallery", isAuthenticated, async (req: any, res) => {
+     try {
+       const userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+       
+       const { imageUrl, type, title, description, prompt, style, metadata, variants } = req.body;
+       
+       if (!imageUrl || !type) {
+         return res.status(400).json({ error: "ImageUrl and type are required" });
+       }
+       
+       const galleryItem = await storage.addToGallery({
+         userId,
+         imageUrl,
+         type,
+         title,
+         description,
