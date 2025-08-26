@@ -205,7 +205,7 @@ export default function Home() {
           </div>
           
           {/* Tools Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-8 max-w-5xl mx-auto">
             
             {/* Stencil Generator Card */}
             <div className="animate-card-in animate-card-in-1">
