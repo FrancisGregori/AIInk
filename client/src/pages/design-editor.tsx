@@ -656,7 +656,18 @@ function DesignEditor() {
         chatAssistantRef.current.addImageMessage(imageUrl);
       }
       
-      // Create project entry for history
+      // FIRST: Save to gallery (most important - ensures persistence)
+      await apiRequest("POST", "/api/gallery", {
+        imageUrl,
+        thumbnailUrl,
+        type: "design",
+        title: prompt.slice(0, 50),
+        description: prompt,
+        prompt,
+        style: modelVariant,
+      });
+      
+      // SECOND: Try to create project for history (optional - can fail)
       const projectData = {
         name: prompt.slice(0, 50),
         description: prompt,
@@ -674,12 +685,11 @@ function DesignEditor() {
         imageUrl: imageUrl // Usar la URL pública optimizada devuelta por el servidor
       };
       
-      // Try to save project to flux/projects, but don't fail if it doesn't work
       try {
         await apiRequest("POST", "/api/flux/create", projectData);
       } catch (err: unknown) {
-        console.error("POST /api/flux/create failed", err);
-        // Continue anyway - the image is already saved to gallery
+        console.error("POST /api/flux/create failed, but image is saved in gallery:", err);
+        // Continue - image is already saved to gallery
       }
       
       // Update job status with the processed image URL
@@ -695,19 +705,6 @@ function DesignEditor() {
       
       updateJob(tempJobId, completedJob);
       setCurrentJob(completedJob);
-      
-      // Don't clear the job - keep it visible until next generation
-      
-      // Save to gallery
-      await apiRequest("POST", "/api/gallery", {
-        imageUrl,
-        thumbnailUrl,
-        type: "design",
-        title: prompt.slice(0, 50),
-        description: prompt,
-        prompt,
-        style: modelVariant,
-      });
       
       // Invalidate projects query to refresh history
       queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });

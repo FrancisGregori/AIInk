@@ -9,9 +9,11 @@ TattoostencilPro is a professional AI-powered design platform featuring two main
   - Ensures images always appear even if flux/projects endpoint fails or user loses session
   - Gallery data is automatically transformed to match FluxProject format for consistency
   - Both queries are invalidated on new image generation for immediate updates
-- **Improved Error Handling**: POST to `/api/flux/create` no longer blocks workflow if it fails
-  - Images are saved to gallery independently, ensuring data persistence
-  - Errors are logged but don't prevent successful image display
+- **Improved Error Handling & Data Persistence**: Gallery saving prioritized over project creation
+  - Images are now saved to gallery FIRST, before attempting project creation
+  - POST to `/api/flux/create` failures no longer prevent gallery storage
+  - Ensures images are always persisted even if project creation fails
+  - Error logging continues while maintaining data integrity
 - **Code Cleanup in Design Editor**: Removed dead code and unused state variables
   - Eliminated unused `referenceImage` state and all its setter calls (6 occurrences)
   - Removed unused `createProjectMutation` block (30 lines)
