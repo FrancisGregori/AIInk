@@ -1345,46 +1345,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Proxy endpoint for Replicate images to avoid CORS issues
-  app.get("/api/proxy/replicate/*", async (req, res) => {
-    try {
-      // Extract the Replicate URL from the path
-      const replicateUrl = req.params[0];
-      if (!replicateUrl) {
-        return res.status(400).json({ error: "Missing URL parameter" });
-      }
-      
-      // Reconstruct the full Replicate URL
-      const fullUrl = `https://replicate.delivery/${replicateUrl}`;
-      console.log('[REPLICATE_PROXY] Fetching:', fullUrl);
-      
-      // Fetch the image from Replicate
-      const response = await fetch(fullUrl);
-      
-      if (!response.ok) {
-        console.error('[REPLICATE_PROXY] Failed to fetch:', response.status);
-        return res.status(response.status).json({ error: "Failed to fetch image from Replicate" });
-      }
-      
-      // Get content type
-      const contentType = response.headers.get('content-type') || 'image/png';
-      
-      // Set appropriate headers for caching and CORS
-      res.set({
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
-        'Access-Control-Allow-Origin': '*',
-      });
-      
-      // Stream the image directly to the response
-      const buffer = await response.arrayBuffer();
-      res.send(Buffer.from(buffer));
-      
-    } catch (error: any) {
-      console.error('[REPLICATE_PROXY] Error:', error);
-      res.status(500).json({ error: "Failed to proxy Replicate image" });
-    }
-  });
+  // PROXY DE REPLICATE ELIMINADO - Las URLs de Replicate deben usarse directamente sin proxy
+  // Las imágenes de Replicate son públicas y no necesitan proxy para evitar CORS
 
   // Endpoint PÚBLICO para servir imágenes de galería (sin autenticación)
   app.get('/api/public/images/:filename(*)', async (req, res) => {

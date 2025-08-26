@@ -16,28 +16,16 @@ interface AuthenticatedImageProps {
 }
 
 export function AuthenticatedImage({ src, alt, className, onLoad, onError, loading = 'lazy', variants }: AuthenticatedImageProps) {
-  // Convertir URLs de Replicate a usar el proxy para evitar CORS
-  const getProxiedUrl = (url: string) => {
-    if (url.includes('replicate.delivery')) {
-      // Extraer la parte después de replicate.delivery/
-      const match = url.match(/replicate\.delivery\/(.+)/);
-      if (match) {
-        const proxyUrl = `/api/proxy/replicate/${match[1]}`;
-        console.log('[AuthenticatedImage] Converting Replicate URL:', url, '->', proxyUrl);
-        return proxyUrl;
-      }
-    }
-    return url;
-  };
+  // NO CONVERTIR URLs de Replicate - usar directamente
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isTimeout, setIsTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [currentSrc, setCurrentSrc] = useState(() => {
-    const proxied = getProxiedUrl(src);
-    console.log('[AuthenticatedImage] Initial src:', src, '-> currentSrc:', proxied);
-    return proxied;
+    console.log('[AuthenticatedImage] Initial src (NO PROXY):', src);
+    return src;  // USAR LA URL DIRECTAMENTE
   });
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -50,7 +38,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     setHasError(false);
     setIsTimeout(false);
     setRetryCount(0);
-    setCurrentSrc(getProxiedUrl(src));
+    setCurrentSrc(src);  // USAR LA URL DIRECTAMENTE, SIN PROXY
     
     // Set timeout for loading
     if (timeoutId.current) clearTimeout(timeoutId.current);
@@ -65,6 +53,18 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
       if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
     };
   }, [src]);
+
+  // Verificar en tiempo de ejecución que las URLs de Replicate NO se transforman
+  useEffect(() => {
+    if (src.includes('replicate.delivery') && imgRef.current) {
+      const emitted = imgRef.current.getAttribute('src');
+      if (emitted !== currentSrc) {
+        console.error('[AuthenticatedImage] ⚠️ URL de Replicate fue modificada:', currentSrc, '->', emitted);
+      } else {
+        console.log('[AuthenticatedImage] ✅ URL de Replicate sin cambios:', currentSrc);
+      }
+    }
+  }, [src, currentSrc]);
 
   const handleLoad = () => {
     if (timeoutId.current) clearTimeout(timeoutId.current);
@@ -86,10 +86,9 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
       
       retryTimeoutId.current = setTimeout(() => {
         setRetryCount(prev => prev + 1);
-        // Forzar recarga añadiendo timestamp - usando proxy para Replicate
-        const proxiedUrl = getProxiedUrl(src);
-        const separator = proxiedUrl.includes('?') ? '&' : '?';
-        setCurrentSrc(`${proxiedUrl}${separator}_retry=${Date.now()}`);
+        // Forzar recarga añadiendo timestamp - SIN PROXY
+        const separator = src.includes('?') ? '&' : '?';
+        setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
         setIsLoading(true);
         setHasError(false);
       }, delay);
@@ -205,6 +204,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
             />
           )}
           <img
+            ref={imgRef}
             src={currentSrc}
             alt={alt}
             className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
@@ -216,6 +216,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
       ) : (
         // Fallback to regular img element
         <img
+          ref={imgRef}
           src={currentSrc}
           alt={alt}
           className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}

@@ -4,6 +4,12 @@
 TattoostencilPro is a professional AI-powered design platform featuring two main creative tools: Stencil Tool for tattoo stencil generation and Flux Kontext for AI-assisted design editing. It recreates the functionality of the original TattoostencilPro, utilizing multiple AI models (Steven, Makishi, Darwin, Adrian) for stencil processing. This full-stack web application, built with a React frontend and Express.js backend, supports real-time job processing, user credit management, and comprehensive gallery display. The business vision is to provide a leading AI-powered platform for tattoo artists and designers, enhancing creative workflows and expanding market potential through innovative AI tools.
 
 ### Recent Updates (2025-08-26)
+- **Replicate URL Direct Access Fixed**: Eliminated proxy system that was breaking Replicate images
+  - Removed proxy conversion code from AuthenticatedImage.tsx that was rewriting URLs to `/api/proxy/replicate/...`
+  - Deleted proxy endpoint `/api/proxy/replicate/*` from server/routes.ts
+  - Replicate URLs now used directly without any modification or rewriting
+  - Added runtime verification to detect any unwanted URL transformations
+  - Images from Replicate (like `https://replicate.delivery/...`) now load directly without proxy
 - **Public Gallery Access Restored**: Fixed critical issue where gallery and flux projects returned empty arrays due to authentication requirements
   - Added `getPublicGalleryItems()` method in storage to fetch recent gallery items from all users
   - Added `getPublicFluxProjects()` method in storage to fetch recent flux projects from all users  
@@ -16,7 +22,6 @@ TattoostencilPro is a professional AI-powered design platform featuring two main
   - Removed `shell: true` parameter from spawn() calls in server/start.ts to prevent command injection attacks
   - Deleted temp_clone directory containing duplicate code with vulnerabilities
 - **Deployment Health Checks Added**: Added `/`, `/health` and `/api/health` endpoints for Replit deployment health checks
-- **CORS Proxy Implementation**: Added `/api/proxy/replicate/*` endpoint for Replicate images (though fresh URLs don't need it)
 
 ### Previous Updates (2025-08-26)
 - **Robust History Fallback in Design Editor**: Implemented dual-source system for displaying generated images
