@@ -16,11 +16,23 @@ interface AuthenticatedImageProps {
 }
 
 export function AuthenticatedImage({ src, alt, className, onLoad, onError, loading = 'lazy', variants }: AuthenticatedImageProps) {
+  // Convertir URLs de Replicate a usar el proxy para evitar CORS
+  const getProxiedUrl = (url: string) => {
+    if (url.includes('replicate.delivery')) {
+      // Extraer la parte después de replicate.delivery/
+      const match = url.match(/replicate\.delivery\/(.+)/);
+      if (match) {
+        return `/api/proxy/replicate/${match[1]}`;
+      }
+    }
+    return url;
+  };
+
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isTimeout, setIsTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [currentSrc, setCurrentSrc] = useState(src);
+  const [currentSrc, setCurrentSrc] = useState(getProxiedUrl(src));
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MAX_RETRIES = 3;
@@ -32,7 +44,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     setHasError(false);
     setIsTimeout(false);
     setRetryCount(0);
-    setCurrentSrc(src);
+    setCurrentSrc(getProxiedUrl(src));
     
     // Set timeout for loading
     if (timeoutId.current) clearTimeout(timeoutId.current);
@@ -68,9 +80,10 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
       
       retryTimeoutId.current = setTimeout(() => {
         setRetryCount(prev => prev + 1);
-        // Forzar recarga añadiendo timestamp
-        const separator = src.includes('?') ? '&' : '?';
-        setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
+        // Forzar recarga añadiendo timestamp - usando proxy para Replicate
+        const proxiedUrl = getProxiedUrl(src);
+        const separator = proxiedUrl.includes('?') ? '&' : '?';
+        setCurrentSrc(`${proxiedUrl}${separator}_retry=${Date.now()}`);
         setIsLoading(true);
         setHasError(false);
       }, delay);
