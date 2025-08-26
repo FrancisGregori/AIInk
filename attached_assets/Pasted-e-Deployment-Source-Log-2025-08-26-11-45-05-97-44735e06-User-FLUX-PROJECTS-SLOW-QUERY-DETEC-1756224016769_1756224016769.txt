@@ -1,0 +1,152 @@
+e
+Deployment
+Source
+Log
+2025-08-26 11:45:05.97
+44735e06
+User
+[FLUX_PROJECTS] SLOW QUERY DETECTED: took 18809ms
+2025-08-26 11:45:05.97
+44735e06
+User
+[FLUX_PROJECTS] Found 50 projects for user 36468537
+2025-08-26 11:45:05.97
+44735e06
+User
+[FLUX_PROJECTS] Query took 18809ms
+2025-08-26 11:45:07.00
+44735e06
+System
+system: received signal terminated
+2025-08-26 11:45:07.70
+44735e06
+User
+3:45:07 PM [express] GET /api/flux/projects 200 in 20068ms :: [{"id":"6eb828d5-de64-4aa4-9ecf-e6f726…
+2025-08-26 11:45:13.18
+44735e06
+System
+starting up user application
+2025-08-26 11:45:13.24
+44735e06
+System
+starting up user application
+2025-08-26 11:45:13.32
+44735e06
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-08-26 11:45:13.39
+44735e06
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-08-26 11:45:13.44
+44735e06
+System
+starting up user application
+2025-08-26 11:45:13.66
+44735e06
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-08-26 11:45:14.13
+44735e06
+User
+> rest-express@1.0.0 start
+2025-08-26 11:45:14.13
+44735e06
+User
+> NODE_ENV=production node dist/index.js
+2025-08-26 11:45:14.19
+44735e06
+User
+> rest-express@1.0.0 start
+2025-08-26 11:45:14.19
+44735e06
+User
+> NODE_ENV=production node dist/index.js
+2025-08-26 11:45:15.31
+44735e06
+User
+> rest-express@1.0.0 start
+2025-08-26 11:45:15.31
+44735e06
+User
+> NODE_ENV=production node dist/index.js
+2025-08-26 11:45:15.69
+44735e06
+User
+✅ Stripe initialized successfully
+2025-08-26 11:45:15.69
+44735e06
+User
+Initializing stencil styles...
+2025-08-26 11:45:15.79
+44735e06
+User
+✅ Stripe initialized successfully
+2025-08-26 11:45:15.79
+44735e06
+User
+Initializing stencil styles...
+2025-08-26 11:45:16.00
+44735e06
+User
+✅ Stencil styles initialized successfully
+2025-08-26 11:45:16.10
+44735e06
+User
+✅ Stencil styles initialized successfully
+2025-08-26 11:45:16.30
+44735e06
+User
+3:45:16 PM [express] serving on port 5000
+2025-08-26 11:45:16.30
+44735e06
+User
+Server is running in production mode on port 5000
+2025-08-26 11:45:16.42
+44735e06
+User
+3:45:16 PM [express] serving on port 5000
+2025-08-26 11:45:16.42
+44735e06
+User
+Server is running in production mode on port 5000
+2025-08-26 11:45:17.41
+44735e06
+User
+[GALLERY] Request user object: {
+2025-08-26 11:45:17.41
+44735e06
+User
+claims: {
+2025-08-26 11:45:17.41
+44735e06
+User
+aud: '6eb7ec1e-53b9-4e95-adfd-f718b072b5d7',
+2025-08-26 11:45:17.41
+44735e06
+User
+exp: 1756225031,
+2025-08-26 11:45:17.41
+44735e06
+User
+iat: 1756221431,
+2025-08-26 11:45:17.41
+44735e06
+User
+iss: 'https://replit.com/oidc',
+2025-08-26 11:45:17.41
+44735e06
+User
+sub: '36468537',
+2025-08-26 11:45:17.41
+44735e06
+User
+email: 'darwintattoo@gmail.com',
+2025-08-26 11:45:17.41
+44735e06
+User
+at_hash: 'qr51Sg6Zx371esrOFZy9cw',
+2025-08-26 11:45:17.41
+44735e06
+User
+username: 'darwintattoo1',
