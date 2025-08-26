@@ -1172,51 +1172,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        model === 'max' ? 'M' : 
                        (model as string).charAt(0).toUpperCase();
       
-      // IMPORTANTE: Las URLs de Replicate se borran después de 1 hora
-      // Necesitamos descargar y guardar la imagen permanentemente
-      console.log('=== DESCARGANDO IMAGEN DE REPLICATE ===');
+      // GUARDAR PERMANENTEMENTE - Las URLs de Replicate expiran en 1 hora
+      console.log('=== GUARDANDO IMAGEN PERMANENTEMENTE ===');
       console.log('URL temporal de Replicate:', imageUrl);
       
-      let permanentImageUrl = imageUrl;
+      let permanentImageUrl = imageUrl; // Por defecto usar la temporal
       
-      try {
-        // 1. Descargar la imagen de Replicate
-        const imageResponse = await fetch(imageUrl);
-        if (!imageResponse.ok) {
-          throw new Error(`Failed to download image from Replicate: ${imageResponse.status}`);
-        }
-        
-        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-        console.log(`Downloaded image: ${imageBuffer.length} bytes`);
-        
-        // 2. Generar nombre único para la imagen
-        const imageId = `${Date.now()}_${userId}_${Math.random().toString(36).substring(2, 9)}`;
-        const fileName = `designs/${imageId}.png`;
-        
-        // 3. Subir a Object Storage
-        const objectStorageService = new ObjectStorageService();
-        const bucketName = 'replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b';
-        const bucket = objectStorageClient.bucket(bucketName);
-        const file = bucket.file(`.private/${fileName}`);
-        
-        await file.save(imageBuffer, {
-          metadata: {
-            contentType: 'image/png',
-            cacheControl: 'public, max-age=31536000',
+      // Solo intentar guardar si es una URL de Replicate
+      if (imageUrl.includes('replicate.delivery')) {
+        try {
+          // 1. Descargar la imagen de Replicate
+          console.log('Descargando imagen de:', imageUrl);
+          const imageResponse = await fetch(imageUrl);
+          
+          if (!imageResponse.ok) {
+            throw new Error(`HTTP ${imageResponse.status} al descargar imagen`);
           }
-        });
-        
-        // 4. Generar URL permanente
-        permanentImageUrl = `/objects/${fileName}`;
-        console.log('✅ Imagen guardada permanentemente en:', permanentImageUrl);
-        
-      } catch (saveError: any) {
-        console.error('Error guardando imagen permanentemente:', saveError);
-        // Si falla el guardado permanente, devolver error
-        return res.status(500).json({ 
-          error: "Failed to save image permanently",
-          details: process.env.NODE_ENV === 'development' ? saveError.message : 'Storage error'
-        });
+          
+          const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+          console.log(`Imagen descargada: ${imageBuffer.length} bytes`);
+          
+          // 2. Generar nombre único
+          const timestamp = Date.now();
+          const randomStr = Math.random().toString(36).substring(2, 9);
+          const fileName = `designs/${timestamp}_${randomStr}.png`;
+          
+          // 3. Guardar en Object Storage
+          console.log('Guardando en Object Storage:', fileName);
+          const bucketName = 'replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b';
+          const bucket = objectStorageClient.bucket(bucketName);
+          const file = bucket.file(`.private/${fileName}`);
+          
+          await file.save(imageBuffer, {
+            metadata: {
+              contentType: 'image/png',
+              cacheControl: 'public, max-age=31536000',
+              originalUrl: imageUrl
+            }
+          });
+          
+          // 4. Usar URL permanente
+          permanentImageUrl = `/objects/${fileName}`;
+          console.log('✅ IMAGEN GUARDADA PERMANENTEMENTE:', permanentImageUrl);
+          
+        } catch (saveError: any) {
+          console.error('⚠️ Error guardando permanentemente:', saveError.message);
+          console.error('Detalles del error:', saveError);
+          // Si falla, seguir usando la URL temporal de Replicate
+          console.log('Usando URL temporal que expirará en 1 hora');
+        }
       }
       
       // Save to gallery con URL permanente
@@ -1239,9 +1243,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('ID:', savedItem.id);
       console.log('Título:', savedItem.title);
       
+      // Devolver la URL correcta (permanente si se guardó, temporal si falló)
+      console.log('=== DEVOLVIENDO AL FRONTEND ===');
+      console.log('URL final:', permanentImageUrl);
+      console.log('Es permanente:', permanentImageUrl.startsWith('/objects/'));
+      
       res.json({
-        imageUrl: permanentImageUrl,  // DEVOLVER LA URL PERMANENTE
-        thumbnailUrl: permanentImageUrl,  // USAR LA MISMA URL PERMANENTE
+        imageUrl: permanentImageUrl,  // URL permanente o temporal
+        thumbnailUrl: permanentImageUrl,  // Misma URL
         prompt,
         model: modelName,
         success: true
