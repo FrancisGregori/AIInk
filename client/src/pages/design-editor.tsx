@@ -445,7 +445,7 @@ function DesignEditor() {
         id: data.id,
         status: 'processing',
         type: 'design',
-        originalImageUrl: data.settings && typeof data.settings === 'object' && 'referenceImage' in data.settings ? String(data.settings.referenceImage) : undefined,
+        originalImageUrl: data.settings && typeof data.settings === 'object' && 'referenceImageUrl' in data.settings ? String(data.settings.referenceImageUrl) : undefined,
         style: data.prompt?.slice(0, 30) || undefined,
         startedAt: new Date().toISOString()
       });
@@ -620,7 +620,7 @@ function DesignEditor() {
           modelVariant,
           width,
           height,
-          referenceImage: referencePreview,
+          ...(referencePreview ? { referenceImageUrl: referencePreview } : {}),
           matchInput,
           thumbnailUrl,
         },
