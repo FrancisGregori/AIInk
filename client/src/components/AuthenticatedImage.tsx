@@ -83,8 +83,15 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
 
   // Detección mejorada de imágenes públicas vs privadas
   const isPublicCDN = src.startsWith('https://storage.googleapis.com/');
+  const isReplicateURL = src.includes('replicate.delivery') || src.includes('replicate.com');
+  const isExternalURL = src.startsWith('http://') || src.startsWith('https://');
   
   const needsCredentials = (() => {
+    // URLs de Replicate son públicas y no necesitan credenciales
+    if (isReplicateURL) {
+      return false;
+    }
+    
     // Las imágenes de Google Cloud Storage con /.private/ necesitan credenciales
     if (isPublicCDN && src.includes('/.private/')) {
       return true;
@@ -97,6 +104,17 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
     
     try {
       const url = new URL(src, window.location.origin);
+      
+      // URLs externas (diferentes dominios) generalmente no necesitan credenciales
+      if (isExternalURL && url.hostname !== window.location.hostname) {
+        // Excepto si son subdominios del mismo dominio base
+        const currentDomain = window.location.hostname.split('.').slice(-2).join('.');
+        const imageDomain = url.hostname.split('.').slice(-2).join('.');
+        
+        if (currentDomain !== imageDomain) {
+          return false; // URL externa completamente diferente
+        }
+      }
       
       // Imágenes públicas no necesitan credenciales
       if (url.pathname.startsWith('/api/public/')) {
@@ -172,7 +190,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
             alt={alt}
             className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
             loading={loading}
-            crossOrigin={isPublicCDN ? undefined : (needsCredentials ? 'use-credentials' : undefined)}
+            crossOrigin={isReplicateURL || isPublicCDN ? undefined : (needsCredentials ? 'use-credentials' : undefined)}
             onLoad={handleLoad}
             onError={handleError}
           />
@@ -184,7 +202,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
           alt={alt}
           className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
           loading={loading}
-          crossOrigin={needsCredentials ? 'use-credentials' : undefined}
+          crossOrigin={isReplicateURL || isPublicCDN || !needsCredentials ? undefined : 'use-credentials'}
           onLoad={handleLoad}
           onError={handleError}
         />
