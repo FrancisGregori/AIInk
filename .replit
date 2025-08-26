@@ -42,5 +42,17 @@ integrations = ["javascript_stripe==1.0.0", "javascript_object_storage==1.0.0", 
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 34019
+externalPort = 3002
+
+[[ports]]
+localPort = 40457
+externalPort = 3001
+
+[[ports]]
+localPort = 41889
+externalPort = 3000
+
 [objectStorage]
 defaultBucketID = "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b"
