@@ -3,6 +3,16 @@
 ## Overview
 TattoostencilPro is a professional AI-powered design platform featuring two main creative tools: Stencil Tool for tattoo stencil generation and Flux Kontext for AI-assisted design editing. It recreates the functionality of the original TattoostencilPro, utilizing multiple AI models (Steven, Makishi, Darwin, Adrian) for stencil processing. This full-stack web application, built with a React frontend and Express.js backend, supports real-time job processing, user credit management, and comprehensive gallery display. The business vision is to provide a leading AI-powered platform for tattoo artists and designers, enhancing creative workflows and expanding market potential through innovative AI tools.
 
+### Recent Updates (2025-08-26)
+- **Fixed Object Storage Image Display**: Resolved issue where images couldn't be displayed due to bucket "public access prevention" restrictions
+  - Removed all `file.makePublic()` calls that were failing
+  - Changed all public URLs to use API endpoint `/api/public/images/` instead of direct Google Cloud Storage URLs
+  - Images now properly served through API endpoints that work with bucket security
+- **Fixed Reference Image Uploads**: Reference images now upload to Object Storage instead of being sent as base64
+  - Added `/api/upload` endpoint for uploading reference images to Object Storage
+  - Modified Design Editor to upload images and use URLs instead of base64 payloads
+  - Prevents request size limit issues and improves performance
+
 ### Recent Updates (2025-08-24)
 - **Neutral Style Added**: Implemented prompt-based "Neutral" style using line-art conversion without LoRA models
 - **Dynamic Style Loading**: Updated StyleSelector component to load styles from API instead of hardcoded list

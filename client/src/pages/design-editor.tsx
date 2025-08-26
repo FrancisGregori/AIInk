@@ -483,19 +483,54 @@ function DesignEditor() {
     },
   });
 
-  // Handle file selection
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle file selection - Subir a Object Storage en lugar de base64
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
       setReferenceImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReferencePreview(reader.result as string);
+      
+      // Mostrar estado de carga
+      toast({
+        title: language === 'es' ? "Subiendo imagen..." : "Uploading image...",
+        description: language === 'es' ? "Por favor espera" : "Please wait",
+      });
+      
+      const formData = new FormData();
+      formData.append("image", file);
+      
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || "Upload failed");
+        }
+        
+        const data = await res.json();
+        setReferencePreview(data.url); // Usar la URL de Object Storage en lugar de base64
+        
         // Automatically select Match Input when image is loaded
         setAspectRatio("Match Input");
         setMatchInput(true);
-      };
-      reader.readAsDataURL(file);
+        
+        toast({
+          title: language === 'es' ? "Imagen subida" : "Image uploaded",
+          description: language === 'es' ? "Lista para usar" : "Ready to use",
+        });
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast({
+          title: language === 'es' ? "Error al subir" : "Upload failed",
+          description: language === 'es' ? 'No se pudo subir la imagen. Intenta de nuevo.' : 'Could not upload the image. Please try again.',
+          variant: "destructive",
+        });
+        // Limpiar el estado si falla
+        setReferenceImage(null);
+        setReferencePreview(null);
+      }
     }
   };
 

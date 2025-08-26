@@ -624,6 +624,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload image endpoint - sube imágenes a Object Storage y devuelve URL
+  app.post("/api/upload", isAuthenticated, upload.single("image"), async (req: any, res) => {
+    try {
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+
+      // Convertir el buffer de multer a base64
+      const base64Data = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      
+      // Subir a Object Storage y obtener URL pública
+      const objectStorage = new ObjectStorageService();
+      const uploadResult = await objectStorage.uploadPublicImageFromBase64(
+        base64Data,
+        'references', // Carpeta específica para imágenes de referencia
+        userId,
+        false // No generar versiones optimizadas para referencias
+      );
+
+      console.log('=== IMAGEN DE REFERENCIA SUBIDA ===');
+      console.log('URL:', uploadResult.imageUrl);
+      console.log('Usuario:', userId);
+
+      res.json({
+        url: uploadResult.imageUrl,
+        thumbnailUrl: uploadResult.thumbnailUrl
+      });
+    } catch (error) {
+      console.error("Error uploading reference image:", error);
+      res.status(500).json({ error: "Failed to upload image" });
+    }
+  });
+
   // Delete flux project
   app.delete("/api/flux/projects/:id", isAuthenticated, async (req: any, res) => {
     try {
