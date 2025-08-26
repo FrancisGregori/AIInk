@@ -1,0 +1,74 @@
+🏗️ Arquitectura General
+El proyecto está dividido en dos partes principales:
+
+Frontend (React + TypeScript):
+
+Interfaz de usuario moderna con componentes reutilizables
+Manejo de estado para mensajes, imágenes y chat
+Subida y preview de imágenes
+Comunicación con el backend via API
+Backend (Node.js + Express):
+
+Servidor que maneja las peticiones HTTP
+Integración con la API de Google Gemini
+Procesamiento de imágenes en base64
+Validación de archivos y manejo de errores
+🔧 Componentes Principales
+1. ChatInterface (Componente principal)
+// Maneja el estado principal del chat
+const [messages, setMessages] = useState<Message[]>([]);
+const [uploadedImage, setUploadedImage] = useState<ImageData | null>(null);
+// Lógica para enviar mensajes y editar imágenes
+const handleSendMessage = async () => {
+  if (uploadedImage && message) {
+    // Llama a la API de edición de imágenes
+    await imageMutation.mutateAsync({
+      prompt: message,
+      imageBase64: uploadedImage.base64,
+      mimeType: uploadedImage.file.type
+    });
+  }
+};
+2. ImageUpload (Subida de imágenes)
+// Convierte archivo a base64 para enviar al servidor
+const handleFileSelect = async (file: File) => {
+  const preview = URL.createObjectURL(file);
+  const base64 = await fileToBase64(file);
+  
+  onImageSelect({ file, preview, base64 });
+};
+3. Backend APIs
+Chat Endpoint:
+
+app.post("/api/chat", async (req, res) => {
+  const { messages } = req.body;
+  const response = await chatWithGemini(latestMessage.content);
+  res.json({ text: response });
+});
+Edición de Imágenes:
+
+app.post("/api/edit-image", async (req, res) => {
+  const { prompt, imageBase64, mimeType } = req.body;
+  const result = await editImageWithGemini(prompt, imageBase64, mimeType);
+  res.json(result);
+});
+🔄 Flujo de Funcionamiento
+Subir imagen: Usuario arrastra/selecciona imagen → Se convierte a base64 → Aparece como miniatura
+Escribir instrucción: Usuario escribe cómo quiere editar la imagen
+Procesar: Frontend envía prompt + imagen al backend
+Gemini AI: Backend usa Gemini 2.5 Flash Image Preview para editar
+Mostrar resultado: Imagen editada regresa como base64 → Se muestra en el chat
+Continuar editando: La imagen editada se convierte en la nueva imagen base
+🛠️ Tecnologías Clave
+React Query: Manejo de peticiones HTTP y cache
+Google Gemini API: IA para chat (gemini-2.5-flash) y edición de imágenes (gemini-2.5-flash-image-preview)
+Tailwind CSS: Estilos responsivos y tema claro/oscuro
+TypeScript: Tipado estático para mayor seguridad
+Express.js: Servidor web con middleware para archivos grandes (25MB)
+💡 Características Especiales
+Edición continua: La imagen editada se mantiene cargada para seguir editándola
+Miniatura inteligente: Muestra preview compacto junto al input
+Respuestas concisas: Gemini configurado para dar respuestas cortas (máx 150 tokens)
+Manejo de errores: Validación de tipos de archivo y tamaños
+Tema adaptable: Soporta modo claro y oscuro automáticamente
+¿Te interesa alguna parte específi
