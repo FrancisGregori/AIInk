@@ -1,0 +1,471 @@
+index-Bi-WomkU.js:402 ChatAssistant received currentImage: NO
+index-Bi-WomkU.js:402 CurrentImage preview: none
+index-Bi-WomkU.js:402 ChatAssistant received currentImage: YES
+index-Bi-WomkU.js:402 CurrentImage preview: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAA
+index-Bi-WomkU.js:402 Updating stored image, length: 1540762
+index-Bi-WomkU.js:402 Analyzing image, storedImage: exists
+index-Bi-WomkU.js:402 Image data length: 1540762
+index-Bi-WomkU.js:402 Sending image to chat API, image exists: true
+index-Bi-WomkU.js:402 Image preview for analysis: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAA
+index-Bi-WomkU.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-Bi-WomkU.js:48
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:48 [API] /api/flux/projects returned 500, using empty array fallback
+(anonymous) @ index-Bi-WomkU.js:48
+await in (anonymous)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects net::ERR_ABORTED 500 (Internal Server Error)
+(anonymous) @ index-Bi-WomkU.js:48
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:404
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:48 [API] /api/flux/projects returned 500, using empty array fallback
+(anonymous) @ index-Bi-WomkU.js:48
+await in (anonymous)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:404
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design 500 (Internal Server Error)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404 Gallery fetch failed: 500
+queryFn @ index-Bi-WomkU.js:404
+await in queryFn
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:403 Sending message with image: yes
+index-Bi-WomkU.js:403 Image data preview: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAA
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn ', isShortPhrase: false, hasModification: false, isNotPrompt: false, result: false}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design net::ERR_ABORTED 500 (Internal Server Error)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:404
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404 Gallery fetch failed: 500
+queryFn @ index-Bi-WomkU.js:404
+await in queryFn
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:404
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining ', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:404 Trabajo completed guardado en localStorage: job-1756237343899
+index-Bi-WomkU.js:401 Imagen cargada exitosamente: https://replicate.delivery/xezq/AfdxHp11PwwzKizEvjns2BEmuxyO82m3m9QhibYE8endA8OVA/out-0.png
+index-Bi-WomkU.js:404 Project created from InkVision successfully
+index-Bi-WomkU.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-Bi-WomkU.js:48
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+me @ index-Bi-WomkU.js:404
+await in me
+(anonymous) @ index-Bi-WomkU.js:404
+setTimeout
+fe @ index-Bi-WomkU.js:404
+await in fe
+Y @ index-Bi-WomkU.js:404
+EN @ index-Bi-WomkU.js:37
+NN @ index-Bi-WomkU.js:37
+PN @ index-Bi-WomkU.js:37
+dv @ index-Bi-WomkU.js:37
+Fw @ index-Bi-WomkU.js:37
+(anonymous) @ index-Bi-WomkU.js:37
+qm @ index-Bi-WomkU.js:40
+lw @ index-Bi-WomkU.js:37
+fd @ index-Bi-WomkU.js:37
+Sm @ index-Bi-WomkU.js:37
+WN @ index-Bi-WomkU.js:37
+index-Bi-WomkU.js:48 [API] /api/flux/projects returned 500, using empty array fallback
+(anonymous) @ index-Bi-WomkU.js:48
+await in (anonymous)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+me @ index-Bi-WomkU.js:404
+await in me
+(anonymous) @ index-Bi-WomkU.js:404
+setTimeout
+fe @ index-Bi-WomkU.js:404
+await in fe
+Y @ index-Bi-WomkU.js:404
+EN @ index-Bi-WomkU.js:37
+NN @ index-Bi-WomkU.js:37
+PN @ index-Bi-WomkU.js:37
+dv @ index-Bi-WomkU.js:37
+Fw @ index-Bi-WomkU.js:37
+(anonymous) @ index-Bi-WomkU.js:37
+qm @ index-Bi-WomkU.js:40
+lw @ index-Bi-WomkU.js:37
+fd @ index-Bi-WomkU.js:37
+Sm @ index-Bi-WomkU.js:37
+WN @ index-Bi-WomkU.js:37
+index-Bi-WomkU.js:404 isPromptMessage check: {content: 'Turn the subject to front view, maintaining identi', isShortPhrase: true, hasModification: true, isNotPrompt: false, result: true}
+index-Bi-WomkU.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/33082c72-a9c4-49b9-a6b8-c9bdb6a81f23/TattooStencilpro_00001_.png
+index-Bi-WomkU.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/0a569a48-e5c8-4034-8e17-45bdb15e2c84/TattooStencilpro_00002_.png
+index-Bi-WomkU.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/8b3b547d-af56-4177-8dc4-a74c4f740f00/TattooStencilpro_00001_.png
+index-Bi-WomkU.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/fd9cc3f7-f69b-47a6-af08-aa77f7942275/TattooStencilpro_00004_.png
+index-Bi-WomkU.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/2e784d1f-a649-4ced-92e0-cc0fd57feb7a/TattooStencilpro_00003_.png
+index-Bi-WomkU.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/9cf0bb5f-ac4d-494b-9a80-5ceac122371b/TattooStencilpro_00002_.png
+index-Bi-WomkU.js:402 ChatAssistant received currentImage: NO
+index-Bi-WomkU.js:402 CurrentImage preview: none
+index-Bi-WomkU.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects net::ERR_ABORTED 500 (Internal Server Error)
+(anonymous) @ index-Bi-WomkU.js:48
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:48 [API] /api/flux/projects returned 500, using empty array fallback
+(anonymous) @ index-Bi-WomkU.js:48
+await in (anonymous)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design 500 (Internal Server Error)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404 Gallery fetch failed: 500
+queryFn @ index-Bi-WomkU.js:404
+await in queryFn
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-Bi-WomkU.js:48
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:404
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:48 [API] /api/flux/projects returned 500, using empty array fallback
+(anonymous) @ index-Bi-WomkU.js:48
+await in (anonymous)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:404
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design net::ERR_ABORTED 500 (Internal Server Error)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:404
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404 Gallery fetch failed: 500
+queryFn @ index-Bi-WomkU.js:404
+await in queryFn
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+refetchQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+batch @ index-Bi-WomkU.js:48
+invalidateQueries @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:404
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?limit=20&page=1 500 (Internal Server Error)
+queryFn @ index-Bi-WomkU.js:404
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
+index-Bi-WomkU.js:404 Gallery fetch error: Error: Error loading gallery
+    at queryFn (index-Bi-WomkU.js:404:80522)
+queryFn @ index-Bi-WomkU.js:404
+await in queryFn
+s @ index-Bi-WomkU.js:48
+w @ index-Bi-WomkU.js:48
+start @ index-Bi-WomkU.js:48
+fetch @ index-Bi-WomkU.js:48
+Lo @ index-Bi-WomkU.js:48
+onSubscribe @ index-Bi-WomkU.js:48
+subscribe @ index-Bi-WomkU.js:48
+(anonymous) @ index-Bi-WomkU.js:48
+e1 @ index-Bi-WomkU.js:38
+lu @ index-Bi-WomkU.js:40
+Ss @ index-Bi-WomkU.js:40
+oT @ index-Bi-WomkU.js:40
+ui @ index-Bi-WomkU.js:40
+$v @ index-Bi-WomkU.js:40
+ii @ index-Bi-WomkU.js:38
+(anonymous) @ index-Bi-WomkU.js:40
