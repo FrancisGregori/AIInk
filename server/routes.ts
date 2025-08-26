@@ -563,42 +563,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Flux Kontext Routes - ULTRA RESILIENT PUBLIC ACCESS
   app.get("/api/flux/projects", async (req: any, res) => {
-    // GARANTIZAR que SIEMPRE devolvamos 200 con array válido
-    // No importa qué error ocurra, nunca devolver 500
-    
-    let projects: any[] = [];
-    
-    // Primer intento: usar storage
+    // TOP-LEVEL TRY-CATCH: GARANTIZAR que NUNCA devolvamos 500
     try {
-      projects = await storage.getFluxProjects();
-      console.log(`[FLUX_PROJECTS] Storage returned ${projects.length} projects`);
-    } catch (storageError: any) {
-      console.error("[FLUX_PROJECTS] Storage error:", storageError?.message || storageError);
+      // GARANTIZAR que SIEMPRE devolvamos 200 con array válido
+      // No importa qué error ocurra, nunca devolver 500
       
-      // Segundo intento: consulta directa a DB
+      let projects: any[] = [];
+      
+      // Primer intento: usar storage
       try {
-        projects = await db.select()
-          .from(fluxProjects)
-          .orderBy(desc(fluxProjects.createdAt))
-          .limit(50);
-        console.log(`[FLUX_PROJECTS] DB query returned ${projects.length} projects`);
-      } catch (dbError: any) {
-        console.error("[FLUX_PROJECTS] DB error:", dbError?.message || dbError);
+        projects = await storage.getFluxProjects();
+        console.log(`[FLUX_PROJECTS] Storage returned ${projects.length} projects`);
+      } catch (storageError: any) {
+        console.error("[FLUX_PROJECTS] Storage error:", storageError?.message || storageError);
         
-        // Tercer intento: usar array vacío como fallback final
-        console.log("[FLUX_PROJECTS] Returning empty array as final fallback");
+        // Segundo intento: consulta directa a DB
+        try {
+          projects = await db.select()
+            .from(fluxProjects)
+            .orderBy(desc(fluxProjects.createdAt))
+            .limit(50);
+          console.log(`[FLUX_PROJECTS] DB query returned ${projects.length} projects`);
+        } catch (dbError: any) {
+          console.error("[FLUX_PROJECTS] DB error:", dbError?.message || dbError);
+          
+          // Tercer intento: usar array vacío como fallback final
+          console.log("[FLUX_PROJECTS] Returning empty array as final fallback");
+          projects = [];
+        }
+      }
+      
+      // GARANTÍA FINAL: Siempre devolver un array válido con status 200
+      if (!Array.isArray(projects)) {
+        console.error("[FLUX_PROJECTS] Projects is not an array, returning empty array");
         projects = [];
       }
+      
+      // Enviar respuesta con status 200 garantizado
+      res.status(200).json(projects);
+    } catch (criticalError: any) {
+      // FALLBACK ABSOLUTO: Si TODO falla, aún así devolver 200 con array vacío
+      console.error("[FLUX_PROJECTS] CRITICAL ERROR - Returning empty array:", criticalError?.message || criticalError);
+      res.status(200).json([]);
     }
-    
-    // GARANTÍA FINAL: Siempre devolver un array válido con status 200
-    if (!Array.isArray(projects)) {
-      console.error("[FLUX_PROJECTS] Projects is not an array, returning empty array");
-      projects = [];
-    }
-    
-    // Enviar respuesta con status 200 garantizado
-    res.status(200).json(projects);
   });
 
   app.post("/api/flux/create", isAuthenticated, async (req: any, res) => {
@@ -1210,45 +1217,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Get user gallery - ULTRA RESILIENT PUBLIC ACCESS
   app.get("/api/gallery", async (req: any, res) => {
-    // GARANTIZAR que SIEMPRE devolvamos 200 con array válido
-    // No importa qué error ocurra, nunca devolver 500
-    
-    const type = req.query.type as string;
-    let galleryItems: any[] = [];
-    
-    // Primer intento: consulta directa a DB
+    // TOP-LEVEL TRY-CATCH: GARANTIZAR que NUNCA devolvamos 500
     try {
-      const items = await db.select()
-        .from(userGallery)
-        .where(type ? eq(userGallery.type, type) : undefined)
-        .orderBy(desc(userGallery.createdAt))
-        .limit(50);
+      // GARANTIZAR que SIEMPRE devolvamos 200 con array válido
+      // No importa qué error ocurra, nunca devolver 500
       
-      galleryItems = items;
-      console.log(`[GALLERY] DB query returned ${galleryItems.length} items of type: ${type}`);
-    } catch (dbError: any) {
-      console.error("[GALLERY] DB error:", dbError?.message || dbError);
+      const type = req.query.type as string;
+      let galleryItems: any[] = [];
       
-      // Segundo intento: usar storage si está disponible
+      // Primer intento: consulta directa a DB
       try {
-        const userId = undefined; // Sin usuario para obtener galería pública
-        const items = await storage.getUserGallery(userId, type, 50, 0);
+        const items = await db.select()
+          .from(userGallery)
+          .where(type ? eq(userGallery.type, type) : undefined)
+          .orderBy(desc(userGallery.createdAt))
+          .limit(50);
+        
         galleryItems = items;
-        console.log(`[GALLERY] Storage fallback returned ${galleryItems.length} items`);
-      } catch (storageError: any) {
-        console.error("[GALLERY] Storage fallback error:", storageError?.message || storageError);
+        console.log(`[GALLERY] DB query returned ${galleryItems.length} items of type: ${type}`);
+      } catch (dbError: any) {
+        console.error("[GALLERY] DB error:", dbError?.message || dbError);
+        
+        // Segundo intento: usar storage si está disponible
+        try {
+          const userId = undefined; // Sin usuario para obtener galería pública
+          const items = await storage.getUserGallery(userId, type, 50, 0);
+          galleryItems = items;
+          console.log(`[GALLERY] Storage fallback returned ${galleryItems.length} items`);
+        } catch (storageError: any) {
+          console.error("[GALLERY] Storage fallback error:", storageError?.message || storageError);
+          galleryItems = [];
+        }
+      }
+      
+      // GARANTÍA FINAL: Siempre devolver un array válido con status 200
+      if (!Array.isArray(galleryItems)) {
+        console.error("[GALLERY] Items is not an array, returning empty array");
         galleryItems = [];
       }
+      
+      // Enviar respuesta con status 200 garantizado
+      res.status(200).json(galleryItems);
+    } catch (criticalError: any) {
+      // FALLBACK ABSOLUTO: Si TODO falla, aún así devolver 200 con array vacío
+      console.error("[GALLERY] CRITICAL ERROR - Returning empty array:", criticalError?.message || criticalError);
+      res.status(200).json([]);
     }
-    
-    // GARANTÍA FINAL: Siempre devolver un array válido con status 200
-    if (!Array.isArray(galleryItems)) {
-      console.error("[GALLERY] Items is not an array, returning empty array");
-      galleryItems = [];
-    }
-    
-    // Enviar respuesta con status 200 garantizado
-    res.status(200).json(galleryItems);
   });
   
   // Add item to gallery (this will be called automatically when generating)
