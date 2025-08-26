@@ -79,12 +79,8 @@ const generateImageSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoints for deployment - MUST BE FIRST
-  // These need to respond immediately without any middleware or auth
-  app.get("/", (req, res) => {
-    res.status(200).json({ status: "healthy", message: "TattoostencilPro API is running" });
-  });
-
+  // Health check endpoints for deployment
+  // NOTE: "/" route is handled by Vite/static files to serve the React app
   app.get("/health", (req, res) => {
     res.status(200).json({ status: "healthy", message: "Server is running" });
   });
