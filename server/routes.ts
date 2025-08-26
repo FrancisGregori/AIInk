@@ -1035,7 +1035,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Replicate output received:", output);
       
       // Manejar diferentes formatos de output según el modelo
-      let imageUrl: string;
+      let imageUrl: string = "";
       
       // Qwen devuelve un array de objetos File con método .url()
       if (model === "qwen" && Array.isArray(output) && output.length > 0) {
