@@ -530,34 +530,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Flux Kontext Routes - Made resilient to auth failures
+  // Flux Kontext Routes - Made PUBLIC for viewing designs without login
   app.get("/api/flux/projects", async (req: any, res) => {
     try {
-      // Check authentication manually without middleware
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        console.log("[FLUX_PROJECTS] User not authenticated, returning empty array");
-        return res.status(200).json([]);
-      }
-      
-      console.log("[FLUX_PROJECTS] Request user object:", req.user);
-      console.log("[FLUX_PROJECTS] Request user claims:", req.user?.claims);
-      
-      // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        console.error("[FLUX_PROJECTS] No userId found. User object:", req.user);
-        // Return empty array instead of error
-        return res.status(200).json([]);
-      }
-
-      // Solo devolver proyectos del usuario autenticado
-      console.log(`[FLUX_PROJECTS] Fetching projects for userId: ${userId}`);
+      // MAKE FLUX PROJECTS PUBLIC - Return recent designs from all users
+      console.log("[FLUX_PROJECTS] Fetching public flux projects");
       const startTime = Date.now();
       
       try {
-        const projects = await storage.getFluxProjects(userId);
+        // Get recent flux projects from all users (public gallery)
+        const projects = await storage.getPublicFluxProjects(50);
         const endTime = Date.now();
-        console.log(`[FLUX_PROJECTS] Found ${projects.length} projects for user ${userId}`);
+        console.log(`[FLUX_PROJECTS] Found ${projects.length} public projects`);
         console.log(`[FLUX_PROJECTS] Query took ${endTime - startTime}ms`);
         
         if (endTime - startTime > 5000) {
@@ -1232,67 +1216,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user gallery - Made resilient to auth failures
   app.get("/api/gallery", async (req: any, res) => {
     try {
-      // Check authentication manually without middleware
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        console.log("[GALLERY] User not authenticated, returning empty array");
-        return res.status(200).json([]);
-      }
+      // MAKE GALLERY PUBLIC - NO AUTH REQUIRED
+      // This allows the app to show gallery images without login
+      const type = req.query.type as string;
       
-      console.log("[GALLERY] Request user object:", req.user);
-      console.log("[GALLERY] Request user claims:", req.user?.claims);
+      // Get public gallery items for all users
+      const galleryItems = await storage.getPublicGalleryItems(type);
+      console.log(`[GALLERY] Returning ${galleryItems.length} public items of type: ${type}`);
       
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        console.error("[GALLERY] No userId found. User object:", req.user);
-        // Return empty array instead of error
-        return res.status(200).json([]);
-      }
-      
-      console.log(`[GALLERY] Fetching gallery for userId: ${userId}`);
-      const { type, limit, page } = req.query;
-      console.log(`[GALLERY] Query params - type: ${type}, limit: ${limit}, page: ${page}`);
-      
-      // Paginación: 50 items por página por defecto, máximo 100
-      const requestedLimit = limit ? Math.min(parseInt(limit as string), 100) : 50;
-      const requestedPage = page ? Math.max(parseInt(page as string), 1) : 1;
-      const offset = (requestedPage - 1) * requestedLimit;
-      
-      // Iniciar timer para medir performance
-      const startTime = Date.now();
-      
-      try {
-        console.log(`[GALLERY] Calling storage.getUserGallery with params:`, { userId, type, requestedLimit, offset });
-        const galleryItems = await storage.getUserGallery(
-          userId, 
-          type as string | undefined,
-          requestedLimit,
-          offset
-        );
-        
-        // Obtener el total de items para calcular páginas
-        const totalItems = await storage.getGalleryItemCount(userId, type as string | undefined);
-        
-        const queryTime = Date.now() - startTime;
-        console.log(`[GALLERY] Query completed in ${queryTime}ms for ${galleryItems.length} items`);
-        
-        // Cache y metadata de paginación
-        const totalCount = totalItems || 0;
-        res.set({
-          'Cache-Control': 'no-store',
-          'X-Total-Count': totalCount.toString(),
-          'X-Page': requestedPage.toString(),
-          'X-Page-Size': requestedLimit.toString(),
-          'X-Total-Pages': Math.ceil(totalCount / requestedLimit).toString(),
-          'X-Query-Time': queryTime.toString()
-        });
-        
-        res.json(galleryItems);
-      } catch (storageError: any) {
-        console.error("[GALLERY] Storage error:", storageError?.message);
-        console.error("[GALLERY] Storage error stack:", storageError?.stack);
-        // Return empty array even if storage fails
-        res.status(200).json([]);
-      }
+      res.json(galleryItems);
     } catch (error: any) {
       console.error("[GALLERY] CRITICAL ERROR:", error);
       console.error("[GALLERY] Error message:", error?.message);

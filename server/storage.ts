@@ -274,6 +274,21 @@ export class DatabaseStorage implements IStorage {
     console.log(`[STORAGE] DB query completed in ${endTime - startTime}ms, returning ${result.length} items`);
     return result;
   }
+  
+  // Public method to get recent flux projects from all users
+  async getPublicFluxProjects(limit?: number): Promise<FluxProject[]> {
+    console.log(`[STORAGE] getPublicFluxProjects called`);
+    const defaultLimit = limit || 50;
+    const startTime = Date.now();
+    
+    const result = await db.select().from(fluxProjects)
+      .orderBy(desc(fluxProjects.createdAt))
+      .limit(defaultLimit);
+    
+    const endTime = Date.now();
+    console.log(`[STORAGE] Public flux projects query completed in ${endTime - startTime}ms, returning ${result.length} items`);
+    return result;
+  }
 
   async createFluxProject(project: InsertFluxProject): Promise<FluxProject> {
     const [newProject] = await db.insert(fluxProjects).values(project).returning();
@@ -358,6 +373,32 @@ export class DatabaseStorage implements IStorage {
     
     const duration = Date.now() - startTime;
     console.log(`Gallery query took ${duration}ms for ${result.length} items`);
+    
+    return result;
+  }
+  
+  // Public gallery method - returns recent items from all users
+  async getPublicGalleryItems(type?: string, limit?: number, offset?: number): Promise<GalleryItem[]> {
+    const defaultLimit = limit || 50;
+    const defaultOffset = offset || 0;
+    
+    console.log(`[DB] Fetching public gallery items, type: ${type || 'all'}, limit: ${defaultLimit}`);
+    
+    const startTime = Date.now();
+    
+    let baseQuery = db.select().from(userGallery);
+    
+    if (type && type !== 'all') {
+      baseQuery = baseQuery.where(eq(userGallery.type, type));
+    }
+    
+    const result = await baseQuery
+      .orderBy(desc(userGallery.createdAt))
+      .limit(defaultLimit)
+      .offset(defaultOffset);
+    
+    const duration = Date.now() - startTime;
+    console.log(`Public gallery query took ${duration}ms for ${result.length} items`);
     
     return result;
   }

@@ -4,6 +4,13 @@
 TattoostencilPro is a professional AI-powered design platform featuring two main creative tools: Stencil Tool for tattoo stencil generation and Flux Kontext for AI-assisted design editing. It recreates the functionality of the original TattoostencilPro, utilizing multiple AI models (Steven, Makishi, Darwin, Adrian) for stencil processing. This full-stack web application, built with a React frontend and Express.js backend, supports real-time job processing, user credit management, and comprehensive gallery display. The business vision is to provide a leading AI-powered platform for tattoo artists and designers, enhancing creative workflows and expanding market potential through innovative AI tools.
 
 ### Recent Updates (2025-08-26)
+- **Public Gallery Access Restored**: Fixed critical issue where gallery and flux projects returned empty arrays due to authentication requirements
+  - Added `getPublicGalleryItems()` method in storage to fetch recent gallery items from all users
+  - Added `getPublicFluxProjects()` method in storage to fetch recent flux projects from all users  
+  - Modified `/api/gallery` endpoint to return public gallery items without authentication
+  - Modified `/api/flux/projects` endpoint to return public flux projects without authentication
+  - Gallery and design history now visible to all users without login
+  - Sensitive endpoints like create/update/delete still require authentication
 - **Successful Deployment**: Application successfully deployed to https://testdtattoostencilpro.replit.app
 - **Security Vulnerabilities Fixed**: Resolved 5 security vulnerabilities
   - Removed `shell: true` parameter from spawn() calls in server/start.ts to prevent command injection attacks
