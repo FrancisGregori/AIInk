@@ -1,0 +1,102 @@
+diff --git a/server/routes.ts b/server/routes.ts
+index 45b95ed833df8715566463d06487538f4c420321..084a13d339a47dbfa2844eba65c1ec2ea91693f1 100644
+--- a/server/routes.ts
++++ b/server/routes.ts
+@@ -539,64 +539,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
+         const updatedJob = await storage.getStencilJob(job.id);
+         res.json(updatedJob);
+       } catch (processError) {
+         // If ComfyDeploy fails, refund credits and return the job with error status
+         if (creditsDeducted) {
+           await storage.addCredits(userId, STENCIL_COST);
+           creditsDeducted = false;
+         }
+         await storage.updateStencilJob(job.id, {
+           status: "failed",
+           errorMessage: String(processError),
+         });
+ 
+         const updatedJob = await storage.getStencilJob(job.id);
+         res.json(updatedJob);
+       }
+     } catch (error) {
+       if (creditsDeducted) {
+         await storage.addCredits(userId, STENCIL_COST);
+       }
+       console.error("Error processing stencil:", error);
+       res.status(500).json({ error: "Error processing image" });
+     }
+   });
+ 
+-  // Flux Kontext Routes - SIMPLIFIED FOR PUBLIC ACCESS
++  // Flux Kontext Routes - resilient to auth/storage failures
+   app.get("/api/flux/projects", async (req: any, res) => {
++    // First, attempt authentication but swallow any errors
++    let userId: string | undefined;
+     try {
+-      // SIMPLE: Direct database query without complex methods
+-      const projects = await db.select()
+-        .from(fluxProjects)
+-        .orderBy(desc(fluxProjects.createdAt))
+-        .limit(50);
+-      
++      const authed = await new Promise<boolean>((resolve, reject) => {
++        const fakeRes = {
++          status: () => ({ json: () => resolve(false) })
++        } as any;
++
++        try {
++          isAuthenticated(req, fakeRes, (err: any) => {
++            if (err) return reject(err);
++            resolve(true);
++          });
++        } catch (e) {
++          reject(e);
++        }
++      });
++
++      if (!authed) {
++        console.log("[FLUX_PROJECTS] User not authenticated");
++        return res.status(200).json([]);
++      }
++
++      userId = req.user?.claims?.sub;
++    } catch (authError) {
++      console.error("[FLUX_PROJECTS] Auth error:", authError);
++      return res.status(200).json([]);
++    }
++
++    try {
++      const projects = await storage.getFluxProjects(userId);
+       console.log(`[FLUX_PROJECTS] Found ${projects.length} projects`);
+       res.json(projects);
+-    } catch (error: any) {
+-      console.error("[FLUX_PROJECTS] Error:", error?.message);
+-      // Return empty array on error to prevent complete failure
++    } catch (storageError) {
++      console.error("[FLUX_PROJECTS] Storage error:", storageError);
+       res.status(200).json([]);
+     }
+   });
+ 
+   app.post("/api/flux/create", isAuthenticated, async (req: any, res) => {
+     try {
+       // SEGURIDAD: Obtener userId del usuario autenticado
+       const userId = req.user?.claims?.sub;
+       if (!userId) {
+         return res.status(401).json({ error: "User not authenticated" });
+       }
+ 
+       // Crear datos del proyecto con campos mínimos requeridos
+       const projectData = {
+         userId,
+         name: req.body.name || 'Untitled Design',
+         description: req.body.description || null,
+         prompt: req.body.prompt || null,
+         imageUrl: req.body.imageUrl || null,
+         settings: req.body.settings || null,
+         isPublic: false
+       };
+ 
+       console.log('Creating flux project:', projectData);
+ 

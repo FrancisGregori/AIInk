@@ -211,6 +211,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
             loading={loading}
             onLoad={handleLoad}
             onError={handleError}
+            crossOrigin={needsCredentials ? 'use-credentials' : undefined}
           />
         </picture>
       ) : (
@@ -223,6 +224,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
           loading={loading}
           onLoad={handleLoad}
           onError={handleError}
+          crossOrigin={needsCredentials ? 'use-credentials' : undefined}
         />
       )}
       {(isLoading || hasError) && (
