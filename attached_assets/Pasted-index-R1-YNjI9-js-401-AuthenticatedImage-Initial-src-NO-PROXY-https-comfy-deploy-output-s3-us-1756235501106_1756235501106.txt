@@ -1,0 +1,351 @@
+index-R1_YNjI9.js:401 [AuthenticatedImage] Initial src (NO PROXY): https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/33082c72-a9c4-49b9-a6b8-c9bdb6a81f23/TattooStencilpro_00001_.png
+index-R1_YNjI9.js:401 [AuthenticatedImage] Initial src (NO PROXY): https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/0a569a48-e5c8-4034-8e17-45bdb15e2c84/TattooStencilpro_00002_.png
+index-R1_YNjI9.js:401 [AuthenticatedImage] Initial src (NO PROXY): https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/8b3b547d-af56-4177-8dc4-a74c4f740f00/TattooStencilpro_00001_.png
+index-R1_YNjI9.js:401 [AuthenticatedImage] Initial src (NO PROXY): https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/fd9cc3f7-f69b-47a6-af08-aa77f7942275/TattooStencilpro_00004_.png
+index-R1_YNjI9.js:401 [AuthenticatedImage] Initial src (NO PROXY): https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/2e784d1f-a649-4ced-92e0-cc0fd57feb7a/TattooStencilpro_00003_.png
+index-R1_YNjI9.js:401 [AuthenticatedImage] Initial src (NO PROXY): https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/9cf0bb5f-ac4d-494b-9a80-5ceac122371b/TattooStencilpro_00002_.png
+index-R1_YNjI9.js:401 [AuthenticatedImage] Initial src (NO PROXY): https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/41b6be93-aaaa-438e-b8aa-68b473c56eb1/TattooStencilpro_00001_.png
+index-R1_YNjI9.js:401 [AuthenticatedImage] Initial src (NO PROXY): https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/ef652e6a-fb49-4d11-9758-32f9d7428936/TattooStencilpro_00002_.png
+index-R1_YNjI9.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/8b3b547d-af56-4177-8dc4-a74c4f740f00/TattooStencilpro_00001_.png
+index-R1_YNjI9.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/0a569a48-e5c8-4034-8e17-45bdb15e2c84/TattooStencilpro_00002_.png
+index-R1_YNjI9.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/2e784d1f-a649-4ced-92e0-cc0fd57feb7a/TattooStencilpro_00003_.png
+index-R1_YNjI9.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/fd9cc3f7-f69b-47a6-af08-aa77f7942275/TattooStencilpro_00004_.png
+index-R1_YNjI9.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/41b6be93-aaaa-438e-b8aa-68b473c56eb1/TattooStencilpro_00001_.png
+index-R1_YNjI9.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/9cf0bb5f-ac4d-494b-9a80-5ceac122371b/TattooStencilpro_00002_.png
+index-R1_YNjI9.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/ef652e6a-fb49-4d11-9758-32f9d7428936/TattooStencilpro_00002_.png
+index-R1_YNjI9.js:401 Imagen cargada exitosamente: https://comfy-deploy-output.s3.us-east-2.amazonaws.com/outputs/runs/33082c72-a9c4-49b9-a6b8-c9bdb6a81f23/TattooStencilpro_00001_.png
+index-R1_YNjI9.js:402 ChatAssistant received currentImage: NO
+index-R1_YNjI9.js:402 CurrentImage preview: none
+index-R1_YNjI9.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design 500 (Internal Server Error)
+queryFn @ index-R1_YNjI9.js:404
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404 Gallery fetch failed: 500
+queryFn @ index-R1_YNjI9.js:404
+await in queryFn
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-R1_YNjI9.js:48
+queryFn @ index-R1_YNjI9.js:404
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+refetchQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+invalidateQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:404
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-R1_YNjI9.js:48:42733)
+    at async index-R1_YNjI9.js:48:43129
+    at async queryFn (index-R1_YNjI9.js:404:19565)
+queryFn @ index-R1_YNjI9.js:404
+await in queryFn
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+refetchQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+invalidateQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:404
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-R1_YNjI9.js:48
+queryFn @ index-R1_YNjI9.js:404
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-R1_YNjI9.js:48:42733)
+    at async index-R1_YNjI9.js:48:43129
+    at async queryFn (index-R1_YNjI9.js:404:19565)
+queryFn @ index-R1_YNjI9.js:404
+await in queryFn
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design 500 (Internal Server Error)
+queryFn @ index-R1_YNjI9.js:404
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+refetchQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+invalidateQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:404
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404 Gallery fetch failed: 500
+queryFn @ index-R1_YNjI9.js:404
+await in queryFn
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+refetchQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+invalidateQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:404
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?limit=20&page=1 500 (Internal Server Error)
+queryFn @ index-R1_YNjI9.js:404
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404 Gallery fetch error: Error: Error loading gallery
+    at queryFn (index-R1_YNjI9.js:404:80458)
+queryFn @ index-R1_YNjI9.js:404
+await in queryFn
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:402 ChatAssistant received currentImage: NO
+index-R1_YNjI9.js:402 CurrentImage preview: none
+index-R1_YNjI9.js:404  GET https://testdtattoostencilpro.replit.app/api/gallery?type=design 500 (Internal Server Error)
+queryFn @ index-R1_YNjI9.js:404
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404 Gallery fetch failed: 500
+queryFn @ index-R1_YNjI9.js:404
+await in queryFn
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-R1_YNjI9.js:48
+queryFn @ index-R1_YNjI9.js:404
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-R1_YNjI9.js:48:42733)
+    at async index-R1_YNjI9.js:48:43129
+    at async queryFn (index-R1_YNjI9.js:404:19565)
+queryFn @ index-R1_YNjI9.js:404
+await in queryFn
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+Lo @ index-R1_YNjI9.js:48
+onSubscribe @ index-R1_YNjI9.js:48
+subscribe @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+e1 @ index-R1_YNjI9.js:38
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:48  GET https://testdtattoostencilpro.replit.app/api/flux/projects 500 (Internal Server Error)
+(anonymous) @ index-R1_YNjI9.js:48
+queryFn @ index-R1_YNjI9.js:404
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+refetchQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+invalidateQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:404
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40
+index-R1_YNjI9.js:404 GET /api/flux/projects failed: Error: 500: 
+    at hb (index-R1_YNjI9.js:48:42733)
+    at async index-R1_YNjI9.js:48:43129
+    at async queryFn (index-R1_YNjI9.js:404:19565)
+queryFn @ index-R1_YNjI9.js:404
+await in queryFn
+s @ index-R1_YNjI9.js:48
+w @ index-R1_YNjI9.js:48
+start @ index-R1_YNjI9.js:48
+fetch @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+refetchQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:48
+batch @ index-R1_YNjI9.js:48
+invalidateQueries @ index-R1_YNjI9.js:48
+(anonymous) @ index-R1_YNjI9.js:404
+lu @ index-R1_YNjI9.js:40
+Ss @ index-R1_YNjI9.js:40
+oT @ index-R1_YNjI9.js:40
+ui @ index-R1_YNjI9.js:40
+$v @ index-R1_YNjI9.js:40
+ri @ index-R1_YNjI9.js:38
+(anonymous) @ index-R1_YNjI9.js:40

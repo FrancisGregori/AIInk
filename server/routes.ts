@@ -1240,7 +1240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Segundo intento: usar storage si está disponible
         try {
-          const userId = undefined; // Sin usuario para obtener galería pública
+          const userId = ''; // Cadena vacía en lugar de undefined
           const items = await storage.getUserGallery(userId, type, 50, 0);
           galleryItems = items;
           console.log(`[GALLERY] Storage fallback returned ${galleryItems.length} items`);
