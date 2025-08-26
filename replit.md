@@ -34,6 +34,10 @@ TattoostencilPro is a professional AI-powered design platform featuring two main
   - Removed fetchImageAsBase64 function that was causing unnecessary overhead
   - Consistent with handleFileSelect approach that already uses URLs
   - Reduces payload size and improves performance
+- **History Grid Performance**: Optimized image loading by using thumbnails in grid view
+  - Grid now displays thumbnailUrl when available, falling back to full imageUrl
+  - Full resolution images still shown in modal dialog when clicking items
+  - Significantly improves loading speed and reduces bandwidth usage in history section
 
 ### Recent Updates (2025-08-24)
 - **Neutral Style Added**: Implemented prompt-based "Neutral" style using line-art conversion without LoRA models

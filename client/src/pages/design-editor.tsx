@@ -1247,7 +1247,7 @@ function DesignEditor() {
                       <DialogTrigger asChild>
                         <div className="relative group cursor-pointer">
                           <LazyImage
-                            src={project.imageUrl || ""}
+                            src={(project.settings as any)?.thumbnailUrl || project.imageUrl || ""}
                             alt={project.name}
                             className="w-full aspect-[3/4] rounded-lg object-cover transition-opacity"
                           />
