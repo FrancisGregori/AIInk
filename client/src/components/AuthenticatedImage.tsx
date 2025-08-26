@@ -104,6 +104,8 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError, loadi
   const isReplicateURL = src.includes('replicate.delivery') || src.includes('replicate.com');
   const isExternalURL = src.startsWith('http://') || src.startsWith('https://');
   
+  // IMPORTANTE: needsCredentials determina si incluir cookies en solicitudes de imagen
+  // Se usa en crossOrigin={needsCredentials ? 'use-credentials' : undefined}
   const needsCredentials = (() => {
     // URLs de Replicate son públicas y no necesitan credenciales
     if (isReplicateURL) {

@@ -3,7 +3,7 @@
 ## Overview
 TattoostencilPro is a professional AI-powered design platform featuring two main creative tools: Stencil Tool for tattoo stencil generation and Flux Kontext for AI-assisted design editing. It recreates the functionality of the original TattoostencilPro, utilizing multiple AI models (Steven, Makishi, Darwin, Adrian) for stencil processing. This full-stack web application, built with a React frontend and Express.js backend, supports real-time job processing, user credit management, and comprehensive gallery display. The business vision is to provide a leading AI-powered platform for tattoo artists and designers, enhancing creative workflows and expanding market potential through innovative AI tools.
 
-### Recent Updates (2025-08-26)
+### Recent Updates (2025-08-27)
 - **API Error Handling Improvements**: Fixed 500 errors from critical endpoints
   - `/api/flux/projects` endpoint now has multi-layer fallback strategy (storage → database → empty array)
   - `/api/gallery` endpoint now ultra-resilient with dual fallback system (DB → storage → empty array)
@@ -16,6 +16,11 @@ TattoostencilPro is a professional AI-powered design platform featuring two main
   - Reduced retention: jobs kept 6 hours (was 24h), max 10 jobs (was 20)
   - Automatic cleanup and retry on quota errors
   - Jobs always remain in memory even if localStorage save fails
+- **AuthenticatedImage Credentials Handling**: Fixed and documented `needsCredentials` usage
+  - Variable `needsCredentials` is properly applied via `crossOrigin` attribute on img elements
+  - Public images (Replicate, external URLs) load without credentials for better performance
+  - Private images (API routes, Object Storage private paths) include credentials as needed
+  - Added clear documentation about credential detection logic
 - **Replicate URL Direct Access Fixed**: Eliminated proxy system that was breaking Replicate images
   - Removed proxy conversion code from AuthenticatedImage.tsx that was rewriting URLs to `/api/proxy/replicate/...`
   - Deleted proxy endpoint `/api/proxy/replicate/*` from server/routes.ts
