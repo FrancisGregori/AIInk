@@ -1129,7 +1129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Devolver la URL de la imagen generada - Igual que tu repositorio
+      // Devolver la URL de la imagen generada - USAR TAL CUAL
       // Credits already deducted before generation
       
       // Crear abreviatura del modelo
@@ -1138,60 +1138,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        model === 'max' ? 'M' : 
                        (model as string).charAt(0).toUpperCase();
       
-      // USE REAL REPLICATE URLS - Don't re-upload to Object Storage
-      let finalImageUrl = imageUrl;
-      let thumbnailUrl = imageUrl; // Use same URL for thumbnail temporarily
-      let variants = undefined;
+      // USAR LA URL EXACTAMENTE COMO VIENE DE REPLICATE - NO CAMBIAR NADA
+      console.log('=== URL RECIBIDA DE REPLICATE ===');
+      console.log('URL SIN CAMBIOS:', imageUrl);
       
-      // Check if it's a real Replicate URL
-      const isReplicateUrl = imageUrl.includes('replicate.delivery') || 
-                            imageUrl.includes('replicate.com') ||
-                            imageUrl.includes('pbxt.replicate.delivery');
-      
-      if (isReplicateUrl) {
-        console.log('✅ USING REAL REPLICATE URL DIRECTLY:', imageUrl);
-        console.log('Not re-uploading to Object Storage - using original Replicate URL');
-        // Keep the original Replicate URL
-        finalImageUrl = imageUrl;
-        thumbnailUrl = imageUrl;
-      } else if (imageUrl.startsWith('data:')) {
-        // Only upload to Object Storage if it's base64 (shouldn't happen with fixes above)
-        console.log('⚠️ WARNING: Received base64 instead of URL - this should not happen');
-        const objectStorage = new ObjectStorageService();
-        try {
-          const uploadResult = await objectStorage.uploadPublicImageFromBase64(
-            imageUrl,
-            'gallery',
-            userId,
-            true
-          );
-          finalImageUrl = uploadResult.imageUrl;
-          thumbnailUrl = uploadResult.thumbnailUrl;
-          variants = uploadResult.variants;
-        } catch (uploadError) {
-          console.error('Error uploading base64 to Object Storage:', uploadError);
-        }
-      } else {
-        // For other URLs, just use them directly
-        console.log('✅ Using external URL directly:', imageUrl);
-        finalImageUrl = imageUrl;
-        thumbnailUrl = imageUrl;
-      }
-      
-      console.log('=== FINAL IMAGE URL ===');
-      console.log('Final URL for gallery:', finalImageUrl);
-      console.log('Thumbnail URL:', thumbnailUrl);
-      
-      // Save to gallery con URLs optimizadas
+      // Save to gallery - USAR LA URL DIRECTAMENTE
       const savedItem = await storage.addToGallery({
         userId,
-        imageUrl: finalImageUrl,
-        thumbnailUrl: thumbnailUrl,
+        imageUrl: imageUrl,  // USAR LA URL ORIGINAL
+        thumbnailUrl: imageUrl, // MISMA URL PARA THUMBNAIL
         type: 'design',
         title: `${prompt.slice(0, 45)} (${modelAbbr})`,
         description: prompt,
         prompt: prompt,
-        variants, // Save optimized variants
         metadata: {
           model: modelName,
           inputImageUrl: inputImageUrl
@@ -1203,8 +1162,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Título:', savedItem.title);
       
       res.json({
-        imageUrl: finalImageUrl, // Devolver URL optimizada en lugar de base64
-        thumbnailUrl: thumbnailUrl,
+        imageUrl: imageUrl,  // DEVOLVER LA URL ORIGINAL DE REPLICATE
+        thumbnailUrl: imageUrl,  // USAR LA MISMA URL
         prompt,
         model: modelName,
         success: true
