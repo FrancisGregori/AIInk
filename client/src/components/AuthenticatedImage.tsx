@@ -26,11 +26,15 @@ export function AuthenticatedImage({
 }: AuthenticatedImageProps) {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
+  // CRITICAL: Preserve Replicate URLs exactly as they come
+  // Never transform replicate.delivery URLs
+  const preservedSrc = src.includes('replicate.delivery') ? src : src;
+  
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isTimeout, setIsTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [currentSrc, setCurrentSrc] = useState(() => src);
+  const [currentSrc, setCurrentSrc] = useState(() => preservedSrc);
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const MAX_RETRIES = 3;
@@ -38,11 +42,14 @@ export function AuthenticatedImage({
 
   // Reset loading and error states when the source changes
   useEffect(() => {
+    // NEVER transform Replicate URLs - use them exactly as provided
+    const finalSrc = src.includes('replicate.delivery') ? src : src;
+    
     setIsLoading(true);
     setHasError(false);
     setIsTimeout(false);
     setRetryCount(0);
-    setCurrentSrc(src);
+    setCurrentSrc(finalSrc);
 
     if (timeoutId.current) clearTimeout(timeoutId.current);
     timeoutId.current = setTimeout(() => {
