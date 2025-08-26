@@ -6,9 +6,9 @@ import { useToast } from '@/hooks/use-toast';
  * ----------------------
  * - Only lightweight metadata is stored in localStorage.
  * - Any base64, blob or data URLs are stripped before serialization.
- * - Completed jobs older than 6 hours and total jobs over 10 are pruned.
- * - If the serialized payload exceeds ~1MB it is **not** written to storage and
- *   the user is warned with a toast.
+ * - Completed jobs are removed immediately and total jobs over 5 are pruned.
+ * - If the serialized payload exceeds ~0.5MB it is **not** written to storage and
+ *   the user is warned with a toast and guidance to clear history.
  */
 
 interface Job {
@@ -38,8 +38,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
   const { toast } = useToast();
 
-  // Conservative limit (~1MB) to avoid QuotaExceededError
-  const MAX_STORAGE_BYTES = 1 * 1024 * 1024; // 1MB
+  // More conservative limit (~0.5MB) to avoid QuotaExceededError
+  const MAX_STORAGE_BYTES = 0.5 * 1024 * 1024; // 0.5MB
   const STORAGE_KEY = 'tattoo-stencil-jobs';
 
   const isHttpUrl = (url?: string) => !!url && /^https?:\/\//.test(url);
@@ -108,18 +108,11 @@ export function JobProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      // Limpiar jobs completados antiguos
-      const cleanedJobs = activeJobs.filter(job => {
-        if (job.status === 'completed' && job.completedAt) {
-          const completedDate = new Date(job.completedAt);
-          const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000); // Más agresivo: 6h
-          return completedDate > sixHoursAgo;
-        }
-        return true; // Mantener trabajos en progreso y fallidos
-      });
+      // Remove completed jobs immediately
+      const cleanedJobs = activeJobs.filter(job => job.status !== 'completed');
 
-      // Límite más estricto de jobs
-      const maxJobs = 10; // Reducido de 20 a 10
+      // Aggressive job limit
+      const maxJobs = 5;
       const finalJobs = cleanedJobs.length > maxJobs
         ? cleanedJobs.slice(-maxJobs)
         : cleanedJobs;
@@ -133,14 +126,23 @@ export function JobProvider({ children }: { children: ReactNode }) {
           console.warn('Could not save jobs to localStorage (quota exceeded)');
           toast({
             title: 'Storage full',
-            description: 'Could not save job history to your browser.',
+            description: 'Could not save job history. Please clear your job history and try again.',
           });
         }
       } else {
         console.warn(`Job payload too large: ${(payloadSize / 1024 / 1024).toFixed(2)}MB, max: ${(MAX_STORAGE_BYTES / 1024 / 1024).toFixed(2)}MB`);
+        // Log detailed size metrics for debugging
+        const metrics = activeJobs.map(job => {
+          const fieldSizes: Record<string, number> = {};
+          Object.entries(job).forEach(([key, value]) => {
+            fieldSizes[key] = new Blob([JSON.stringify(value ?? '')]).size;
+          });
+          return { id: job.id, total: new Blob([JSON.stringify(job)]).size, ...fieldSizes };
+        });
+        console.table(metrics);
         toast({
           title: 'Job history not saved',
-          description: 'Job data exceeds local storage limit and will not persist.',
+          description: 'Storage limit reached. Please clear your job history and try again.',
         });
       }
 
