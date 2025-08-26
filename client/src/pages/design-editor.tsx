@@ -1063,25 +1063,22 @@ function DesignEditor() {
                               {/* Botón para cancelar trabajo colgado */}
                               <button
                                 onClick={() => {
-                                  // Limpiar trabajo de localStorage
-                                  const storageKey = 'tattoo-stencil-jobs';
-                                  const stored = localStorage.getItem(storageKey);
-                                  if (stored) {
-                                    try {
-                                      const jobs = JSON.parse(stored);
-                                      const cleanedJobs = jobs.filter((j: any) => j.id !== currentJob?.id);
-                                      localStorage.setItem(storageKey, JSON.stringify(cleanedJobs));
-                                    } catch (error) {
-                                      console.error('Error canceling:', error);
-                                    }
+                                  if (currentJob) {
+                                    // Marcamos el trabajo como cancelado y lo removemos usando el contexto
+                                    updateJob(currentJob.id, {
+                                      status: 'failed',
+                                      errorMessage: 'Canceled by user',
+                                      completedAt: new Date().toISOString()
+                                    });
+                                    removeJob(currentJob.id);
                                   }
-                                  
+
                                   // Resetear estado
                                   setCurrentJob(null);
                                   setIsGenerating(false);
                                   setReferencePreview('');
                                   setRecoveredImageUrl('');
-                                  
+
                                   toast({
                                     title: language === 'es' ? "Proceso cancelado" : "Process canceled",
                                     description: language === 'es' ? "El diseño fue cancelado correctamente" : "The design was canceled successfully",
