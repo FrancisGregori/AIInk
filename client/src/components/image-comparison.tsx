@@ -75,24 +75,24 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
 
   if (mode === "side-by-side") {
     return (
-      <div className="grid grid-cols-2 gap-4 h-[400px]">
-        <div className="flex flex-col">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
           <h4 className="text-sm font-medium mb-2 text-gray-400">Original Image</h4>
-          <div className="relative bg-[#f5f5f5] rounded-lg overflow-hidden flex-1 flex items-center justify-center">
+          <div className="relative bg-[#f5f5f5] rounded-lg overflow-hidden">
             <img 
               src={originalImage} 
               alt="Original" 
-              className="max-w-full max-h-full object-contain"
+              className="w-full h-auto object-contain max-h-[450px]"
             />
           </div>
         </div>
-        <div className="flex flex-col">
+        <div>
           <h4 className="text-sm font-medium mb-2 text-gray-400">Result</h4>
-          <div className="relative bg-[#f5f5f5] rounded-lg overflow-hidden flex-1 flex items-center justify-center">
+          <div className="relative bg-[#f5f5f5] rounded-lg overflow-hidden">
             <img 
               src={processedImage} 
               alt="Processed" 
-              className="max-w-full max-h-full object-contain"
+              className="w-full h-auto object-contain max-h-[450px]"
             />
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
   return (
     <div 
       ref={containerRef}
-      className="relative bg-[#f5f5f5] rounded-lg overflow-hidden cursor-ew-resize select-none touch-none h-[400px] flex items-center justify-center"
+      className="relative bg-[#f5f5f5] rounded-lg overflow-hidden cursor-ew-resize select-none touch-none"
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
@@ -111,14 +111,14 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
       <img 
         src={originalImage} 
         alt="Original" 
-        className="max-h-[400px] w-auto h-auto invisible"
+        className="w-full h-auto invisible max-h-[500px]"
       />
       
       {/* Original Image (Background) - positioned absolutely over invisible image */}
       <img 
         src={originalImage} 
         alt="Original" 
-        className="absolute inset-0 max-h-[400px] w-auto h-auto object-contain left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        className="absolute inset-0 w-full h-full object-contain"
       />
       <div className="absolute top-4 left-4 bg-black/70 px-3 py-1 rounded text-sm z-10">
         Original Image
@@ -132,7 +132,7 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
         <img 
           src={processedImage} 
           alt="Processed" 
-          className="absolute inset-0 max-h-[400px] w-auto h-auto object-contain left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          className="absolute inset-0 w-full h-full object-contain"
         />
         <div className="absolute top-4 right-4 bg-black/70 px-3 py-1 rounded text-sm z-10">
           Result

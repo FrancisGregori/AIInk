@@ -103,7 +103,7 @@ export default function PreviewArea({ selectedFile, selectedStyle, jobId, extern
 
       {/* Preview Container */}
       {!selectedFile ? (
-        <div className="h-[400px] bg-zinc-800 rounded-xl border-2 border-dashed border-zinc-600 flex items-center justify-center">
+        <div className="min-h-[300px] bg-zinc-800 rounded-xl border-2 border-dashed border-zinc-600 flex items-center justify-center">
           <div className="text-center text-gray-400">
             <div className="w-16 h-16 bg-zinc-700 rounded-full mx-auto mb-4 flex items-center justify-center">
               <Eye className="h-8 w-8" />
@@ -114,20 +114,18 @@ export default function PreviewArea({ selectedFile, selectedStyle, jobId, extern
         </div>
       ) : hasProcessedImage && job.originalImageUrl && job.processedImageUrl ? (
         // Image comparison view
-        <div className="max-h-[400px] overflow-hidden bg-zinc-800 rounded-xl">
-          <ImageComparison
-            originalImage={job.originalImageUrl}
-            processedImage={job.processedImageUrl}
-            mode={comparisonMode}
-          />
-        </div>
+        <ImageComparison
+          originalImage={job.originalImageUrl}
+          processedImage={job.processedImageUrl}
+          mode={comparisonMode}
+        />
       ) : (
         // Single image view (original or processing)
-        <div className="h-[400px] bg-zinc-800 rounded-xl border-2 border-dashed border-zinc-600 flex items-center justify-center relative overflow-hidden">
+        <div className="bg-zinc-800 rounded-xl border-2 border-dashed border-zinc-600 flex items-center justify-center relative overflow-hidden">
           <img
             src={previewUrl!}
             alt="Original image"
-            className="max-h-[400px] w-auto h-auto object-contain rounded-lg"
+            className="max-h-[500px] w-full h-auto object-contain rounded-lg"
           />
 
           {/* Processing Overlay */}
