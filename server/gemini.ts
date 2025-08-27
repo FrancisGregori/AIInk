@@ -477,17 +477,48 @@ export async function editImageWithGemini(
       model: "gemini-2.5-flash-image-preview",  // Nuevo modelo de Google que puede generar y editar imágenes
       contents,
     });
-    const result = response.text || '';
     
-    console.log('Edit image response received, length:', result.length);
+    // Obtener la respuesta completa con todas las partes
+    const responseData = response as any;
+    const candidates = responseData.candidates || responseData.response?.candidates || [];
     
-    // Verificar si la respuesta contiene una imagen en base64
-    const base64Match = result.match(/data:image\/[\w+]+;base64,[^\s]+/);
+    let editedImageBase64: string | undefined;
+    let textResponse = '';
+    
+    // Buscar la imagen generada en las partes de la respuesta
+    if (candidates.length > 0 && candidates[0].content && candidates[0].content.parts) {
+      for (const part of candidates[0].content.parts) {
+        if (part.text) {
+          textResponse += part.text;
+        }
+        if (part.inlineData && part.inlineData.data) {
+          // La imagen está aquí
+          const mimeType = part.inlineData.mimeType || 'image/jpeg';
+          editedImageBase64 = `data:${mimeType};base64,${part.inlineData.data}`;
+          console.log('Found generated image in response');
+        }
+      }
+    }
+    
+    // Si no encontramos la imagen en las partes, usar el método text() como fallback
+    if (!editedImageBase64 && !textResponse) {
+      try {
+        textResponse = response.text || '';
+      } catch (e) {
+        console.log('Could not get text from response');
+      }
+    }
+    
+    console.log('Edit image response:', { 
+      hasText: !!textResponse, 
+      hasImage: !!editedImageBase64,
+      textLength: textResponse.length 
+    });
     
     return {
       success: true,
-      result: result,
-      editedImage: base64Match ? base64Match[0] : undefined
+      result: textResponse,
+      editedImage: editedImageBase64
     };
   } catch (error: any) {
     console.error('Error editing image with Gemini:', error);
