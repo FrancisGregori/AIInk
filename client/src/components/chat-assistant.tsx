@@ -472,9 +472,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     setIsLoading(true);
 
     try {
-      // Si hay una imagen cargada, usar el endpoint de edición de imágenes
-      if (storedImage && inputMessage.trim()) {
-        console.log('Image detected, using edit-image endpoint');
+      // Si hay una imagen cargada y el modelo es gemini-preview, usar el endpoint de edición de imágenes
+      if (storedImage && inputMessage.trim() && modelVariant === 'gemini-preview') {
+        console.log('Using Gemini Preview for image editing');
         
         // Llamar al endpoint de edición de imágenes
         const response = await fetch('/api/edit-image', {
@@ -538,7 +538,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         return; // Salir aquí si se usó el endpoint de edición
       }
       
-      // Si no hay imagen, usar el chat normal
+      // Si no es gemini-preview o no hay imagen, usar el chat normal
       // Prepare messages for API
       const apiMessages = messages.slice(1).map(msg => ({
         role: msg.role,
@@ -655,30 +655,97 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   };
 
   const applyPrompt = async (content: string) => {
-    // Solo aplicar el prompt al componente padre, sin generación automática
+    // Aplicar el prompt al componente padre
     onApplyPrompt(content);
-    return;
     
-    /* FUNCIONALIDAD DE GENERACIÓN AUTOMÁTICA DESHABILITADA
-    // Check authentication before allowing image generation
+    // Si el modelo es gemini-preview y hay imagen, usar edición con Gemini
+    if (modelVariant === 'gemini-preview' && storedImage) {
+      // Check authentication before allowing image generation
+      if (!isAuthenticated) {
+        if (onAuthRequired) {
+          onAuthRequired();
+        }
+        return;
+      }
+      
+      try {
+        setIsGeneratingImage(true);
+        
+        // Usar el endpoint de edición de imágenes con Gemini
+        const response = await fetch('/api/edit-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: content,
+            imageBase64: storedImage,
+            mimeType: storedImage.startsWith('data:image/png') ? 'image/png' : 'image/jpeg'
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          if (response.status === 402) {
+            throw new Error(error.error || 'No tienes créditos suficientes');
+          }
+          throw new Error('Failed to edit image');
+        }
+
+        const result = await response.json();
+        
+        // Si se generó una nueva imagen, actualizarla
+        if (result.editedImage) {
+          setStoredImage(result.editedImage);
+          if (onImageGenerated) {
+            onImageGenerated(result.editedImage, content);
+          }
+          
+          // Agregar mensaje mostrando la imagen generada
+          const generatedMessage: Message = {
+            id: `generated-${Date.now()}`,
+            role: 'assistant',
+            content: language === 'es' 
+              ? '✨ Imagen editada con Gemini Preview' 
+              : '✨ Image edited with Gemini Preview',
+            timestamp: new Date(),
+            image: result.editedImage
+          };
+          setMessages(prev => [...prev, generatedMessage]);
+          
+          toast({
+            title: language === 'es' ? "¡Imagen generada!" : "Image generated!",
+            description: language === 'es' 
+              ? "La edición se completó exitosamente"
+              : "The edit completed successfully"
+          });
+        }
+      } catch (error: any) {
+        console.error('Error generating image with Gemini:', error);
+        toast({
+          title: language === 'es' ? "Error" : "Error",
+          description: error.message || (language === 'es' 
+            ? "No se pudo generar la imagen" 
+            : "Could not generate image"),
+          variant: "destructive",
+        });
+      } finally {
+        setIsGeneratingImage(false);
+      }
+      return;
+    }
+    
+    // Si no es gemini-preview o hay imagen, usar el flujo normal de FLUX
     if (!isAuthenticated) {
       if (onAuthRequired) {
         onAuthRequired();
       }
-      // Solo mostrar el diálogo, sin mensajes adicionales
       return;
     }
     
-    // Apply the prompt to the parent component first
-    onApplyPrompt(content);
-    
-    // Also trigger image generation if we have an image
     if (storedImage) {
       try {
-        // Set loading state
         setIsGeneratingImage(true);
-
-        // Call Replicate API with the current image and prompt
+        
+        // Call Replicate API with the current image and prompt  
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: {
@@ -731,6 +798,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             // Crear abreviatura del modelo
             const modelAbbr = modelVariant === 'qwen' ? 'Q' : 
                             modelVariant === 'pro' ? 'P' : 
+                            modelVariant === 'gemini-preview' ? 'G' :
                             modelVariant.charAt(0).toUpperCase();
             
             const projectResponse = await fetch('/api/flux/create', {
@@ -815,7 +883,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           : "The prompt has been applied to the edit field"
       });
     }
-    */
   };
 
   // Function to determine if a message contains a prompt that should have action buttons
@@ -1117,6 +1184,12 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                     >
                       Qwen Edit
                     </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onModelChange?.("gemini-preview")}
+                      className={modelVariant === "gemini-preview" ? "bg-zinc-800" : ""}
+                    >
+                      Gemini Preview
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
@@ -1134,7 +1207,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-40">
                     {/* Show different options based on model */}
-                    {(modelVariant === "qwen" ? 
+                    {(modelVariant === "qwen" || modelVariant === "gemini-preview" ? 
                       ["Match Input", "1:1", "16:9", "9:16", "4:3", "3:4"] : 
                       ["Match Input", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]
                     ).map((ratio) => (
