@@ -429,6 +429,7 @@ function DesignEditor() {
     initialData: [],
     enabled: isAuthenticated, // evita petición antes de autenticarse
     staleTime: 0,              // permite refetch inmediato tras login
+    refetchInterval: 3000,     // refetch cada 3 segundos para ver nuevas imágenes
   });
 
   useEffect(() => {
@@ -1079,6 +1080,9 @@ function DesignEditor() {
                       
                       // También disparar evento para otros listeners
                       window.dispatchEvent(new Event('storage'));
+                      
+                      // Invalidar query del historial para que se actualice inmediatamente
+                      queryClient.invalidateQueries({ queryKey: ["/api/gallery", "design", 8] });
                     } catch (error) {
                       console.error('Error guardando trabajo en localStorage:', error);
                     }

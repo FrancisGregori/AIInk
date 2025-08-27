@@ -750,6 +750,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               ? "La edición se completó exitosamente"
               : "The edit completed successfully"
           });
+          
+          // Invalidar query del historial para mostrar la nueva imagen inmediatamente
+          queryClient.invalidateQueries({ queryKey: ["/api/gallery", "design", 8] });
         }
       } catch (error: any) {
         console.error('Error generating image with Gemini:', error);
@@ -855,8 +858,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             });
 
             if (projectResponse.ok) {
-              // Refrescar la lista de proyectos para que aparezca en el editor
-              queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+              // Refrescar el historial de la galería para que aparezca la nueva imagen
+              queryClient.invalidateQueries({ queryKey: ["/api/gallery", "design", 8] });
+              queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
               console.log('Project created from InkVision successfully');
             }
           } catch (projectError) {
