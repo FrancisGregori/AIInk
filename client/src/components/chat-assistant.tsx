@@ -604,6 +604,11 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   };
 
   const applyPrompt = async (content: string) => {
+    // Solo aplicar el prompt al componente padre, sin generación automática
+    onApplyPrompt(content);
+    return;
+    
+    /* FUNCIONALIDAD DE GENERACIÓN AUTOMÁTICA DESHABILITADA
     // Check authentication before allowing image generation
     if (!isAuthenticated) {
       if (onAuthRequired) {
@@ -759,75 +764,13 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           : "The prompt has been applied to the edit field"
       });
     }
+    */
   };
 
   // Function to determine if a message contains a prompt that should have action buttons
   const isPromptMessage = (content: string) => {
-    // If the message contains questions, it's not a prompt
-    if (content.includes('?') || content.includes('¿')) {
-      return false;
-    }
-    
-    // Check if it's a greeting, description, or result message (not a prompt)
-    const notPromptPhrases = [
-      'hola', 'hi', 'hello', 'bienvenido', 'welcome',
-      'soy tu experto', 'soy tu asistente', 'ayudo', 'puedo ayudar',
-      'describe', 'descripción', 'esta imagen', 'elementos principales',
-      'composición', 'análisis', 'veo que', 'observo',
-      // Result messages - these should NOT have buttons
-      '✨', 'aquí está', 'here is', 'tu imagen editada', 'your edited image',
-      'imagen generada', 'generated image', 'resultado', 'result',
-      '🎨', '✅', '❌', 'completado', 'completed', 'listo', 'ready',
-      'diseño generado', 'design generated'
-    ];
-    
-    const isNotPrompt = notPromptPhrases.some(phrase => 
-      content.toLowerCase().includes(phrase)
-    );
-    
-    if (isNotPrompt) {
-      return false;
-    }
-    
-    // If it's a short phrase (likely a modification prompt), show buttons
-    const isShortPhrase = content.trim().length > 5 && content.trim().length < 200;
-    
-    // Check for technical prompt patterns (especially Gemini responses)
-    const technicalPromptPatterns = [
-      // Gemini generated technical prompts (key indicators)
-      'maintaining', 'manteniendo',
-      'change the', 'cambiar el', 'cambiar la',
-      'add ', 'remove ', 'transform to', 'turn the',
-      'rotate ', 'replace ', 'girar ', 'rotar ',
-      ', maintaining', ', manteniendo',
-      // Standard modification patterns
-      'add', 'remove', 'change', 'with', 'make', 'convert',
-      'transform', 'edit', 'modify', 'apply', 'generate',
-      'increase', 'decrease', 'enhance', 'improve',
-      // Spanish  
-      'en ', 'con ', 'sin ', 'hacer', 'poner', 'quitar',
-      'cambiar', 'convertir', 'transformar', 'aplicar',
-      'que se vea', 'mas ', 'más ', 'realista', 'detallado',
-      'agregar', 'eliminar', 'mejorar', 'aumentar',
-      // Colors and styles
-      'blanco', 'negro', 'color', 'estilo', 'fondo',
-      'black', 'white', 'style', 'background'
-    ];
-    
-    const hasModification = technicalPromptPatterns.some(pattern => 
-      content.toLowerCase().includes(pattern)
-    );
-    
-    // Debug logging
-    console.log('isPromptMessage check:', {
-      content: content.substring(0, 50),
-      isShortPhrase,
-      hasModification,
-      isNotPrompt,
-      result: !isNotPrompt && (isShortPhrase || hasModification)
-    });
-    
-    return isShortPhrase || hasModification;
+    // Deshabilitado - no mostrar botones de aplicar automáticamente
+    return false;
   };
 
 

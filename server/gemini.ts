@@ -136,31 +136,11 @@ export async function analyzeImageForTattoo(imageBase64: string, language: "es" 
 
         const text = response.text || "";
         
-        // Extraer sugerencias específicas
-        const suggestions = language === "es" 
-            ? [
-                "Convertir a estilo blackwork",
-                "Aplicar técnica de sombreado puntillista",
-                "Añadir elementos geométricos",
-                "Crear versión minimalista",
-                "Adaptar para manga completa"
-              ]
-            : [
-                "Convert to blackwork style",
-                "Apply dotwork shading technique",
-                "Add geometric elements",
-                "Create minimalist version",
-                "Adapt for full sleeve"
-              ];
-
-        const styles = language === "es"
-            ? ["Blackwork", "Realista", "Geométrico", "Neo-tradicional", "Minimalista"]
-            : ["Blackwork", "Realistic", "Geometric", "Neo-traditional", "Minimalist"];
-
+        // Sin sugerencias automáticas
         return {
             analysis: text,
-            suggestions: suggestions.slice(0, 3),
-            styles: styles.slice(0, 4)
+            suggestions: [],
+            styles: []
         };
     } catch (error) {
         console.error("Error in InkVision analysis:", error);
@@ -200,24 +180,10 @@ export async function inkVisionChat(
 
         const responseText = response.text || "";
 
-        // Generar sugerencias contextuales
-        const suggestions = language === "es"
-            ? [
-                "Aplicar este estilo al diseño",
-                "Ver ejemplos similares",
-                "Modificar composición",
-                "Cambiar densidad de líneas"
-              ]
-            : [
-                "Apply this style to design",
-                "View similar examples",
-                "Modify composition",
-                "Change line density"
-              ];
-
+        // Sin sugerencias automáticas
         return {
             response: responseText,
-            suggestions: suggestions.slice(0, 3)
+            suggestions: []
         };
     } catch (error) {
         console.error("Error in InkVision chat:", error);
