@@ -790,7 +790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             description: prompt,
             prompt: prompt,
             metadata: {
-              model: 'gemini-2.0-flash-exp',
+              model: 'gemini-2.5-flash-image-preview',
               editType: 'image_edit',
               originalImage: imageBase64 ? 'provided' : 'none'
             }
