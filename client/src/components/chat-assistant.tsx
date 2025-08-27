@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2, ImageIcon, Bot, Square, Check } from "lucide-react";
+import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2, ImageIcon, Bot, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -991,26 +991,12 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                         <div className="flex gap-2 mt-2">
                           <Button
                             size="sm"
-                            className={`flex-1 ${
-                              msg.image === storedImage 
-                                ? 'bg-green-700 hover:bg-green-600' 
-                                : 'bg-zinc-700 hover:bg-zinc-600'
-                            } text-white border-0`}
+                            className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white border-0"
                             onClick={() => handleUseAsReference(msg.image!)}
                             data-testid={`button-edit-chat-${msg.id}`}
-                            disabled={msg.image === storedImage}
                           >
-                            {msg.image === storedImage ? (
-                              <>
-                                <Check className="h-4 w-4 mr-1" />
-                                {language === 'es' ? 'Activa' : 'Active'}
-                              </>
-                            ) : (
-                              <>
-                                <Edit className="h-4 w-4 mr-1" />
-                                {language === 'es' ? 'Usar como base' : 'Use as base'}
-                              </>
-                            )}
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
                           </Button>
                           <Button
                             size="sm"
@@ -1110,16 +1096,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   alt="Loaded image"
                   className="h-8 w-8 object-cover rounded border border-zinc-700"
                 />
-                <span className="text-xs">
-                  {language === 'es' 
-                    ? (modelVariant === 'gemini-preview' 
-                      ? 'Editando esta imagen' 
-                      : 'Imagen base activa')
-                    : (modelVariant === 'gemini-preview' 
-                      ? 'Editing this image' 
-                      : 'Base image active')
-                  }
-                </span>
+                <span>{language === 'es' ? 'Imagen cargada' : 'Image loaded'}</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1147,19 +1124,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={
-                    storedImage 
-                      ? (modelVariant === 'gemini-preview'
-                        ? (language === 'es' 
-                          ? "Describe qué quieres cambiar en la imagen..." 
-                          : "Describe what you want to change in the image...")
-                        : (language === 'es' 
-                          ? "Escribe tu mensaje o describe cambios..." 
-                          : "Write your message or describe changes..."))
-                      : (language === 'es' 
-                        ? "Describe los cambios o arrastra una imagen..."
-                        : "Describe changes or drag an image...")
-                  }
+                  placeholder={language === 'es' 
+                    ? "Describe los cambios o arrastra una imagen..."
+                    : "Describe changes or drag an image..."}
                   className="w-full min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors pr-12"
                   disabled={isLoading}
                   data-testid="textarea-chat-input"

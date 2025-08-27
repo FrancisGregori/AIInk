@@ -18,7 +18,7 @@ const getGeminiKey = (): string => {
 };
 
 // Initialize AI with API key from environment
-const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY || "");
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export async function summarizeArticle(text: string): Promise<string> {
     const prompt = `You are a helpful AI assistant.
@@ -26,11 +26,12 @@ export async function summarizeArticle(text: string): Promise<string> {
 Message: ${text}`;
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        return text || "Lo siento, no pude procesar tu mensaje. ¿Podrías intentar reformularlo?";
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+        });
+
+        return response.text || "Lo siento, no pude procesar tu mensaje. ¿Podrías intentar reformularlo?";
     } catch (error) {
         console.error("Error generating Gemini response:", error);
         return "Disculpa, estoy experimentando dificultades técnicas. Por favor intenta nuevamente en unos momentos.";
@@ -50,10 +51,10 @@ from 1 to 5 stars and a confidence score between 0 and 1.
 Respond with JSON in this format: 
 {'rating': number, 'confidence': number}`;
 
-        const model = genAI.getGenerativeModel({ 
+        const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
-            systemInstruction: systemPrompt,
-            generationConfig: {
+            config: {
+                systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: "object",
@@ -63,11 +64,11 @@ Respond with JSON in this format:
                     },
                     required: ["rating", "confidence"],
                 },
-            }
+            },
+            contents: text,
         });
-        const result = await model.generateContent(text);
-        const response = await result.response;
-        const rawJson = response.text();
+
+        const rawJson = response.text;
 
         if (rawJson) {
             const data: Sentiment = JSON.parse(rawJson);
@@ -95,14 +96,12 @@ export async function analyzeImage(jpegImagePath: string): Promise<string> {
             `Analyze this image and describe what you see.`,
         ];
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });
-        const result = await model.generateContent({
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-image-preview",
             contents: contents,
         });
-        const response = await result.response;
-        const text = response.text();
 
-        return text || "No pude analizar la imagen. Por favor intenta con otra imagen.";
+        return response.text || "No pude analizar la imagen. Por favor intenta con otra imagen.";
     } catch (error) {
         console.error("Error analyzing image:", error);
         return "Error analizando la imagen. Verifica que el archivo sea una imagen válida.";
@@ -130,12 +129,12 @@ export async function analyzeImageForTattoo(imageBase64: string, language: "es" 
             systemPrompt
         ];
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });
-        const result = await model.generateContent({
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-image-preview",
             contents: contents,
         });
-        const response = await result.response;
-        const text = response.text() || "";
+
+        const text = response.text || "";
         
         // Sin sugerencias automáticas
         return {
@@ -171,15 +170,15 @@ export async function inkVisionChat(
                
                Contexto actual: ${context}`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const result = await model.generateContent({
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
             contents: [
                 { text: systemPrompt },
                 { text: `Usuario: ${message}` }
             ],
         });
-        const response = await result.response;
-        const responseText = response.text() || "";
+
+        const responseText = response.text || "";
 
         // Sin sugerencias automáticas
         return {
@@ -209,13 +208,12 @@ User request: ${prompt}
 
 Provide practical steps, color suggestions, composition ideas, and specific techniques. Be creative but practical.`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
-        const result = await model.generateContent({
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
             contents: designPrompt,
         });
-        const response = await result.response;
-        const text = response.text();
-        return text || "No pude generar sugerencias para tu proyecto. ¿Podrías proporcionar más detalles?";
+
+        return response.text || "No pude generar sugerencias para tu proyecto. ¿Podrías proporcionar más detalles?";
     } catch (error) {
         console.error("Error generating design suggestions:", error);
         return "Error generando sugerencias de diseño. Por favor intenta con una descripción diferente.";
@@ -396,13 +394,12 @@ Responde de forma profesional y clara.`
     });
     
     // Llamada al modelo Gemini con límite de tokens para respuestas cortas
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const result = await model.generateContent({
+    const response = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
       contents: chatMessages,
     });
-    const response = await result.response;
-    const text = response.text();
-    return text || "Error generating response";
+
+    return response.text || "Error generating response";
   } catch (error: any) {
     console.error('Gemini error:', error);
     throw new Error(`Gemini API error: ${error.message}`);
@@ -457,7 +454,7 @@ export async function editImageWithGemini(
   try {
     console.log('Edit image request:', { promptLength: prompt.length, hasImage: !!imageBase64 });
     
-    // Use the global genAI instance
+    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
     // Crear el prompt para editar la imagen  
     const editPrompt = `${prompt}`;  // El modelo entiende directamente las instrucciones del usuario
@@ -476,11 +473,10 @@ export async function editImageWithGemini(
       } as any);
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });  // Nuevo modelo de Google que puede generar y editar imágenes
-    const result = await model.generateContent({
+    const response = await genAI.models.generateContent({
+      model: "gemini-2.5-flash-image-preview",  // Nuevo modelo de Google que puede generar y editar imágenes
       contents,
     });
-    const response = await result.response;
     
     // Obtener la respuesta completa con todas las partes
     const responseData = response as any;
@@ -507,7 +503,7 @@ export async function editImageWithGemini(
     // Si no encontramos la imagen en las partes, usar el método text() como fallback
     if (!editedImageBase64 && !textResponse) {
       try {
-        textResponse = response.text() || '';
+        textResponse = response.text || '';
       } catch (e) {
         console.log('Could not get text from response');
       }
