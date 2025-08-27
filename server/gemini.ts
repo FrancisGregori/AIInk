@@ -54,7 +54,7 @@ Respond with JSON in this format:
 {'rating': number, 'confidence': number}`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-2.5-flash",
             config: {
                 systemInstruction: systemPrompt,
                 responseMimeType: "application/json",
@@ -105,7 +105,7 @@ export async function analyzeImage(jpegImagePath: string): Promise<string> {
         ];
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-2.5-flash-image-preview",
             contents: contents,
         });
 
@@ -150,7 +150,7 @@ export async function analyzeImageForTattoo(imageBase64: string, language: "es" 
         ];
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-2.5-flash-image-preview",
             contents: contents,
         });
 
@@ -219,7 +219,7 @@ export async function inkVisionChat(
                Responde de forma profesional, precisa y orientada a la edición para artistas del tatuaje.`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-2.5-flash",
             contents: [
                 { text: systemPrompt },
                 { text: `Usuario: ${message}` }
@@ -300,7 +300,7 @@ Create a comprehensive prompt that includes:
 Respond with just the optimized prompt, no additional explanation.`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-2.5-flash",
             contents: promptGeneration,
         });
 
@@ -526,14 +526,14 @@ Responde como InkVision naturalmente:`
 
     // Log para verificar el contenido que se enviará
     console.log('Sending to Gemini model:', {
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.5-flash",
       hasImage: chatMessages[0]?.parts?.some((part: any) => part.inlineData) || false,
       messageCount: chatMessages.length
     });
     
     // Llamada al modelo Gemini
     const response = await genAI.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.5-flash",
       contents: chatMessages,
     });
 
