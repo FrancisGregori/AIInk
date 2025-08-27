@@ -519,10 +519,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             id: (Date.now() + 1).toString(),
             role: 'assistant',
             content: result.editedImage 
-              ? (language === 'es' ? '✨ Imagen editada con éxito' : '✨ Image edited successfully')
-              : result.result || (language === 'es' 
-                ? '⚠️ Gemini no puede editar imágenes actualmente. Por favor usa Kontext Pro o Qwen Edit para editar imágenes.' 
-                : '⚠️ Gemini cannot edit images currently. Please use Kontext Pro or Qwen Edit to edit images.'),
+              ? (language === 'es' ? '✨ Imagen generada con éxito' : '✨ Image generated successfully')
+              : result.result || (language === 'es' ? 'Procesando tu solicitud...' : 'Processing your request...'),
             timestamp: new Date(),
             image: result.editedImage // Si hay imagen editada, mostrarla
           };
