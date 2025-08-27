@@ -82,7 +82,7 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
             <img 
               src={originalImage} 
               alt="Original" 
-              className="w-full h-auto object-contain max-h-[450px]"
+              className="w-full h-auto object-contain"
             />
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
             <img 
               src={processedImage} 
               alt="Processed" 
-              className="w-full h-auto object-contain max-h-[450px]"
+              className="w-full h-auto object-contain"
             />
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function ImageComparison({ originalImage, processedImage, mode }:
       <img 
         src={originalImage} 
         alt="Original" 
-        className="w-full h-auto invisible max-h-[500px]"
+        className="w-full h-auto invisible"
       />
       
       {/* Original Image (Background) - positioned absolutely over invisible image */}

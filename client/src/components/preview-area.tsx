@@ -125,7 +125,7 @@ export default function PreviewArea({ selectedFile, selectedStyle, jobId, extern
           <img
             src={previewUrl!}
             alt="Original image"
-            className="max-h-[500px] w-full h-auto object-contain rounded-lg"
+            className="w-full h-auto object-contain rounded-lg"
           />
 
           {/* Processing Overlay */}
