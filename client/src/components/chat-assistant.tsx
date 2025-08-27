@@ -529,10 +529,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           
           // Si se generó una nueva imagen, actualizarla como la imagen actual
           if (result.editedImage) {
-            // Usar URL permanente si está disponible, si no usar la imagen base64
-            const newImage = result.permanentUrl || result.editedImage;
-            setStoredImage(newImage);
-            console.log('Actualizando imagen de referencia (Edit-Image):', newImage.substring(0, 50));
+            // IMPORTANTE: Mantener el base64 para Gemini, no la URL
+            setStoredImage(result.editedImage);
+            console.log('Actualizando imagen de referencia (Edit-Image) - base64');
             
             if (onImageGenerated) {
               // Pasar también la URL permanente si está disponible
@@ -731,10 +730,9 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         
         // Si se generó una nueva imagen, actualizarla
         if (result.editedImage) {
-          // Usar URL permanente si está disponible, si no usar la imagen base64
-          const newImage = result.permanentUrl || result.editedImage;
-          setStoredImage(newImage);
-          console.log('Actualizando imagen de referencia (Gemini):', newImage.substring(0, 50));
+          // IMPORTANTE: Mantener el base64 para Gemini, no la URL
+          setStoredImage(result.editedImage);
+          console.log('Actualizando imagen de referencia (Gemini) - base64');
           
           if (onImageGenerated) {
             onImageGenerated(result.editedImage, content, result.permanentUrl);
