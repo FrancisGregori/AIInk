@@ -3,11 +3,8 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini, getChatResponseGemini, chatWithGemini, editImageWithGemini } from "./gemini";
-import { GoogleGenAI, Modality } from "@google/genai";
-import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema, userGallery, fluxProjects } from "@shared/schema";
-import { db } from "./db";
-import { desc, eq, sql } from "drizzle-orm";
+import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
+import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
 import Replicate from "replicate";
 import { z } from "zod";
@@ -18,9 +15,6 @@ import { CREDIT_PACKS, getCreditPackByCredits, getPriceId, PRICE_ID_TO_TIER } fr
 // Configure multer for file uploads - SECURE DISK STORAGE
 import fs from 'fs';
 import path from 'path';
-
-// Initialize Gemini AI for ChatImageEditor
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 // Ensure temp directory exists
 const tempDir = path.join(process.cwd(), 'temp');
@@ -56,7 +50,7 @@ let stripe: Stripe | null = null;
 try {
   if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2025-07-30.basil" as any, // Usar versión más reciente
+      apiVersion: "2023-10-16", // Using stable API version (latest stable without codename)
     });
     console.log("✅ Stripe initialized successfully");
   } else {
@@ -85,45 +79,6 @@ const generateImageSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoints for deployment
-  // NOTE: "/" route is handled by Vite/static files to serve the React app
-  app.get("/health", (req, res) => {
-    res.status(200).json({ status: "healthy", message: "Server is running" });
-  });
-  
-  app.get("/api/health", (req, res) => {
-    res.status(200).json({ status: "healthy", timestamp: Date.now() });
-  });
-  
-  // Debug endpoint to identify production issues
-  app.get("/api/debug/test", async (req, res) => {
-    try {
-      const response: any = {
-        server: "running",
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-        databaseUrl: process.env.DATABASE_URL ? "configured" : "missing",
-      };
-      
-      // Test simple database query
-      try {
-        const testQuery = await db.select({ count: sql<number>`count(*)` }).from(userGallery);
-        response.database = "connected";
-        response.galleryCount = testQuery[0]?.count || 0;
-      } catch (dbError: any) {
-        response.database = "error";
-        response.dbError = dbError.message;
-      }
-      
-      res.json(response);
-    } catch (error: any) {
-      res.status(500).json({ 
-        error: "Debug endpoint failed",
-        message: error.message 
-      });
-    }
-  });
-
   // Auth middleware
   await setupAuth(app);
   
@@ -250,32 +205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Update job based on ComfyDeploy status
           if (status.status === "completed" && status.outputUrl) {
             console.log("Job completed! Updating with URL:", status.outputUrl);
-            
-            // Subir imagen a almacenamiento PÚBLICO
-            let publicImageUrl = status.outputUrl;
-            let thumbnailUrl = null;
-            let variants = status.variants;
-            
-            try {
-              const objectStorage = new ObjectStorageService();
-              const uploadResult = await objectStorage.uploadPublicImageFromUrl(
-                status.outputUrl,
-                'gallery',
-                job.userId,
-                true // generateOptimized
-              );
-              publicImageUrl = uploadResult.imageUrl;
-              thumbnailUrl = uploadResult.thumbnailUrl;
-              variants = uploadResult.variants || status.variants;
-              console.log('Imagen subida a CDN público:', publicImageUrl);
-            } catch (uploadError) {
-              console.error('Error subiendo a Object Storage público:', uploadError);
-              // Mantener URL original si falla
-            }
-            
             await storage.updateStencilJob(job.id, {
               status: "completed",
-              processedImageUrl: publicImageUrl,
+              processedImageUrl: status.outputUrl,
               completedAt: new Date(),
             });
             
@@ -283,21 +215,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               await storage.addToGallery({
                 userId: job.userId,
-                imageUrl: publicImageUrl,
-                thumbnailUrl: thumbnailUrl,
+                imageUrl: status.outputUrl,
+                thumbnailUrl: null, // No guardar imagen original
                 type: 'stencil',
                 title: `Stencil - ${job.style}`,
                 style: job.style,
-                variants: variants, // Save optimized variants
                 metadata: {
                   jobId: job.id,
                   processingOptions: job.processingOptions
                 }
               });
               console.log("Stencil saved to gallery");
-              if (status.variants) {
-                console.log("Optimized variants saved:", Object.keys(status.variants));
-              }
             } catch (galleryError) {
               console.error("Error saving to gallery:", galleryError);
               // Don't fail the request if gallery save fails
@@ -476,14 +404,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       creditsDeducted = true;
 
-      // Get style configuration from database
-      const styleConfig = await storage.getStencilStyle(style);
-      
       // Start processing with ComfyDeploy
       try {
         const result = await comfyDeploy.processImage(
           publicImageUrl,
-          styleConfig || style,  // Pass full config if available, otherwise just the name
+          style as any,
           options,
           userId
         );
@@ -498,40 +423,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Save to gallery
         if (result.outputUrl) {
           try {
-            // Subir imagen a almacenamiento PÚBLICO
-            let finalImageUrl = result.outputUrl;
-            let thumbnailUrl = publicImageUrl;
-            let variants = undefined;
-            
-            try {
-              const objectStorage = new ObjectStorageService();
-              const uploadResult = await objectStorage.uploadPublicImageFromUrl(
-                result.outputUrl,
-                'gallery',
-                userId,
-                true // generateOptimized
-              );
-              finalImageUrl = uploadResult.imageUrl;
-              thumbnailUrl = uploadResult.thumbnailUrl;
-              variants = uploadResult.variants;
-              console.log('Stencil subido a CDN público:', finalImageUrl);
-            } catch (uploadError) {
-              console.error('Error subiendo stencil a Object Storage público:', uploadError);
-              // Mantener URL original si falla
-            }
-            
             await storage.addToGallery({
               userId,
-              imageUrl: finalImageUrl,
-              thumbnailUrl: thumbnailUrl,
+              imageUrl: result.outputUrl,
+              thumbnailUrl: publicImageUrl,
               type: 'stencil',
               title: `Stencil - ${style}`,
               style: style,
               metadata: {
                 jobId: job.id,
                 processingOptions: options
-              },
-              variants
+              }
             });
             console.log("Stencil saved to gallery immediately");
           } catch (galleryError) {
@@ -565,55 +467,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ENDPOINT ALTERNATIVO - máxima protección
-  app.get("/api/flux/projects-safe", async (req: any, res) => {
-    res.status(200).json([]);
-  });
-
-  // Flux Kontext Routes - ULTRA RESILIENT PUBLIC ACCESS
-  app.get("/api/flux/projects", async (req: any, res) => {
-    // TOP-LEVEL TRY-CATCH: GARANTIZAR que NUNCA devolvamos 500
+  // Flux Kontext Routes
+  app.get("/api/flux/projects", isAuthenticated, async (req: any, res) => {
     try {
-      // GARANTIZAR que SIEMPRE devolvamos 200 con array válido
-      // No importa qué error ocurra, nunca devolver 500
+      // SEGURIDAD: Obtener userId del usuario autenticado
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      // Solo devolver proyectos del usuario autenticado
+      console.log(`[DB] Fetching flux projects for user ${userId}`);
+      const startTime = Date.now();
+      const projects = await storage.getFluxProjects(userId);
+      const endTime = Date.now();
+      console.log(`Flux projects query took ${endTime - startTime}ms for ${projects.length} items`);
       
-      let projects: any[] = [];
-      
-      // Primer intento: usar storage
-      try {
-        projects = await storage.getFluxProjects();
-        console.log(`[FLUX_PROJECTS] Storage returned ${projects.length} projects`);
-      } catch (storageError: any) {
-        console.error("[FLUX_PROJECTS] Storage error:", storageError?.message || storageError);
-        
-        // Segundo intento: consulta directa a DB
-        try {
-          projects = await db.select()
-            .from(fluxProjects)
-            .orderBy(desc(fluxProjects.createdAt))
-            .limit(50);
-          console.log(`[FLUX_PROJECTS] DB query returned ${projects.length} projects`);
-        } catch (dbError: any) {
-          console.error("[FLUX_PROJECTS] DB error:", dbError?.message || dbError);
-          
-          // Tercer intento: usar array vacío como fallback final
-          console.log("[FLUX_PROJECTS] Returning empty array as final fallback");
-          projects = [];
-        }
+      if (endTime - startTime > 5000) {
+        console.warn(`🐌 SLOW QUERY DETECTED: flux projects took ${endTime - startTime}ms - investigating...`);
       }
       
-      // GARANTÍA FINAL: Siempre devolver un array válido con status 200
-      if (!Array.isArray(projects)) {
-        console.error("[FLUX_PROJECTS] Projects is not an array, returning empty array");
-        projects = [];
-      }
-      
-      // Enviar respuesta con status 200 garantizado
-      res.status(200).json(projects);
-    } catch (criticalError: any) {
-      // FALLBACK ABSOLUTO: Si TODO falla, aún así devolver 200 con array vacío
-      console.error("[FLUX_PROJECTS] CRITICAL ERROR - Returning empty array:", criticalError?.message || criticalError);
-      res.status(200).json([]);
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching flux projects:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
@@ -625,19 +502,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User not authenticated" });
       }
 
-      // Crear datos del proyecto con campos mínimos requeridos
-      const projectData = {
-        userId,
-        name: req.body.name || 'Untitled Design',
-        description: req.body.description || null,
-        prompt: req.body.prompt || null,
-        imageUrl: req.body.imageUrl || null,
-        settings: req.body.settings || null,
-        isPublic: false
-      };
+      const validation = insertFluxProjectSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: "Invalid project data", details: validation.error });
+      }
 
-      console.log('Creating flux project:', projectData);
-
+      // Asegurar que el proyecto se asocia al usuario autenticado
+      const projectData = { ...validation.data, userId };
       const project = await storage.createFluxProject(projectData);
       res.json(project);
     } catch (error) {
@@ -691,45 +562,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error regenerating flux project:", error);
       res.status(500).json({ error: "Error regenerating project" });
-    }
-  });
-
-  // Upload image endpoint - sube imágenes a Object Storage y devuelve URL
-  app.post("/api/upload", isAuthenticated, upload.single("image"), async (req: any, res) => {
-    try {
-      // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ error: "No image file provided" });
-      }
-
-      // Convertir el buffer de multer a base64
-      const base64Data = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-      
-      // Subir a Object Storage y obtener URL pública
-      const objectStorage = new ObjectStorageService();
-      const uploadResult = await objectStorage.uploadPublicImageFromBase64(
-        base64Data,
-        'gallery', // Usar carpeta gallery para imágenes de referencia
-        userId,
-        false // No generar versiones optimizadas para referencias
-      );
-
-      console.log('=== IMAGEN DE REFERENCIA SUBIDA ===');
-      console.log('URL:', uploadResult.imageUrl);
-      console.log('Usuario:', userId);
-
-      res.json({
-        url: uploadResult.imageUrl,
-        thumbnailUrl: uploadResult.thumbnailUrl
-      });
-    } catch (error) {
-      console.error("Error uploading reference image:", error);
-      res.status(500).json({ error: "Failed to upload image" });
     }
   });
 
@@ -898,209 +730,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint to save generated base64 images to Object Storage
-  app.post("/api/save-generated-image", isAuthenticated, async (req: any, res) => {
-    try {
-      const { imageData, type = 'design', prompt = '' } = req.body;
-      
-      if (!imageData) {
-        return res.status(400).json({ error: "Image data is required" });
-      }
-      
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
-      
-      // Extract base64 data and mime type
-      let base64Data = imageData;
-      let mimeType = 'image/png';
-      
-      if (imageData.startsWith('data:')) {
-        const matches = imageData.match(/^data:([^;]+);base64,(.+)$/);
-        if (matches) {
-          mimeType = matches[1];
-          base64Data = matches[2];
-        }
-      }
-      
-      // Convert base64 to buffer
-      const buffer = Buffer.from(base64Data, 'base64');
-      
-      // Generate unique filename
-      const timestamp = Date.now();
-      const randomId = Math.random().toString(36).substring(2, 15);
-      const extension = mimeType.includes('jpeg') ? 'jpg' : 'png';
-      const filename = `.private/designs/${userId}/${timestamp}_${randomId}.${extension}`;
-      
-      // Save to Object Storage
-      const objectStorage = new ObjectStorageService();
-      const bucket = objectStorageClient.bucket(OBJECT_STORAGE_BUCKET);
-      const file = bucket.file(filename);
-      
-      await file.save(buffer, {
-        metadata: {
-          contentType: mimeType,
-          metadata: {
-            userId: userId,
-            type: type,
-            prompt: prompt,
-            createdAt: new Date().toISOString()
-          }
-        }
-      });
-      
-      // Generate thumbnail
-      const thumbnailFilename = `.private/thumbnails/${userId}/${timestamp}_${randomId}_thumb.${extension}`;
-      const thumbnailFile = bucket.file(thumbnailFilename);
-      
-      // For now, use the same image as thumbnail (could resize with sharp later)
-      await thumbnailFile.save(buffer, {
-        metadata: {
-          contentType: mimeType,
-          metadata: {
-            userId: userId,
-            type: 'thumbnail',
-            originalFile: filename
-          }
-        }
-      });
-      
-      // Return the permanent URLs
-      const imageUrl = `/api/images/${encodeURIComponent(filename)}`;
-      const thumbnailUrl = `/api/images/${encodeURIComponent(thumbnailFilename)}`;
-      
-      console.log('Image saved to Object Storage:', { filename, imageUrl });
-      
-      res.json({
-        success: true,
-        imageUrl,
-        thumbnailUrl,
-        filename
-      });
-    } catch (error) {
-      console.error('Error saving generated image:', error);
-      res.status(500).json({ 
-        error: 'Failed to save generated image',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  // ChatImageEditor endpoints (replacing Replicate)
-  app.post("/api/chat-editor/chat", async (req, res) => {
-    try {
-      const { messages } = req.body;
-      
-      if (!messages || messages.length === 0) {
-        return res.status(400).json({ 
-          error: "Messages array is required and cannot be empty" 
-        });
-      }
-
-      const latestMessage = messages[messages.length - 1];
-      if (!latestMessage.content) {
-        return res.status(400).json({ 
-          error: "Message content is required" 
-        });
-      }
-
-      // Use the getChatResponseGemini function which already handles image editing context
-      const response = await getChatResponseGemini(messages);
-      
-      res.json({ text: response });
-    } catch (error) {
-      console.error("Chat editor error:", error);
-      res.status(500).json({ 
-        error: "Failed to process chat request",
-        message: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  // Chat endpoint - EXACT copy from ChatImageEditor repository
-  app.post("/api/chat", async (req, res) => {
-    try {
-      const { messages } = req.body;
-      
-      if (!messages || messages.length === 0) {
-        return res.status(400).json({ 
-          error: "Messages array is required and cannot be empty" 
-        });
-      }
-
-      const latestMessage = messages[messages.length - 1];
-      if (!latestMessage.content) {
-        return res.status(400).json({ 
-          error: "Message content is required" 
-        });
-      }
-
-      const response = await chatWithGemini(latestMessage.content);
-      
-      res.json({ text: response });
-    } catch (error) {
-      console.error("Chat error:", error);
-      res.status(500).json({ 
-        error: "Failed to process chat request",
-        message: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  // Image editing endpoint - EXACT copy from ChatImageEditor repository
-  app.post("/api/edit-image", async (req, res) => {
-    try {
-      const { prompt, imageBase64, mimeType, fileUri } = req.body;
-      
-      if (!prompt) {
-        return res.status(400).json({ 
-          error: "Prompt is required" 
-        });
-      }
-
-      // Validate that either imageBase64 or fileUri is provided
-      if (!imageBase64 && !fileUri) {
-        return res.status(400).json({ 
-          error: "Either imageBase64 or fileUri must be provided" 
-        });
-      }
-
-      // Validate imageBase64 format if provided
-      if (imageBase64) {
-        if (!mimeType) {
-          return res.status(400).json({ 
-            error: "mimeType is required when using imageBase64" 
-          });
-        }
-
-        // Basic base64 validation
-        try {
-          const buffer = Buffer.from(imageBase64, 'base64');
-          if (buffer.length > 25 * 1024 * 1024) { // 25MB limit
-            return res.status(400).json({ 
-              error: "Image size exceeds 25MB limit" 
-            });
-          }
-        } catch {
-          return res.status(400).json({ 
-            error: "Invalid base64 image data" 
-          });
-        }
-      }
-
-      const response = await editImageWithGemini(prompt, imageBase64, mimeType, fileUri);
-      
-      res.json(response);
-    } catch (error) {
-      console.error("Image edit error:", error);
-      res.status(500).json({ 
-        error: "Failed to process image edit request",
-        message: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
   // Replicate FLUX Kontext endpoint - Exact implementation from your original
   app.post("/api/generate", isAuthenticated, async (req: any, res) => {
     let creditsDeducted = false;
@@ -1194,12 +823,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // Para Kontext, siempre enviar aspect ratio cuando hay imagen
-        if (model !== "qwen") {
-          // Mapear "Match Input" del frontend a "match_input_image" para Replicate
-          const mappedAspectRatio = aspectRatio === "Match Input" ? "match_input_image" : aspectRatio;
-          input.aspect_ratio = mappedAspectRatio || "match_input_image";
-          console.log("Aspect ratio set to:", input.aspect_ratio);
+        // Solo para Kontext, manejar aspect ratio
+        if (model !== "qwen" && aspectRatio && aspectRatio !== "match_input_image") {
+          input.aspect_ratio = aspectRatio;
         }
       } else {
         // Qwen requiere una imagen, no puede generar desde texto puro
@@ -1208,11 +834,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             error: "Qwen Image Edit requires a reference image. Please upload an image first." 
           });
         }
-        // Para generación desde texto con Kontext, usar aspect ratio en lugar de dimensiones
-        // Kontext no acepta width/height, solo aspect_ratio
-        const mappedAspectRatio = aspectRatio === "Match Input" ? "1:1" : aspectRatio;
-        input.aspect_ratio = mappedAspectRatio || "1:1";
-        console.log("Aspect ratio for text-only generation:", input.aspect_ratio);
+        // Para generación desde texto con Kontext, usar dimensiones específicas
+        input.width = width;
+        input.height = height;
       }
 
       // Seleccionar el modelo basado en el parámetro
@@ -1276,7 +900,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Replicate output received:", output);
       
       // Manejar diferentes formatos de output según el modelo
-      let imageUrl: string = "";
+      let imageUrl: string;
+      let optimizedImageBase64: string = "";
+      let thumbnailBase64: string = "";
       
       // Qwen devuelve un array de objetos File con método .url()
       if (model === "qwen" && Array.isArray(output) && output.length > 0) {
@@ -1284,80 +910,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const file = output[0];
         if (file && typeof file.url === 'function') {
           const urlObject = file.url();
-          // Convert URL object to string - THIS IS THE REAL REPLICATE URL
+          // Convert URL object to string
           imageUrl = urlObject.href || urlObject.toString();
-          console.log("✅ Qwen output - Real Replicate URL:", imageUrl);
+          console.log("Qwen output URL object:", urlObject);
+          console.log("Qwen final URL string:", imageUrl);
         } else if (typeof file === 'string') {
-          // Fallback si ya es string - THIS IS THE REAL REPLICATE URL
+          // Fallback si ya es string
           imageUrl = file;
-          console.log("✅ Qwen output - Real Replicate URL (direct string):", imageUrl);
+          console.log("Qwen output URL (direct string):", imageUrl);
         } else {
           console.error("Unexpected Qwen output format:", file);
           throw new Error("Unexpected Qwen output format");
         }
       } else if (typeof output === 'string') {
-        // FLUX Kontext returns URL directly - USE THE REAL REPLICATE URL
         imageUrl = output;
-        console.log("✅ FLUX Kontext - Real Replicate URL:", imageUrl);
       } else if (Array.isArray(output) && output.length > 0) {
-        // Array with URLs - USE THE REAL REPLICATE URL
         imageUrl = output[0];
-        console.log("✅ FLUX Kontext (array) - Real Replicate URL:", imageUrl);
       } else if (output && typeof (output as any)[Symbol.asyncIterator] === 'function') {
-        // AsyncIterator returns URLs, not streams - handle properly
-        console.log("Processing async iterable from Replicate...");
+        // Es un stream iterable - Exacto como en tu repositorio
+        console.log("Processing async iterable stream from Replicate...");
         
-        let finalUrl = null;
+        const chunks: Buffer[] = [];
         try {
-          for await (const item of output as any) {
-            // The iterator returns URLs, not binary data
-            if (typeof item === 'string') {
-              finalUrl = item;
-              console.log("✅ AsyncIterator returned URL:", finalUrl);
-              break;
-            }
+          for await (const chunk of output as any) {
+            chunks.push(Buffer.from(chunk));
           }
           
-          if (finalUrl) {
-            imageUrl = finalUrl;
-          } else {
-            throw new Error("No URL received from async iterator");
-          }
+          const imageBuffer = Buffer.concat(chunks);
+          console.log("Original image buffer size:", imageBuffer.length);
+          
+          // Guardar imagen exactamente como la genera Replicate - SIN COMPRESIÓN
+          optimizedImageBase64 = imageBuffer.toString('base64');
+          thumbnailBase64 = optimizedImageBase64;
+          imageUrl = `data:image/png;base64,${optimizedImageBase64}`;
+          
+          console.log("Image saved without any compression or processing");
           
         } catch (streamError) {
-          console.error("Error reading async iterator:", streamError);
-          throw new Error("Failed to read image URL from async iterator");
+          console.error("Error reading async stream:", streamError);
+          throw new Error("Failed to read image stream");
         }
       } else if (output && 'getReader' in output) {
-        // ReadableStream - This is less common, might be binary data
+        // Es un ReadableStream estándar - Exacto de tu repositorio
         console.log("Processing ReadableStream from Replicate...");
         
-        // Try to read as text first (might be URL)
-        const chunks: string[] = [];
+        const chunks: Buffer[] = [];
         const reader = (output as any).getReader();
         
         try {
-          const { done, value } = await reader.read();
-          if (!done && value) {
-            // Check if it's text (URL) or binary
-            const text = new TextDecoder().decode(value);
-            if (text.startsWith('http')) {
-              imageUrl = text.trim();
-              console.log("✅ ReadableStream returned URL:", imageUrl);
-            } else {
-              // If it's binary data, we should NOT process it
-              // Let Object Storage handle the original Replicate URL
-              throw new Error("Unexpected binary stream from Replicate - expected URL");
-            }
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(Buffer.from(value));
           }
+          
+          const imageBuffer = Buffer.concat(chunks);
+          console.log("Image buffer size:", imageBuffer.length);
+          
+          // Convertir a base64 data URL
+          const base64 = imageBuffer.toString('base64');
+          imageUrl = `data:image/png;base64,${base64}`;
+          console.log("Created data URL, length:", imageUrl.length);
         } catch (streamError) {
           console.error("Error reading stream:", streamError);
-          throw new Error("Failed to read image URL from stream");
+          throw new Error("Failed to read image stream");
         } finally {
           reader.releaseLock();
         }
       } else {
-        console.error("Unexpected output format from Replicate:", output);
+        console.error("Unexpected output format from FLUX Kontext Max:", output);
         return res.status(500).json({ 
           error: "No image URL was generated - unexpected output format" 
         });
@@ -1370,7 +991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Devolver la URL de la imagen generada - USAR TAL CUAL
+      // Devolver la URL de la imagen generada - Igual que tu repositorio
       // Credits already deducted before generation
       
       // Crear abreviatura del modelo
@@ -1379,70 +1000,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
                        model === 'max' ? 'M' : 
                        (model as string).charAt(0).toUpperCase();
       
-      // GUARDAR PERMANENTEMENTE - Las URLs de Replicate expiran en 1 hora
-      console.log('=== GUARDANDO IMAGEN PERMANENTEMENTE ===');
-      console.log('URL temporal de Replicate:', imageUrl);
+      // Subir imagen a Object Storage en lugar de guardar base64
+      const objectStorage = new ObjectStorageService();
+      let finalImageUrl = imageUrl;
+      let thumbnailUrl = null;
       
-      let permanentImageUrl = imageUrl; // Por defecto usar la temporal
-      
-      // Solo intentar guardar si es una URL de Replicate
-      if (imageUrl.includes('replicate.delivery')) {
-        try {
-          // 1. Descargar la imagen de Replicate
-          console.log('Descargando imagen de:', imageUrl);
-          const imageResponse = await fetch(imageUrl);
-          
-          if (!imageResponse.ok) {
-            throw new Error(`HTTP ${imageResponse.status} al descargar imagen`);
-          }
-          
-          const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-          console.log(`Imagen descargada: ${imageBuffer.length} bytes`);
-          
-          // 2. Generar nombre único
-          const timestamp = Date.now();
-          const randomStr = Math.random().toString(36).substring(2, 9);
-          const fileName = `designs/${timestamp}_${randomStr}.png`;
-          
-          // 3. Guardar en Object Storage
-          console.log('Guardando en Object Storage:', fileName);
-          const bucketName = 'replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b';
-          const bucket = objectStorageClient.bucket(bucketName);
-          const file = bucket.file(`.private/${fileName}`);
-          
-          await file.save(imageBuffer, {
-            metadata: {
-              contentType: 'image/png',
-              cacheControl: 'public, max-age=31536000',
-              originalUrl: imageUrl
-            }
-          });
-          
-          // 4. Usar URL permanente
-          permanentImageUrl = `/objects/${fileName}`;
-          console.log('✅ IMAGEN GUARDADA PERMANENTEMENTE:', permanentImageUrl);
-          
-        } catch (saveError: any) {
-          console.error('⚠️ Error guardando permanentemente:', saveError.message);
-          console.error('Detalles del error:', saveError);
-          // Si falla, seguir usando la URL temporal de Replicate
-          console.log('Usando URL temporal que expirará en 1 hora');
+      try {
+        console.log('=== PROCESANDO IMAGEN PARA OBJECT STORAGE ===');
+        console.log('Tipo de imagen:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
+        
+        // Subir la imagen a Object Storage
+        if (imageUrl.startsWith('data:')) {
+          // Si es base64, subir directamente
+          const uploadResult = await objectStorage.uploadImageFromBase64(
+            imageUrl,
+            'designs',
+            userId
+          );
+          finalImageUrl = uploadResult.imageUrl;
+          thumbnailUrl = uploadResult.thumbnailUrl;
+        } else {
+          // Si es URL externa, descargar y subir
+          const uploadResult = await objectStorage.uploadImageFromUrl(
+            imageUrl,
+            'designs',
+            userId
+          );
+          finalImageUrl = uploadResult.imageUrl;
+          thumbnailUrl = uploadResult.thumbnailUrl;
         }
+        
+        console.log('=== IMAGEN OPTIMIZADA ===');
+        console.log('URL final:', finalImageUrl);
+        console.log('URL miniatura:', thumbnailUrl);
+      } catch (uploadError) {
+        console.error('Error subiendo a Object Storage, usando URL original:', uploadError);
+        // Si falla, mantener la URL original
       }
       
-      // Save to gallery con URL permanente
+      // Save to gallery con URLs optimizadas
       const savedItem = await storage.addToGallery({
         userId,
-        imageUrl: permanentImageUrl,  // USAR URL PERMANENTE
-        thumbnailUrl: permanentImageUrl, // MISMA URL PARA THUMBNAIL
+        imageUrl: finalImageUrl,
+        thumbnailUrl: thumbnailUrl,
         type: 'design',
         title: `${prompt.slice(0, 45)} (${modelAbbr})`,
         description: prompt,
         prompt: prompt,
         metadata: {
           model: modelName,
-          inputImageUrl: inputImageUrl,
-          originalReplicateUrl: imageUrl // Guardar URL original por si acaso
+          inputImageUrl: inputImageUrl
         }
       });
       
@@ -1450,14 +1057,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('ID:', savedItem.id);
       console.log('Título:', savedItem.title);
       
-      // Devolver la URL correcta (permanente si se guardó, temporal si falló)
-      console.log('=== DEVOLVIENDO AL FRONTEND ===');
-      console.log('URL final:', permanentImageUrl);
-      console.log('Es permanente:', permanentImageUrl.startsWith('/objects/'));
-      
       res.json({
-        imageUrl: permanentImageUrl,  // URL permanente o temporal
-        thumbnailUrl: permanentImageUrl,  // Misma URL
+        imageUrl: finalImageUrl, // Devolver URL optimizada en lugar de base64
+        thumbnailUrl: thumbnailUrl,
         prompt,
         model: modelName,
         success: true
@@ -1480,53 +1082,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Gallery API Routes
   
-  // Get user gallery - ULTRA RESILIENT PUBLIC ACCESS
-  app.get("/api/gallery", async (req: any, res) => {
-    // TOP-LEVEL TRY-CATCH: GARANTIZAR que NUNCA devolvamos 500
+  // Get user gallery
+  app.get("/api/gallery", isAuthenticated, async (req: any, res) => {
     try {
-      // GARANTIZAR que SIEMPRE devolvamos 200 con array válido
-      // No importa qué error ocurra, nunca devolver 500
-      
-      const type = req.query.type as string;
-      let galleryItems: any[] = [];
-      
-      // Primer intento: consulta directa a DB
-      try {
-        const items = await db.select()
-          .from(userGallery)
-          .where(type ? eq(userGallery.type, type) : undefined)
-          .orderBy(desc(userGallery.createdAt))
-          .limit(50);
-        
-        galleryItems = items;
-        console.log(`[GALLERY] DB query returned ${galleryItems.length} items of type: ${type}`);
-      } catch (dbError: any) {
-        console.error("[GALLERY] DB error:", dbError?.message || dbError);
-        
-        // Segundo intento: usar storage si está disponible
-        try {
-          const userId = ''; // Cadena vacía en lugar de undefined
-          const items = await storage.getUserGallery(userId, type, 50, 0);
-          galleryItems = items;
-          console.log(`[GALLERY] Storage fallback returned ${galleryItems.length} items`);
-        } catch (storageError: any) {
-          console.error("[GALLERY] Storage fallback error:", storageError?.message || storageError);
-          galleryItems = [];
-        }
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
-      // GARANTÍA FINAL: Siempre devolver un array válido con status 200
-      if (!Array.isArray(galleryItems)) {
-        console.error("[GALLERY] Items is not an array, returning empty array");
-        galleryItems = [];
-      }
+      const { type, limit, page } = req.query;
+      // Paginación: 50 items por página por defecto, máximo 100
+      const requestedLimit = limit ? Math.min(parseInt(limit as string), 100) : 50;
+      const requestedPage = page ? Math.max(parseInt(page as string), 1) : 1;
+      const offset = (requestedPage - 1) * requestedLimit;
       
-      // Enviar respuesta con status 200 garantizado
-      res.status(200).json(galleryItems);
-    } catch (criticalError: any) {
-      // FALLBACK ABSOLUTO: Si TODO falla, aún así devolver 200 con array vacío
-      console.error("[GALLERY] CRITICAL ERROR - Returning empty array:", criticalError?.message || criticalError);
-      res.status(200).json([]);
+      // Iniciar timer para medir performance
+      const startTime = Date.now();
+      
+      const galleryItems = await storage.getUserGallery(
+        userId, 
+        type as string | undefined,
+        requestedLimit,
+        offset
+      );
+      
+      // Obtener el total de items para calcular páginas
+      const totalItems = await storage.getGalleryItemCount(userId, type as string | undefined);
+      
+      const queryTime = Date.now() - startTime;
+      console.log(`Gallery query took ${queryTime}ms for ${galleryItems.length} items`);
+      
+      // Cache y metadata de paginación
+      const totalCount = totalItems || 0;
+      res.set({
+        'Cache-Control': 'no-store',
+        'X-Total-Count': totalCount.toString(),
+        'X-Page': requestedPage.toString(),
+        'X-Page-Size': requestedLimit.toString(),
+        'X-Total-Pages': Math.ceil(totalCount / requestedLimit).toString(),
+        'X-Query-Time': queryTime.toString()
+      });
+      
+      res.json(galleryItems);
+    } catch (error) {
+      console.error("Error fetching gallery:", error);
+      res.status(500).json({ error: "Failed to fetch gallery" });
     }
   });
   
@@ -1538,7 +1138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User not authenticated" });
       }
       
-      const { imageUrl, type, title, description, prompt, style, metadata, variants } = req.body;
+      const { imageUrl, type, title, description, prompt, style, metadata } = req.body;
       
       if (!imageUrl || !type) {
         return res.status(400).json({ error: "ImageUrl and type are required" });
@@ -1552,8 +1152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description,
         prompt,
         style,
-        metadata,
-        variants
+        metadata
       });
       
       res.json(galleryItem);
@@ -1633,103 +1232,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ADMIN ROUTES COMPLETELY REMOVED FOR SECURITY
   // Any admin functionality requires proper role-based access control implementation
-  
-  // NOTE: Duplicate flux endpoints have been removed and consolidated above
 
-  // Create new flux project (duplicate - keeping for reference only)
-  // This endpoint is duplicated above in the Flux Kontext Routes section
-  app.post("/api/flux/create-duplicate", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
-      
-      const { name, imageUrl, prompt, settings } = req.body;
-      
-      // Create project in database
-      const project = await storage.createFluxProject({
-        userId,
-        name,
-        imageUrl,
-        prompt,
-        settings
-      });
-      
-      res.json(project);
-    } catch (error) {
-      console.error("Error creating flux project:", error);
-      res.status(500).json({ error: "Failed to create flux project" });
-    }
-  });
-
-  // PROXY DE REPLICATE ELIMINADO - Las URLs de Replicate deben usarse directamente sin proxy
-  // Las imágenes de Replicate son públicas y no necesitan proxy para evitar CORS
-
-  // Endpoint PÚBLICO para servir imágenes de galería (sin autenticación)
-  app.get('/api/public/images/:filename(*)', async (req, res) => {
-    try {
-      const filename = decodeURIComponent(req.params.filename);
-      console.log('Sirviendo imagen pública:', filename);
-      
-      // Solo servir imágenes del directorio público
-      if (!filename.startsWith('public/')) {
-        return res.status(404).json({ message: "Imagen no encontrada" });
-      }
-      
-      const bucket = objectStorageClient.bucket(OBJECT_STORAGE_BUCKET);
-      const file = bucket.file(filename);
-      
-      // Verificar que el archivo existe
-      const [exists] = await file.exists();
-      if (!exists) {
-        return res.status(404).json({ message: "Imagen no encontrada" });
-      }
-      
-      // Obtener metadata
-      const [metadata] = await file.getMetadata();
-      
-      // Configurar headers para CDN y caching
-      res.set({
-        'Content-Type': metadata.contentType || 'image/png',
-        'Cache-Control': 'public, max-age=31536000, immutable', // Cache agresivo
-        'Content-Length': metadata.size,
-        'Access-Control-Allow-Origin': '*', // CORS abierto para imágenes públicas
-      });
-      
-      // Stream la imagen
-      const stream = file.createReadStream();
-      stream.pipe(res);
-    } catch (error) {
-      console.error('Error sirviendo imagen pública:', error);
-      res.status(500).json({ message: "Error al cargar imagen" });
-    }
-  });
-
-  // Endpoint PRIVADO para servir imágenes privadas con autenticación
+  // Endpoint seguro para servir imágenes privadas con autenticación
   app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
-    // CORS mejorado para subdominios
-    const origin = req.headers.origin;
-    if (origin) {
-      // Permitir todos los orígenes del mismo dominio base
-      const allowedDomains = process.env.ALLOWED_DOMAINS?.split(',') || [];
-      const originHost = new URL(origin).hostname;
-      const baseDomain = originHost.split('.').slice(-2).join('.');
-      
-      // Permitir subdominios del mismo dominio o dominios configurados
-      if (allowedDomains.some(d => originHost.endsWith(d)) || 
-          originHost === 'localhost' || 
-          baseDomain === 'aiink.com' ||
-          baseDomain === 'replit.app' ||
-          baseDomain === 'replit.dev') {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-      }
-    }
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie, Authorization');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Vary', 'Origin');
-    
     try {
       const filename = decodeURIComponent(req.params.filename);
       console.log('Sirviendo imagen privada:', filename);
@@ -1746,8 +1251,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // SEGURIDAD: Verificar que la imagen pertenece al usuario autenticado
-      // Las rutas son: .private/designs/{userId}/... o .private/uploads/{userId}/... o .private/thumbnails/{userId}/... o .private/stencils/{userId}/...
-      const userPattern = new RegExp(`\\.private/(designs|uploads|thumbnails|stencils)/${userId}/`);
+      // Las rutas son: .private/designs/{userId}/... o .private/uploads/{userId}/... o .private/thumbnails/{userId}/...
+      const userPattern = new RegExp(`\\.private/(designs|uploads|thumbnails)/${userId}/`);
       if (!userPattern.test(filename)) {
         console.warn(`Usuario ${userId} intentó acceder a imagen no autorizada: ${filename}`);
         return res.status(403).json({ message: "No autorizado para ver esta imagen" });
@@ -1763,56 +1268,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Imagen no encontrada" });
       }
       
-      // Obtener metadata
-      const [metadata] = await file.getMetadata();
-
-      // Detectar Content-Type correcto basado en extensión o metadata
-      let contentType = metadata.contentType || 'image/png';
-
-      // Detectar por extensión si metadata no está disponible
-      if (!metadata.contentType) {
-        if (filename.includes('.webp')) contentType = 'image/webp';
-        else if (filename.includes('.avif')) contentType = 'image/avif';
-        else if (filename.includes('.jpg') || filename.includes('.jpeg')) contentType = 'image/jpeg';
-        else if (filename.includes('.gif')) contentType = 'image/gif';
-        else if (filename.includes('.svg')) contentType = 'image/svg+xml';
-      }
-
-      // Headers optimizados para rendimiento
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'private, max-age=86400, stale-while-revalidate=604800'); // Cache 1 día, revalidar 7 días
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-
-      // ETag y soporte If-None-Match
-      const etag = metadata.etag || metadata.md5Hash;
-      if (etag) {
-        res.setHeader('ETag', etag);
-        if (req.headers['if-none-match'] === etag) {
-          return res.status(304).end();
-        }
-      }
-
-      // Stream optimizado con manejo de errores mejorado
-      const readStream = file.createReadStream();
-      if (metadata.size) {
-        res.setHeader('Content-Length', metadata.size);
-      }
+      // Obtener el archivo y enviarlo
+      const [buffer] = await file.download();
       
-      // Manejo mejorado de errores y limpieza
-      readStream.on('error', (error) => {
-        console.error('Error en stream de imagen:', error);
-        if (!res.headersSent) {
-          res.status(500).json({ message: 'Error al transmitir imagen' });
-        }
-        readStream.destroy();
-      });
+      // Headers correctos para mostrar imágenes con credenciales
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Length', buffer.length.toString());
+      res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
       
-      // Limpiar recursos al cerrar conexión
-      res.on('close', () => {
-        readStream.destroy();
-      });
-      
-      readStream.pipe(res);
+      res.end(buffer);
     } catch (error) {
       console.error('Error sirviendo imagen privada:', error);
       res.status(404).json({ message: "Imagen no encontrada" });
@@ -1936,7 +1403,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.upsertUser({
               ...user,
               stripeSubscriptionId: subscription.id,
-              subscriptionTier: tier
+              subscriptionTier: tier,
+              subscriptionStatus: subscription.status
             });
             console.log(`✅ Updated subscription for user ${user.id}: ${tier} (${subscription.status})`);
           }
@@ -1957,7 +1425,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.upsertUser({
               ...user,
               stripeSubscriptionId: null,
-              subscriptionTier: 'free'
+              subscriptionTier: 'free',
+              subscriptionStatus: null
             });
             console.log(`✅ Removed subscription for user ${user.id}`);
           }
@@ -2150,8 +1619,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             expand: ['payment_intent']
           });
           
-          if ((invoice as any).payment_intent && typeof (invoice as any).payment_intent === 'object') {
-            clientSecret = ((invoice as any).payment_intent as any).client_secret;
+          if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
+            clientSecret = (invoice.payment_intent as any).client_secret;
           }
         } catch (error) {
           console.error('Error retrieving invoice for clientSecret:', error);
@@ -2208,87 +1677,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error getting subscription status:", error);
       res.status(500).json({ error: "Error retrieving subscription status" });
     }
-  });
-
-  // Endpoint para servir imágenes desde Object Storage - compatible con URLs antiguas
-  // NOTA: Este endpoint es público para permitir que las imágenes se muestren sin autenticación
-  app.get(["/objects/:filePath(*)", "/api/images/:filePath(*)"], async (req, res) => {
-    let filePath = req.params.filePath;
-    
-    try {
-      // Decodificar URL-encoded paths (por ejemplo: .private%2Fstencils%2F...)
-      filePath = decodeURIComponent(filePath);
-      
-      // Si viene de la ruta /api/images/, buscar en diferentes ubicaciones
-      const bucketName = OBJECT_STORAGE_BUCKET;
-      const bucket = objectStorageClient.bucket(bucketName);
-      
-      // Intentar encontrar el archivo en diferentes rutas
-      let file;
-      let exists = false;
-      
-      // Si la ruta comienza con designs/, buscar en .private/designs/
-      if (filePath.startsWith('designs/')) {
-        file = bucket.file(`.private/${filePath}`);
-        [exists] = await file.exists();
-      }
-      // Si la ruta comienza con .private/, buscar ahí directamente
-      else if (filePath.startsWith('.private/')) {
-        file = bucket.file(filePath);
-        [exists] = await file.exists();
-      }
-      
-      // Si no existe o no es una ruta .private/, buscar en public/
-      if (!exists) {
-        // Extraer solo el nombre del archivo de la ruta
-        const fileName = filePath.split('/').pop();
-        if (fileName) {
-          // Buscar en public/ con diferentes patrones
-          const possiblePaths = [
-            `public/${filePath}`,
-            `public/${fileName}`,
-            `.private/${filePath}`, // Agregar búsqueda en .private
-            filePath // Ruta directa
-          ];
-          
-          for (const path of possiblePaths) {
-            file = bucket.file(path);
-            [exists] = await file.exists();
-            if (exists) break;
-          }
-        }
-      }
-      
-      if (!exists || !file) {
-        console.log(`Image not found: ${filePath}`);
-        return res.status(404).json({ error: "File not found" });
-      }
-      
-      // Obtener metadata del archivo
-      const [metadata] = await file.getMetadata();
-      
-      // Configurar headers de respuesta
-      res.set({
-        'Content-Type': metadata.contentType || 'application/octet-stream',
-        'Content-Length': metadata.size,
-        'Cache-Control': 'public, max-age=3600'
-      });
-      
-      // Stream del archivo a la respuesta
-      const stream = file.createReadStream();
-      stream.pipe(res);
-    } catch (error) {
-      console.error("Error serving object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  app.use((err: any, req: any, res: any, _next: any) => {
-    console.error(err);
-    if (req.path === '/api/flux/projects' || req.path === '/api/gallery') {
-      return res.status(200).json([]);
-    }
-    return res.status(500).json({ error: 'Internal server error' });
   });
 
   const httpServer = createServer(app);

@@ -1,9 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-
-export interface ImageVariants {
-  webp?: Record<number, string>;
-  avif?: Record<number, string>;
-}
+import { useState, useEffect } from 'react';
 
 interface AuthenticatedImageProps {
   src: string;
@@ -11,279 +6,98 @@ interface AuthenticatedImageProps {
   className?: string;
   onLoad?: () => void;
   onError?: () => void;
-  loading?: 'lazy' | 'eager';
-  variants?: ImageVariants;
 }
 
-export function AuthenticatedImage({
-  src,
-  alt,
-  className,
-  onLoad,
-  onError,
-  loading = 'lazy',
-  variants,
-}: AuthenticatedImageProps) {
-  const imgRef = useRef<HTMLImageElement | null>(null);
-
-  // CRITICAL: Preserve Replicate URLs exactly as they come
-  // Never transform replicate.delivery URLs
-  const preservedSrc = src.includes('replicate.delivery') ? src : src;
-  
+export function AuthenticatedImage({ src, alt, className, onLoad, onError }: AuthenticatedImageProps) {
+  const [imageSrc, setImageSrc] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [isTimeout, setIsTimeout] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [currentSrc, setCurrentSrc] = useState(() => preservedSrc);
-  const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const retryTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const MAX_RETRIES = 3;
-  const TIMEOUT_MS = 30000; // Aumentado a 30 segundos
 
-  // Reset loading and error states when the source changes
   useEffect(() => {
-    // NEVER transform Replicate URLs - use them exactly as provided
-    const finalSrc = src.includes('replicate.delivery') ? src : src;
-    
-    setIsLoading(true);
-    setHasError(false);
-    setIsTimeout(false);
-    setRetryCount(0);
-    setCurrentSrc(finalSrc);
+    let mounted = true;
 
-    if (timeoutId.current) clearTimeout(timeoutId.current);
-    timeoutId.current = setTimeout(() => {
-      console.warn(`Image timeout after ${TIMEOUT_MS}ms:`, src);
-      setIsTimeout(true);
-      handleError();
-    }, TIMEOUT_MS);
-    
-    return () => {
-      if (timeoutId.current) clearTimeout(timeoutId.current);
-      if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
-    };
-  }, [src]);
-
-  // Ensure Replicate URLs remain untouched after render
-  useEffect(() => {
-    if (!src.includes('replicate.delivery')) return;
-
-    const current = imgRef.current?.src;
-    if (current && current !== src) {
-      console.error('Replicate URL mismatch detected:', {
-        expected: src,
-        actual: current,
-      });
-      if (imgRef.current) {
-        imgRef.current.src = src;
-      }
-    }
-  }, [src]);
-
-
-
-  const handleLoad = () => {
-    if (timeoutId.current) clearTimeout(timeoutId.current);
-    if (retryTimeoutId.current) clearTimeout(retryTimeoutId.current);
-    setIsLoading(false);
-    setHasError(false);
-    console.log('Imagen cargada exitosamente:', src);
-    onLoad?.();
-  };
-
-  const handleError = () => {
-    if (timeoutId.current) clearTimeout(timeoutId.current);
-    console.error(`Error loading image (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, src);
-
-    if (!isReplicateURL && retryCount < MAX_RETRIES && !isTimeout) {
-      const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-      console.log(`Retrying in ${delay}ms...`);
-
-      retryTimeoutId.current = setTimeout(() => {
-        setRetryCount(prev => prev + 1);
-        const separator = src.includes('?') ? '&' : '?';
-        setCurrentSrc(`${src}${separator}_retry=${Date.now()}`);
+    const loadImage = async () => {
+      try {
         setIsLoading(true);
         setHasError(false);
-      }, delay);
-    } else {
-      setIsLoading(false);
-      setHasError(true);
-      onError?.();
-    }
-  };
-
-  // CRITICAL FIX: Force Replicate URLs to be used AS-IS without any transformation
-  // This prevents the production bundle from rewriting them
-  const processedSrc = (() => {
-    if (currentSrc.includes('replicate.delivery')) {
-      // Force bypass any proxy rewriting by using the exact URL
-      return currentSrc;
-    }
-    return currentSrc;
-  })();
-  
-  // Detect public vs private images
-  const isPublicCDN = processedSrc.startsWith('https://storage.googleapis.com/');
-  const isReplicateURL = processedSrc.includes('replicate.delivery');
-  const isObjectStorageURL = processedSrc.startsWith('/objects/');
-  const isExternalURL = processedSrc.startsWith('http://') || processedSrc.startsWith('https://');
-  
-  // IMPORTANTE: needsCredentials determina si incluir cookies en solicitudes de imagen
-  // Se usa en crossOrigin={needsCredentials ? 'use-credentials' : undefined}
-  const needsCredentials = (() => {
-    // URLs de Replicate son públicas y no necesitan credenciales
-    if (isReplicateURL) {
-      return false;
-    }
-    
-    // URLs de Object Storage son nuestras propias imágenes, no necesitan credenciales especiales
-    if (isObjectStorageURL) {
-      return false;
-    }
-    
-    // Las imágenes de Google Cloud Storage con /.private/ necesitan credenciales
-    if (isPublicCDN && src.includes('/.private/')) {
-      return true;
-    }
-    
-    // Otras imágenes de Google Cloud Storage son públicas
-    if (isPublicCDN) {
-      return false;
-    }
-    
-    try {
-      const url = new URL(src, window.location.origin);
-      
-      // URLs externas (diferentes dominios) generalmente no necesitan credenciales
-      if (isExternalURL && url.hostname !== window.location.hostname) {
-        // Excepto si son subdominios del mismo dominio base
-        const currentDomain = window.location.hostname.split('.').slice(-2).join('.');
-        const imageDomain = url.hostname.split('.').slice(-2).join('.');
         
-        if (currentDomain !== imageDomain) {
-          return false; // URL externa completamente diferente
+        // Check if this is an internal API route that requires authentication
+        const isInternalAPI = src.startsWith('/api/images/');
+        
+        if (isInternalAPI) {
+          // Fetch the image with credentials for internal API routes
+          const response = await fetch(src, {
+            credentials: 'include',
+            mode: 'cors',
+            cache: 'default'
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          
+          if (mounted) {
+            setImageSrc(objectUrl);
+            setIsLoading(false);
+            onLoad?.();
+          }
+        } else {
+          // For external URLs, use direct image loading
+          if (mounted) {
+            setImageSrc(src);
+            setIsLoading(false);
+            onLoad?.();
+          }
+        }
+      } catch (error) {
+        console.error('Error loading authenticated image:', src, error);
+        if (mounted) {
+          setHasError(true);
+          setIsLoading(false);
+          onError?.();
         }
       }
-      
-      // Imágenes públicas no necesitan credenciales
-      if (url.pathname.startsWith('/api/public/')) {
-        return false;
-      }
-      
-      // Siempre incluir credenciales para rutas API privadas
-      if (url.pathname.startsWith('/api/')) {
-        return true;
-      }
-      
-      // Para subdominios del mismo dominio base
-      const currentHost = window.location.hostname;
-      const imageHost = url.hostname;
-      
-      // Verificar si es el mismo dominio base (ej: *.aiink.com)
-      const currentDomain = currentHost.split('.').slice(-2).join('.');
-      const imageDomain = imageHost.split('.').slice(-2).join('.');
-      
-      if (currentDomain === imageDomain) {
-        return true;
-      }
-      
-      // Para desarrollo local
-      if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-        return true;
-      }
-      
-      return false;
-    } catch {
-      // Si no es una URL válida, asumir que es una ruta relativa
-      return true;
-    }
-  })();
-  
-  // Build srcSet from variants
-  const buildSrcSet = (sources?: Record<number, string>) => {
-    if (!sources) return undefined;
-    
-    if (retryCount > 0) {
-      const entries = Object.entries(sources).map(([w, url]) => {
-        if (url.includes('replicate.delivery')) {
-          return `${url} ${w}w`;
-        }
-        const separator = url.includes('?') ? '&' : '?';
-        return `${url}${separator}_retry=${Date.now()} ${w}w`;
-      });
-      return entries.join(', ');
+    };
+
+    if (src) {
+      loadImage();
     }
 
-    return Object.entries(sources)
-      .map(([w, url]) => `${url} ${w}w`)
-      .join(', ');
-  };
+    return () => {
+      mounted = false;
+      if (imageSrc && imageSrc.startsWith('blob:')) {
+        URL.revokeObjectURL(imageSrc);
+      }
+    };
+  }, [src, onLoad, onError]);
 
-  return (
-    <div className={`relative ${className || ''}`}>
-      {variants && (variants.avif || variants.webp) ? (
-        // Use picture element with optimized formats
-        <picture>
-          {variants.avif && (
-            <source 
-              type="image/avif" 
-              srcSet={buildSrcSet(variants.avif)}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
-          )}
-          {variants.webp && (
-            <source 
-              type="image/webp" 
-              srcSet={buildSrcSet(variants.webp)}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
-          )}
-          <img
-            ref={imgRef}
-            src={currentSrc}
-            alt={alt}
-            className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-            loading={loading}
-            onLoad={handleLoad}
-            onError={handleError}
-            crossOrigin={needsCredentials ? 'use-credentials' : undefined}
-          />
-        </picture>
-      ) : (
-        // Fallback to regular img element
-        <img
-          ref={imgRef}
-          src={currentSrc}
-          alt={alt}
-          className={`w-full h-full object-cover ${isLoading || hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-          loading={loading}
-          onLoad={handleLoad}
-          onError={handleError}
-          crossOrigin={needsCredentials ? 'use-credentials' : undefined}
-        />
-      )}
-      {(isLoading || hasError) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-          {isLoading ? (
-            <div className="flex flex-col items-center gap-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 dark:border-gray-100"></div>
-              <div className="text-xs text-gray-500">
-                {retryCount > 0 ? `Reintentando... (${retryCount}/${MAX_RETRIES})` : 'Cargando...'}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-1">
-              <div className="text-xs text-red-500">
-                {isTimeout ? 'Tiempo de espera agotado' : 'Error al cargar'}
-              </div>
-              {retryCount >= MAX_RETRIES && (
-                <div className="text-xs text-gray-500">Intentos agotados</div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  // Cleanup blob URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (imageSrc && imageSrc.startsWith('blob:')) {
+        URL.revokeObjectURL(imageSrc);
+      }
+    };
+  }, [imageSrc]);
+
+  if (isLoading) {
+    return (
+      <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
+        <div className="animate-pulse text-xs text-gray-500">Cargando...</div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className={`${className} bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
+        <div className="text-xs text-red-500">Error al cargar</div>
+      </div>
+    );
+  }
+
+  return <img src={imageSrc} alt={alt} className={className} />;
 }

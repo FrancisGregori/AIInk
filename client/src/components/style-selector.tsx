@@ -1,11 +1,5 @@
 import { useState } from "react";
-import { Image, Grid3X3, Pencil, Minus, ZoomIn, Info, X, BadgeCheck, Brush, Plus, Sparkles } from "lucide-react";
-
-// Import style thumbnails
-import stevenThumbnail from "@/assets/style-thumbnails/steven.png";
-import makiThumbnail from "@/assets/style-thumbnails/maki.png";
-import darwinThumbnail from "@/assets/style-thumbnails/darwin.png";
-import adrianThumbnail from "@/assets/style-thumbnails/adrian.png";
+import { Image, Grid3X3, Pencil, Minus, ZoomIn, Info, X, BadgeCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,42 +12,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { StencilStyle } from "@shared/schema";
 
 interface StyleSelectorProps {
   selectedStyle: string;
   onStyleChange: (style: string) => void;
   onOpenHelp?: (tab: string) => void;
-  styles?: StencilStyle[];
 }
 
-// Map style IDs to icons
-const styleIcons: Record<string, any> = {
-  steven: Image,
-  maki: Grid3X3,
-  makishi: Grid3X3,
-  darwin: Pencil,
-  adrian: Minus,
-  neutral: Brush, // Icon for Neutral style
-};
-
-// Map style IDs to thumbnails
-const styleThumbnails: Record<string, string> = {
-  steven: stevenThumbnail,
-  maki: makiThumbnail,
-  makishi: makiThumbnail,
-  darwin: darwinThumbnail,
-  adrian: adrianThumbnail,
-};
-
-// Default hardcoded styles (fallback if API doesn't return data)
-const defaultStyles = [
+const styles = [
   {
     id: "steven",
     name: "Stiven Hernandez",
     description: "Clean, classic detail",
     icon: Image,
-    thumbnail: stevenThumbnail,
+    thumbnail: null, // Will add thumbnails later
     verified: true,
   },
   {
@@ -61,7 +33,7 @@ const defaultStyles = [
     name: "Andres Makishi",
     description: "Minimalist fine-line",
     icon: Grid3X3,
-    thumbnail: makiThumbnail,
+    thumbnail: null,
     verified: true,
   },
   {
@@ -69,7 +41,7 @@ const defaultStyles = [
     name: "Darwin Enriquez",
     description: "Clean, detailed lines",
     icon: Pencil,
-    thumbnail: darwinThumbnail,
+    thumbnail: null,
     verified: true,
   },
   {
@@ -77,25 +49,13 @@ const defaultStyles = [
     name: "Adrian Rod",
     description: "Detailed & high-contrast",
     icon: Minus,
-    thumbnail: adrianThumbnail,
+    thumbnail: null,
     verified: true,
   },
 ];
 
-export default function StyleSelector({ selectedStyle, onStyleChange, onOpenHelp, styles: apiStyles }: StyleSelectorProps) {
+export default function StyleSelector({ selectedStyle, onStyleChange, onOpenHelp }: StyleSelectorProps) {
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
-  
-  // Use API styles if available, otherwise use defaults
-  const styles = apiStyles && apiStyles.length > 0 
-    ? apiStyles.map(style => ({
-        id: style.id,
-        name: style.name,
-        description: style.description || "Professional tattoo stencil",
-        icon: styleIcons[style.id] || Brush,
-        thumbnail: styleThumbnails[style.id] || style.previewImageUrl || null,
-        verified: style.isActive !== false,
-      }))
-    : defaultStyles;
 
   const handleThumbnailClick = (e: React.MouseEvent, src: string | null, name: string) => {
     e.stopPropagation();
@@ -189,7 +149,7 @@ export default function StyleSelector({ selectedStyle, onStyleChange, onOpenHelp
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <svg 
-                                  className="h-4 w-4 flex-shrink-0" 
+                                  className="h-3.5 w-3.5 animate-fadeIn" 
                                   viewBox="0 0 22 22"
                                   aria-label="Verified Pro Artist"
                                 >
@@ -215,37 +175,6 @@ export default function StyleSelector({ selectedStyle, onStyleChange, onOpenHelp
               </div>
             );
           })}
-          
-          {/* Add Custom Style Promotional Card */}
-          <div className="relative">
-            <button
-              onClick={() => onOpenHelp?.("premium")}
-              className="block w-full p-2 bg-zinc-800/50 rounded-lg border-2 border-dashed border-zinc-600 hover:border-zinc-400 transition-all hover:bg-zinc-700/30 cursor-pointer group"
-              aria-label="Create your custom style"
-            >
-              <div className="flex items-center gap-3">
-                {/* Icon Container */}
-                <div className="relative w-12 h-12 bg-gradient-to-br from-zinc-700 to-zinc-800 rounded-lg flex-shrink-0 overflow-hidden group-hover:from-zinc-600 group-hover:to-zinc-700 transition-colors">
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Plus className="h-6 w-6 text-zinc-400 group-hover:text-white transition-colors" />
-                  </div>
-                  <Sparkles className="absolute top-0.5 right-0.5 h-3 w-3 text-yellow-500 animate-pulse" />
-                </div>
-                
-                {/* Info */}
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-gray-400 group-hover:text-white transition-colors">
-                      Create Your Style
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors">
-                    Train AI with your art
-                  </div>
-                </div>
-              </div>
-            </button>
-          </div>
         </div>
       </div>
 

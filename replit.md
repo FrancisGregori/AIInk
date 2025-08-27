@@ -1,7 +1,14 @@
 # TattoostencilPro
 
 ## Overview
-TattoostencilPro is a professional AI-powered design platform featuring two main creative tools: Stencil Tool for tattoo stencil generation and Flux Kontext for AI-assisted design editing. It recreates the functionality of the original TattoostencilPro, utilizing multiple AI models for stencil processing. This full-stack web application, built with a React frontend and Express.js backend, supports real-time job processing, user credit management, and comprehensive gallery display. The business vision is to provide a leading AI-powered platform for tattoo artists and designers, enhancing creative workflows and expanding market potential through innovative AI tools.
+TattoostencilPro is a professional AI-powered design platform featuring two main creative tools: Stencil Tool for tattoo stencil generation and Flux Kontext for AI-assisted design editing. It recreates the functionality of the original TattoostencilPro, utilizing multiple AI models (Steven, Makishi, Darwin, Adrian) for stencil processing. This full-stack web application, built with a React frontend and Express.js backend, supports real-time job processing, user credit management, and comprehensive gallery display. The business vision is to provide a leading AI-powered platform for tattoo artists and designers, enhancing creative workflows and expanding market potential through innovative AI tools.
+
+### Recent Updates (2025-08-22)
+- **InkVision Chat Assistant Enhanced**: Auto-detects and applies technical prompts in English and Spanish without confirmation
+- **Smart Prompt Detection**: Recognizes technical patterns like "maintaining", "Change the", "Cambiar el", "manteniendo" 
+- **Auto-Translation**: Technical prompts in Spanish/other languages are automatically translated to English
+- **Simplified Error Messages**: Credit insufficient errors now show concise message "No tienes créditos suficientes"
+- **Fixed Duplicate Questions**: Eliminated duplicate assistant questions when analyzing images
 
 ## User Preferences
 Preferred communication style: Simple, everyday language in Spanish (español).
@@ -16,7 +23,7 @@ Default AI model: Qwen Edit (for Design Editor)
 - TERMINOLOGÍA: Usar "imagen para editar" NO "imagen de referencia" - la app está diseñada para subir y editar imágenes
 - COLORES DE MARCA: **SOLO negro, blanco y grises** - PROHIBIDO usar azul, morado, rosa, rojo, verde, amarillo o CUALQUIER otro color EN ELEMENTOS DE LA MARCA
 - EXCEPCIÓN: Los logos de terceros (Google, Facebook, etc.) mantienen sus colores originales
-- DISEÑO: Mantener interfaz minimalista y profesional sin elementos decorativos innecesarias
+- DISEÑO: Mantener interfaz minimalista y profesional sin elementos decorativos innecesarios
 - MEMORIA DE COLORES: Eliminar TODA referencia a colores morado/rosa del pasado - la marca NUNCA ha usado esos colores
 
 ## System Architecture
@@ -27,7 +34,7 @@ Default AI model: Qwen Edit (for Design Editor)
 - **Styling**: Tailwind CSS with a custom dark theme and responsive design
 - **State Management**: TanStack Query (React Query) for server state and caching
 - **Routing**: Wouter for lightweight client-side routing
-- **File Uploads**: Uppy for drag-and-drop file handling.
+- **File Uploads**: Uppy for drag-and-drop file handling, with AWS S3 compatibility.
 - **UI/UX Decisions**: Minimalist and professional interface focusing on a monochromatic palette (black, white, greys). Video hero and streamlined workflows (e.g., InkVision integrated into main panel, organized popular styles/editions). Mobile-first considerations for layout and spacing.
 - **Pricing Page**: Implemented with defined plans (Basic, Pro, Premium) and a custom "By Invitation" model, along with credit pack options.
 
@@ -36,6 +43,7 @@ Default AI model: Qwen Edit (for Design Editor)
 - **API Design**: RESTful API with organized route handlers.
 - **File Processing**: Multer middleware for file uploads.
 - **AI Integration**: Google Gemini API for text and image processing.
+- **Development**: Hot module replacement for seamless development.
 
 ### Data Storage Solutions
 - **Database**: PostgreSQL with Drizzle ORM.
@@ -45,19 +53,16 @@ Default AI model: Qwen Edit (for Design Editor)
 ### Authentication and Authorization
 - **Current State**: Basic username/password authentication with unique constraints.
 - **Session Management**: Cookie-based sessions via Express middleware.
-- **COOKIE_DOMAIN**: debe apuntar al dominio base (por ejemplo, '.aiink.com') incluyendo el punto inicial.
 - **Security**: All core AI functionalities (image upload, AI chat, image analysis, design generation, "Apply" button) require user authentication. A freemium model allows free navigation but requires payment for generation.
 
 ### System Design Choices
 - **Real-time Processing**: Implemented instant loading of in-progress jobs from localStorage and immediate "Processing" status feedback.
-- **Gallery Accessibility**: Gallery remains accessible during processing - users can view completed work while new jobs process.
-- **Performance**: Optimized preview area, temporary job system for instant feedback, and strict limits on stored jobs. Job data persisted to localStorage now excludes all base64/blob/data URLs and only saves when payload is under ~1MB to prevent `QuotaExceededError`. Jobs older than 6 hours are auto-pruned and maximum 10 jobs retained (reduced from 20). Toast notifications warn users when storage fails.
+- **Gallery Accessibility**: Gallery remains accessible during processing - users can view completed work while new jobs process (2025-08-22).
+- **Performance**: Optimized preview area, temporary job system for instant feedback, and limits on stored jobs (20 items, 24h expiration) to prevent `QuotaExceededError`.
 - **API Integration**: Replicate API is fully integrated for AI image editing, handling `ReadableStream` and `AsyncIterator`, with retry mechanisms and Zod schema validation.
-- **UI/UX Refinements**: Changed terminology ("Manual Prompt," "Ediciones sugeridas"), intelligent detection of questions vs. prompts, loading animations, and optimized gallery display.
-- **SPA Navigation**: Fixed white flash issue by replacing `window.location.href` with wouter's `setLocation` for instant SPA navigation in tool cards.
-- **Modal Design**: Compact, content-adaptive modals that respect image aspect ratios with minimal padding and streamlined footers.
-- **Error Handling**: Robust error handling for critical endpoints, ensuring HTTP 200 responses with valid JSON arrays even on total system failure. LocalStorage overflow protection implemented.
-- **Permanent Image Storage**: CRITICAL FIX (2025-08-26) - Replicate URLs expire after 1 hour. Implemented automatic download and permanent storage to Google Cloud Storage. All generated images are now saved to `/objects/designs/` with permanent URLs that never expire. This prevents user work loss.
+- **UI/UX Refinements**: Changed terminology ("Manual Prompt," "Ediciones sugeridas"), intelligent detection of questions vs. prompts, loading animations, and optimized gallery display (limited to 2 latest items, portrait layout, daily organization, hover overlays, quick actions).
+- **SPA Navigation**: Fixed white flash issue by replacing `window.location.href` with wouter's `setLocation` for instant SPA navigation in tool cards (2025-08-22).
+- **Modal Design**: Compact, content-adaptive modals that respect image aspect ratios with minimal padding and streamlined footers (2025-08-22).
 
 ## External Dependencies
 
@@ -76,14 +81,12 @@ Default AI model: Qwen Edit (for Design Editor)
 ### File Upload and Processing
 - **@uppy/core**: Core file upload.
 - **@uppy/dashboard**: File upload interface.
-- **@uppy/aws-s3**: AWS S3 integration (for S3 compatible storage).
+- **@uppy/aws-s3**: AWS S3 integration.
 - **multer**: Express middleware for multipart/form-data.
 
 ### AI and Image Generation
-- **Google Gemini 2.5 Flash**: For chat operations and text processing in Design Editor.
-- **Google Gemini 2.5 Flash Image Preview**: For AI-powered image editing in Design Editor.
-- **Important**: Design Editor now uses ChatImageEditor architecture from https://github.com/darwintattoo/ChatImageEditor - complete replacement of previous Replicate-based system (2025-08-26).
-- **Note**: Gemini returns images as base64 data, not URLs. Images are immediately saved to Google Cloud Storage for permanent storage.
+- **Google Gemini 2.5 Flash and Pro models**: For various AI operations (text, image processing).
+- **Replicate API**: Specifically with FLUX.1 Kontext Pro/Max models for AI-powered image editing.
 
 ### Development Tools
 - **vite**: Modern build tool.

@@ -362,7 +362,6 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-
   async getGalleryItemCount(userId: string, type?: string): Promise<number> {
     let baseQuery = db.select({ count: sql<number>`count(*)` }).from(userGallery);
     

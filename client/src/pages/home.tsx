@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Palette, Sparkles, RotateCw, Wand2, ArrowRight, Pen, Edit3, Bot, PenTool, MessageSquare } from "lucide-react";
+import { Palette, Sparkles, RotateCw, Wand2, ArrowRight, Pen, Edit3, Bot, PenTool } from "lucide-react";
 import { motion } from "framer-motion";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
 import stencilExample1 from "@assets/hub_stencil1.png";
@@ -205,7 +205,7 @@ export default function Home() {
           </div>
           
           {/* Tools Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             
             {/* Stencil Generator Card */}
             <div className="animate-card-in animate-card-in-1">
@@ -232,20 +232,8 @@ export default function Home() {
               />
             </div>
 
-            {/* Design Editor 2 - ChatImageEditor Card */}
-            <div className="animate-card-in animate-card-in-3">
-              <ToolCard
-                title="Gemini Chat & Image"
-                description="Chat with AI and generate images with Gemini 2.5 Flash"
-                icon={MessageSquare}
-                imageUrl="https://images.unsplash.com/photo-1683009427513-28e163402d16?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-                href="/design-editor-2"
-                isActive={true}
-              />
-            </div>
-
             {/* Angle and Rotation Modifier Card */}
-            <div className="animate-card-in animate-card-in-4">
+            <div className="animate-card-in animate-card-in-3">
               <ToolCard
                 title="Angle and Rotation Modifier"
                 description="Transform the perspective of your 2D designs into any angle"

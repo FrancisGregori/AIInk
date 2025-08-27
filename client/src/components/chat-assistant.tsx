@@ -52,7 +52,6 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isScrollingToImage, setIsScrollingToImage] = useState(false);
 
   // Handle image download
   const downloadImage = (imageUrl: string, filename: string) => {
@@ -64,26 +63,83 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     document.body.removeChild(link);
   };
 
-  // Handle use as reference - now uses URLs directly
-  const handleUseAsReference = (imageUrl: string) => {
-    // Set the image URL as the current stored image
-    setStoredImage(imageUrl);
-    
-    // Add image message to chat showing it's loaded
-    const imageMessage: Message = {
-      id: `image-${Date.now()}`,
-      role: 'user',
-      content: language === 'es' ? 'Imagen cargada' : 'Image loaded',
-      timestamp: new Date(),
-      image: imageUrl
-    };
-    
-    setMessages(prev => [...prev, imageMessage]);
-    
-    toast({
-      title: language === 'es' ? "Imagen lista" : "Image ready",
-      description: language === 'es' ? "Ya puedes editar esta imagen con nuevas instrucciones" : "You can now edit this image with new instructions",
-    });
+  // Helper function to convert image URL to base64 (copied from FluxKontextAI)
+  const fetchImageAsBase64 = async (imageUrl: string): Promise<string> => {
+    try {
+      console.log('fetchImageAsBase64 called with:', imageUrl);
+      
+      // If it's already a base64 string, return it
+      if (imageUrl.startsWith('data:')) {
+        console.log('Already base64, returning as is');
+        return imageUrl;
+      }
+      
+      // Fetch the image from the API
+      console.log('Fetching image from:', imageUrl);
+      const response = await fetch(imageUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      console.log('Blob size:', blob.size);
+      
+      // Convert blob to base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          console.log('Converted to base64, length:', result.length);
+          resolve(result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error fetching image as base64:', error);
+      throw error;
+    }
+  };
+
+  // Handle use as reference (copied from FluxKontextAI)
+  const handleUseAsReference = async (imageUrl: string) => {
+    try {
+      toast({
+        title: language === 'es' ? "Cargando imagen..." : "Loading image...",
+        description: language === 'es' ? "Preparando imagen para editar" : "Preparing image for editing",
+      });
+      
+      const base64Image = await fetchImageAsBase64(imageUrl);
+      console.log('Base64 conversion complete, setting as reference');
+      console.log('Base64 length:', base64Image.length);
+      
+      // Set the image as the current stored image
+      setStoredImage(base64Image);
+      
+      // Add image message to chat showing it's loaded
+      const imageMessage: Message = {
+        id: `image-${Date.now()}`,
+        role: 'user',
+        content: language === 'es' ? 'Imagen cargada' : 'Image loaded',
+        timestamp: new Date(),
+        image: base64Image
+      };
+      
+      setMessages(prev => [...prev, imageMessage]);
+      
+      toast({
+        title: language === 'es' ? "Imagen lista" : "Image ready",
+        description: language === 'es' ? "Ya puedes editar esta imagen con nuevas instrucciones" : "You can now edit this image with new instructions",
+      });
+    } catch (error) {
+      console.error('Error in use as reference:', error);
+      toast({
+        title: language === 'es' ? "Error" : "Error",
+        description: language === 'es' ? "No se pudo cargar la imagen" : "Could not load the image",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle file selection
@@ -219,57 +275,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         timestamp: new Date(),
         image: imageUrl
       };
-      
-      // Disable normal auto-scroll temporarily
-      setIsScrollingToImage(true);
       setMessages(prev => [...prev, imageMessage]);
-      
-      // Wait for DOM update and image load before scrolling
-      setTimeout(() => {
-        // Create a temporary image to detect when it's loaded
-        const img = new Image();
-        img.onload = () => {
-          // Image is loaded, scroll multiple times to ensure it reaches bottom
-          setTimeout(() => {
-            const messagesContainer = messagesEndRef.current?.parentElement;
-            if (messagesContainer) {
-              // Force scroll to absolute bottom multiple times
-              messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
-              
-              // Second scroll after a brief pause
-              setTimeout(() => {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
-              }, 100);
-              
-              // Third scroll to ensure we're at the bottom
-              setTimeout(() => {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
-                // Re-enable normal scroll after image scroll is complete
-                setIsScrollingToImage(false);
-              }, 500);
-            }
-          }, 200);
-        };
-        img.src = imageUrl;
-        
-        // Fallback scrolls if image takes too long
-        setTimeout(() => {
-          const messagesContainer = messagesEndRef.current?.parentElement;
-          if (messagesContainer) {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
-          }
-        }, 1000);
-        
-        // Extra fallback to ensure scroll and re-enable normal scroll
-        setTimeout(() => {
-          const messagesContainer = messagesEndRef.current?.parentElement;
-          if (messagesContainer) {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
-          }
-          // Ensure we re-enable normal scroll
-          setIsScrollingToImage(false);
-        }, 3000);
-      }, 100);
     }
   }));
   
@@ -307,14 +313,11 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
 
   // Auto-scroll to bottom when new messages arrive or chat opens
   useEffect(() => {
-    // Don't auto-scroll if we're scrolling to an image
-    if (isScrollingToImage) return;
-    
     // Use scrollToBottom function with slight delay for DOM update
     setTimeout(() => {
       scrollToBottom();
     }, 100);
-  }, [messages, isOpen, isScrollingToImage]);
+  }, [messages, isOpen]);
 
   // Detect when a new image is loaded and automatically analyze it
   useEffect(() => {
@@ -451,8 +454,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         id: `error-${Date.now()}`,
         role: 'assistant',
         content: language === 'es'
-          ? '❌ No pude analizar la imagen. Por favor intenta de nuevo o prueba con otra imagen.'
-          : '❌ Could not analyze the image. Please try again or try with a different image.',
+          ? '❌ Error al analizar la imagen. Por favor verifica que la API key de Gemini esté configurada correctamente.'
+          : '❌ Error analyzing image. Please verify that the Gemini API key is configured correctly.',
         timestamp: new Date()
       };
       
@@ -579,8 +582,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: language === 'es'
-          ? '❌ No pude procesar tu mensaje. Por favor intenta de nuevo.'
-          : '❌ Could not process your message. Please try again.',
+          ? '❌ Error al procesar el mensaje. Verifica la configuración de la API.'
+          : '❌ Error processing message. Please check API configuration.',
         timestamp: new Date()
       };
       
@@ -629,7 +632,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
             prompt: content,
             inputImageUrl: storedImage, // Send current image as base64
             model: modelVariant, // Use selected model variant
-            aspectRatio: aspectRatio // Use the selected aspect ratio from props
+            aspectRatio: 'match_input_image'
           }),
         });
 
@@ -863,9 +866,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       {/* Chat panel */}
       {isOpen && (
         <div className={embedded 
-          ? `w-full bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl flex flex-col transition-all duration-300 ${
-              storedImage ? 'h-[700px]' : 'h-[500px]'
-            }`
+          ? "w-full bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl flex flex-col h-[500px]"
           : "fixed bottom-0 right-0 w-full md:w-96 h-[600px] bg-background border-l border-t rounded-tl-xl shadow-xl z-50 flex flex-col"
         }>
           {/* Header */}

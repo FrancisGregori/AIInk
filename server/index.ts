@@ -1,23 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
-import "./forceProduction"; // DEBE SER PRIMERO para forzar producción
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { initializeStyles } from "./initializeStyles";
-import { setupEnvironment } from "./detectEnvironment";
-
-// Log unhandled errors early to catch upstream failures
-process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled rejection:', reason);
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
-});
-
-// Warn if critical environment variables are missing
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL is not set. Database features will be disabled.');
-}
 
 const app = express();
 
@@ -76,12 +59,11 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Configurar entorno correctamente (ya forzado arriba si es necesario)
-    setupEnvironment();
+    // Set NODE_ENV if not set
+    if (!process.env.NODE_ENV) {
+      process.env.NODE_ENV = app.get("env") || "development";
+    }
 
-    // Initialize stencil styles on startup
-    await initializeStyles();
-    
     const server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

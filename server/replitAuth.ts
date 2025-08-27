@@ -33,9 +33,7 @@ export function getSession() {
       saveUninitialized: false,
       cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // Solo HTTPS en producción
-        sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
-        domain: process.env.COOKIE_DOMAIN, // e.g. '.aiink.com'
+        secure: process.env.NODE_ENV === "production",
         maxAge: sessionTtl,
       },
     });
@@ -57,9 +55,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Solo HTTPS en producción
-      sameSite: process.env.NODE_ENV === "production" ? "none" as const : "lax" as const,
-      domain: process.env.COOKIE_DOMAIN, // e.g. '.aiink.com'
+      secure: true,
       maxAge: sessionTtl,
     },
   });
@@ -153,16 +149,8 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
-  const path = req.path;
 
-  // Debug logging for authentication issues
-  if (!req.isAuthenticated()) {
-    console.log(`[AUTH] ${path} - req.isAuthenticated() returned false`);
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  
-  if (!user?.expires_at) {
-    console.log(`[AUTH] ${path} - No expires_at found in user:`, user ? Object.keys(user) : 'user is null');
+  if (!req.isAuthenticated() || !user?.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -173,7 +161,6 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
-    console.log(`[AUTH] ${path} - Token expired and no refresh_token available`);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
@@ -184,7 +171,6 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
-    console.log(`[AUTH] ${path} - Failed to refresh token:`, error);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }

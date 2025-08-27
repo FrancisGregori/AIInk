@@ -1,0 +1,264 @@
+Perfecto, te voy a compartir toda la implementación de Gemini con las instrucciones completas y el código necesario para integrarlo en tu otra aplicación.
+
+Instrucciones Internas del Modelo Gemini (InkVision)
+1. Personalidad del Asistente:
+PERSONALIDAD:
+- Tatuador experto con 20 años de experiencia
+- Tono cercano, motivador y seguro
+- Te gusta enseñar y compartir conocimiento
+- Conversación en español, prompts técnicos en inglés
+2. Análisis de Imágenes:
+Cuando recibe una imagen, genera un prompt técnico detallado:
+
+"photo of [sujeto detallado], [pose específica y posición del cuerpo], 
+[expresión facial y dirección de mirada], [tipo de iluminación y dirección], 
+[ángulo de cámara específico], [estilo artístico], 
+[detalles de vestimenta/accesorios], [características físicas notables], 
+[elementos del fondo], [atmósfera y mood], [calidad de imagen], 
+professional photography, high resolution, detailed textures"
+Código de Implementación Completo
+1. Instalación de Dependencias:
+npm install @google/genai
+2. Archivo Principal de Gemini (gemini.ts):
+import { GoogleGenAI } from "@google/genai";
+// Configuración de la API Key
+const getGeminiKey = (): string => {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error("GEMINI_API_KEY environment variable is not set");
+  }
+  return key;
+};
+// Función principal para chat con Gemini
+export async function getChatResponseGemini(
+  messages: { role: 'user' | 'assistant', content: string }[],
+  imageBase64?: string
+): Promise<string> {
+  try {
+    const ai = new GoogleGenAI({ apiKey: getGeminiKey() });
+    
+    let chatMessages: any[] = [];
+    
+    if (imageBase64) {
+      // Para conversaciones con imagen
+      const lastMessage = messages[messages.length - 1]?.content || "";
+      const isInitialAnalysis = messages.length === 0 || 
+                               lastMessage.includes("Analiza esta imagen");
+      
+      if (isInitialAnalysis) {
+        // Análisis inicial con personalidad InkVision
+        chatMessages = [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `## ERES "InkVision" - ESPECIALISTA EN EDICIÓN DE IMÁGENES PARA TATUAJES
+**PERSONALIDAD:**
+- Tatuador experto con 20 años de experiencia
+- Tono cercano, motivador y seguro
+- Te gusta enseñar y compartir conocimiento
+- Conversación en español, prompts técnicos en inglés
+**ANÁLISIS AUTOMÁTICO DE IMAGEN:**
+Genera ÚNICAMENTE un prompt técnico completo en inglés con este formato detallado:
+"photo of [sujeto detallado], [pose específica], [expresión facial], 
+[tipo de iluminación], [ángulo de cámara], [estilo artístico], 
+[detalles de vestimenta], [características físicas], [elementos del fondo], 
+[atmósfera y mood], [calidad de imagen], professional photography, 
+high resolution, detailed textures"
+RESPONDE SOLO CON EL PROMPT TÉCNICO, SIN EXPLICACIONES.`
+              },
+              {
+                inlineData: {
+                  data: imageBase64,
+                  mimeType: "image/jpeg",
+                },
+              },
+              {
+                text: lastMessage
+              }
+            ]
+          }
+        ];
+      } else {
+        // Modificación de imagen - genera prompt técnico
+        chatMessages = [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `## ERES "InkVision" - MODO PROMPT TÉCNICO
+**INSTRUCCIONES CRÍTICAS:**
+- Genera SOLO el prompt técnico en inglés para Flux Kontext Pro
+- NO agregues explicaciones, introducciones, ni texto adicional
+- Formato: [verbo] [elemento] [cambio], maintaining [lo-que-permanece]
+- Verbos: change/add/remove/replace/transform
+- Sé específico, evita pronombres vagos
+- Responde únicamente con el prompt técnico, nada más
+**SOLICITUD DEL USUARIO:** ${lastMessage}`
+              },
+              {
+                inlineData: {
+                  data: imageBase64,
+                  mimeType: "image/jpeg",
+                },
+              }
+            ]
+          }
+        ];
+      }
+    } else {
+      // Para conversaciones solo de texto
+      const systemMessage = {
+        role: "user",
+        parts: [{
+          text: `## ERES "InkVision" - ESPECIALISTA EN EDICIÓN DE IMÁGENES PARA TATUAJES
+**PERSONALIDAD:**
+- Tatuador experto con 20 años de experiencia
+- Tono cercano, motivador y seguro
+- Te gusta enseñar y compartir conocimiento
+- Conversas en español con naturalidad
+- Explicas técnicas, das consejos artísticos y resuelves dudas
+**CHAT DE SOLO TEXTO:**
+- Mantén la voz experta y empática
+- Comparte conocimiento sobre tatuajes, técnicas de edición
+- Ayuda con dudas sobre el proceso creativo
+Responde como InkVision naturalmente:`
+        }]
+      };
+      chatMessages = [systemMessage, ...messages.map(msg => ({
+        role: msg.role,
+        parts: [{ text: msg.content }]
+      }))];
+    }
+    // Llamada al modelo Gemini
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-exp",  // Modelo usado
+      contents: chatMessages,
+    });
+    return response.text || "Error generating response";
+  } catch (error: any) {
+    console.error('Gemini error:', error);
+    throw new Error(`Gemini API error: ${error.message}`);
+  }
+}
+3. Implementación de Streaming (Respuestas en tiempo real):
+export async function streamChatResponseGemini(
+  messages: { role: 'user' | 'assistant', content: string }[],
+  imageBase64?: string
+): Promise<ReadableStream<Uint8Array>> {
+  try {
+    const response = await getChatResponseGemini(messages, imageBase64);
+    
+    // Crear un stream que envía la respuesta por partes
+    return new ReadableStream({
+      start(controller) {
+        const chunks = response.split(' ');
+        let index = 0;
+        
+        const sendChunk = () => {
+          if (index < chunks.length) {
+            const chunk = chunks[index] + ' ';
+            controller.enqueue(
+              new TextEncoder().encode(
+                `data: ${JSON.stringify({ content: chunk })}\n\n`
+              )
+            );
+            index++;
+            setTimeout(sendChunk, 50); // Simula streaming
+          } else {
+            controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+            controller.close();
+          }
+        };
+        
+        sendChunk();
+      }
+    });
+  } catch (error: any) {
+    console.error('Gemini streaming error:', error);
+    throw error;
+  }
+}
+4. Endpoint de API Express:
+// server/routes.ts o tu archivo de rutas
+import express from 'express';
+import { streamChatResponseGemini } from './services/gemini';
+const router = express.Router();
+router.post('/api/chat/stream', async (req, res) => {
+  const { messages, image } = req.body;
+  
+  try {
+    // Convertir imagen a base64 si es necesario
+    const imageBase64 = image ? 
+      image.replace(/^data:image\/[a-z]+;base64,/, '') : 
+      undefined;
+    
+    const stream = await streamChatResponseGemini(messages, imageBase64);
+    
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    const reader = stream.getReader();
+    const pump = async () => {
+      const { done, value } = await reader.read();
+      if (done) {
+        res.end();
+        return;
+      }
+      res.write(value);
+      await pump();
+    };
+    
+    await pump();
+  } catch (error) {
+    console.error('Chat stream error:', error);
+    res.status(500).json({ error: 'Failed to generate response' });
+  }
+});
+5. Variables de Entorno Necesarias:
+GEMINI_API_KEY=tu_api_key_de_google_ai_studio
+6. Cliente Frontend (React):
+// Función para llamar al chat con streaming
+async function sendMessage(message: string, imageBase64?: string) {
+  const response = await fetch('/api/chat/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [
+        { role: 'user', content: message }
+      ],
+      image: imageBase64
+    })
+  });
+  const reader = response.body?.getReader();
+  const decoder = new TextDecoder();
+  
+  while (true) {
+    const { done, value } = await reader!.read();
+    if (done) break;
+    
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n');
+    
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = line.slice(6);
+        if (data === '[DONE]') break;
+        
+        const parsed = JSON.parse(data);
+        // Procesar el contenido recibido
+        console.log(parsed.content);
+      }
+    }
+  }
+}
+Obtener tu API Key de Gemini:
+Ve a Google AI Studio
+Crea una nueva API key
+Añádela a tu archivo .env como GEMINI_API_KEY
+Notas Importantes:
+El modelo usado es gemini-2.0-flash-exp (el más reciente y rápido)
+Soporta análisis de imágenes y generación de texto
+Maneja conversaciones con contexto
+Incluye personalidad específica de "InkVision" para tatuajes

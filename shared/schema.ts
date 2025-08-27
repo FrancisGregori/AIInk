@@ -55,7 +55,6 @@ export const userGallery = pgTable("user_gallery", {
   style: varchar("style"), // for stencils: steven, makishi, etc
   isFavorite: boolean("is_favorite").default(false),
   metadata: jsonb("metadata"), // extra data like processing options
-  variants: jsonb("variants"), // optimized image variants (webp, avif)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -90,9 +89,7 @@ export const stencilStyles = pgTable("stencil_styles", {
   name: text("name").notNull(),
   description: text("description"),
   comfyDeployWorkflowId: varchar("comfy_deploy_workflow_id"),
-  loraModel: varchar("lora_model"), // null for prompt-based styles
-  promptTemplate: text("prompt_template"), // for styles that use prompts instead of LoRA
-  styleType: varchar("style_type").default("lora"), // 'lora' or 'prompt'
+  loraModel: varchar("lora_model"),
   isActive: boolean("is_active").default(true),
   displayOrder: integer("display_order").default(0),
   previewImageUrl: text("preview_image_url"),

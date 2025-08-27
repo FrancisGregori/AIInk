@@ -1,4 +1,4 @@
-import { StencilJob, StencilStyle } from "@shared/schema";
+import { StencilJob } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
 
 // Map style names to LoRA model files
@@ -22,55 +22,44 @@ export class ComfyDeployService {
     }
   }
 
-  // Save processed stencil to PUBLIC Object Storage with optimized versions
+  // Save processed stencil to protected Object Storage
   async saveStencilToStorage(
     outputUrl: string,
     userId: string,
     style: string
-  ): Promise<{
-    imageUrl: string;
-    variants?: Record<string, Record<number, string>>;
-  }> {
+  ): Promise<string> {
     try {
       const objectStorage = new ObjectStorageService();
       
       if (outputUrl.startsWith('data:')) {
-        // It's already base64, save directly to PUBLIC storage
-        const result = await objectStorage.uploadPublicImageFromBase64(
+        // It's already base64, save directly
+        const { imageUrl } = await objectStorage.uploadImageFromBase64(
           outputUrl,
-          'gallery',
-          userId,
-          true // generateOptimized
+          'stencils',
+          userId
         );
-        console.log('Stencil saved to PUBLIC CDN:', result.imageUrl);
-        if (result.variants) {
-          console.log('Optimized variants generated:', Object.keys(result.variants));
-        }
-        return { imageUrl: result.imageUrl, variants: result.variants };
+        console.log('Stencil saved to protected storage:', imageUrl);
+        return imageUrl;
       } else {
-        // It's an external URL, download and save to PUBLIC storage
-        const result = await objectStorage.uploadPublicImageFromUrl(
+        // It's an external URL, download and save
+        const { imageUrl } = await objectStorage.uploadImageFromUrl(
           outputUrl,
-          'gallery',
-          userId,
-          true // generateOptimized
+          'stencils',
+          userId
         );
-        console.log('Stencil downloaded and saved to PUBLIC CDN:', result.imageUrl);
-        if (result.variants) {
-          console.log('Optimized variants generated:', Object.keys(result.variants));
-        }
-        return { imageUrl: result.imageUrl, variants: result.variants };
+        console.log('Stencil downloaded and saved to protected storage:', imageUrl);
+        return imageUrl;
       }
     } catch (error) {
       console.error('Error saving stencil to storage:', error);
       // Return original URL as fallback
-      return { imageUrl: outputUrl };
+      return outputUrl;
     }
   }
 
   async processImage(
     imageUrl: string,
-    style: string | StencilStyle,
+    style: string,
     processingOptions?: any,
     userId?: string
   ): Promise<{ runId: string; status: string; outputUrl?: string }> {
@@ -83,23 +72,20 @@ export class ComfyDeployService {
       
       // If userId provided, save to protected storage
       if (userId) {
-        const styleName = typeof style === 'string' ? style : style.id;
         try {
-          const result = await this.saveStencilToStorage(imageUrl, userId, styleName);
-          mockOutputUrl = result.imageUrl;
+          mockOutputUrl = await this.saveStencilToStorage(imageUrl, userId, style);
         } catch (error) {
           console.error('Failed to save mock stencil to storage:', error);
           // Fallback to original behavior
           mockOutputUrl = imageUrl.includes('?') 
-            ? `${imageUrl}&stencil=${styleName}&t=${Date.now()}`
-            : `${imageUrl}?stencil=${styleName}&t=${Date.now()}`;
+            ? `${imageUrl}&stencil=${style}&t=${Date.now()}`
+            : `${imageUrl}?stencil=${style}&t=${Date.now()}`;
         }
       } else {
         // Original mock behavior for backward compatibility
-        const styleName = typeof style === 'string' ? style : style.id;
         mockOutputUrl = imageUrl.includes('?') 
-          ? `${imageUrl}&stencil=${styleName}&t=${Date.now()}`
-          : `${imageUrl}?stencil=${styleName}&t=${Date.now()}`;
+          ? `${imageUrl}&stencil=${style}&t=${Date.now()}`
+          : `${imageUrl}?stencil=${style}&t=${Date.now()}`;
       }
       
       return {
@@ -110,31 +96,14 @@ export class ComfyDeployService {
     }
 
     try {
-      // Check if style is an object (StencilStyle) or string
-      const styleConfig = typeof style === 'object' ? style : null;
-      const styleName = typeof style === 'string' ? style : style.id;
-      
-      // Build inputs based on style type
-      const inputs: any = {
-        input_image: imageUrl, // Correct parameter name for ComfyDeploy
-        "fondo transparente": processingOptions?.removeBackground || false,
-        line_color: processingOptions?.lineColor || "black",
-      };
-      
-      // If style has promptTemplate (type 'prompt'), use prompt instead of LoRA
-      if (styleConfig?.styleType === 'prompt' && styleConfig.promptTemplate) {
-        // For prompt-based styles, send the prompt
-        inputs.prompt = styleConfig.promptTemplate;
-        console.log("Using prompt-based style:", styleName);
-      } else {
-        // For LoRA-based styles
-        inputs.lora_path = LORA_MODELS[styleName] || LORA_MODELS.steven;
-        console.log("Using LoRA style:", styleName, "with path:", inputs.lora_path);
-      }
-      
       const requestBody = {
         deployment_id: this.deploymentId,
-        inputs,
+        inputs: {
+          input_image: imageUrl, // Correct parameter name for ComfyDeploy
+          "fondo transparente": processingOptions?.removeBackground || false,
+          line_color: processingOptions?.lineColor || "black",
+          lora_path: LORA_MODELS[style] || LORA_MODELS.steven, // Use full LoRA path
+        },
       };
 
       console.log("Sending request to ComfyDeploy:", {
@@ -177,12 +146,7 @@ export class ComfyDeployService {
     runId: string,
     userId?: string,
     style?: string
-  ): Promise<{ 
-    status: string; 
-    outputUrl?: string; 
-    error?: string;
-    variants?: Record<string, Record<number, string>>;
-  }> {
+  ): Promise<{ status: string; outputUrl?: string; error?: string }> {
     if (!this.apiKey || runId.startsWith("mock-")) {
       return {
         status: "completed",
@@ -261,12 +225,9 @@ export class ComfyDeployService {
       outputUrl = outputUrl || data.output_url;
       
       // If we have an outputUrl and userId, save to protected storage
-      let variants = undefined;
       if (outputUrl && userId && style) {
         try {
-          const result = await this.saveStencilToStorage(outputUrl, userId, style);
-          outputUrl = result.imageUrl;
-          variants = result.variants;
+          outputUrl = await this.saveStencilToStorage(outputUrl, userId, style);
         } catch (error) {
           console.error('Failed to save real stencil to storage:', error);
           // Continue with original URL as fallback
@@ -277,7 +238,6 @@ export class ComfyDeployService {
         status,
         outputUrl,
         error: data.error,
-        variants,
       };
     } catch (error) {
       console.error("Error checking ComfyDeploy status:", error);

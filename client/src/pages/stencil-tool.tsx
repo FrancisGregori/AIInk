@@ -42,7 +42,6 @@ import StyleSelector from "@/components/style-selector";
 import ImageUploader from "@/components/image-uploader";
 import { CreditsDisplay, CreditsRequirement } from "@/components/credits-display";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { LazyGalleryImage } from "@/components/LazyGalleryImage";
 import type { StencilJob, StencilStyle } from "@shared/schema";
 import type { CreditsData } from "@/lib/api";
 
@@ -406,7 +405,6 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               <StyleSelector
                 selectedStyle={selectedStyle}
                 onStyleChange={setSelectedStyle}
-                styles={styles}
               />
             </div>
 
@@ -607,12 +605,10 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                             className="relative overflow-hidden rounded-lg bg-[#f5f5f5] aspect-[3/4]"
                             onClick={() => openGalleryModal(job)}
                           >
-                            <LazyGalleryImage
+                            <img
                               src={job.processedImageUrl || job.originalImageUrl}
                               alt={`Stencil ${job.style}`}
                               className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                              threshold={0.01}
-                              rootMargin="200px"
                             />
                           </div>
                         </div>
