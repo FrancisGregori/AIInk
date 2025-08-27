@@ -996,7 +996,10 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                             data-testid={`button-edit-chat-${msg.id}`}
                           >
                             <Edit className="h-4 w-4 mr-1" />
-                            Edit
+                            {storedImage 
+                              ? (language === 'es' ? 'Reemplazar imagen' : 'Replace image')
+                              : (language === 'es' ? 'Usar como base' : 'Use as base')
+                            }
                           </Button>
                           <Button
                             size="sm"
@@ -1096,7 +1099,16 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   alt="Loaded image"
                   className="h-8 w-8 object-cover rounded border border-zinc-700"
                 />
-                <span>{language === 'es' ? 'Imagen cargada' : 'Image loaded'}</span>
+                <span className="text-xs">
+                  {language === 'es' 
+                    ? (modelVariant === 'gemini-preview' 
+                      ? 'Editando esta imagen' 
+                      : 'Imagen base activa')
+                    : (modelVariant === 'gemini-preview' 
+                      ? 'Editing this image' 
+                      : 'Base image active')
+                  }
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1124,9 +1136,19 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={language === 'es' 
-                    ? "Describe los cambios o arrastra una imagen..."
-                    : "Describe changes or drag an image..."}
+                  placeholder={
+                    storedImage 
+                      ? (modelVariant === 'gemini-preview'
+                        ? (language === 'es' 
+                          ? "Describe qué quieres cambiar en la imagen..." 
+                          : "Describe what you want to change in the image...")
+                        : (language === 'es' 
+                          ? "Escribe tu mensaje o describe cambios..." 
+                          : "Write your message or describe changes..."))
+                      : (language === 'es' 
+                        ? "Describe los cambios o arrastra una imagen..."
+                        : "Describe changes or drag an image...")
+                  }
                   className="w-full min-h-[60px] max-h-[120px] resize-none border border-zinc-600 bg-zinc-800/70 focus:border-zinc-400 focus:bg-zinc-800 transition-colors pr-12"
                   disabled={isLoading}
                   data-testid="textarea-chat-input"
