@@ -332,14 +332,14 @@ OUTPUT ONLY THE TECHNICAL PROMPT (no explanations):`
           }
         ];
       } else if (isDescriptionRequest || isInitialAnalysis) {
-        // Pregunta directa sin descripción
-        console.log('Creating direct question with image');
+        // Solo describir la imagen sin preguntar
+        console.log('Creating image description');
         chatMessages = [
           {
             role: "user",
             parts: [
               {
-                text: `Analiza la imagen y pregunta qué modificación desea el usuario.`
+                text: `Describe la imagen de forma clara y concisa.`
               },
               {
                 inlineData: {

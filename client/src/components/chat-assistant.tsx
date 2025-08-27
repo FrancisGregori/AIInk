@@ -319,14 +319,12 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     }, 100);
   }, [messages, isOpen]);
 
-  // Detect when a new image is loaded and automatically analyze it
+  // No analizar automáticamente cuando se carga una imagen
   useEffect(() => {
     if (storedImage && storedImage !== lastImageAnalyzed && isOpen) {
       setLastImageAnalyzed(storedImage);
-      
-      // Automatically analyze the image when opening with a new image
-      // Don't disable the input field to allow immediate typing
-      analyzeImage();
+      // Análisis automático deshabilitado
+      // analyzeImage();
     }
   }, [storedImage, lastImageAnalyzed, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   
@@ -350,21 +348,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     // Don't set isLoading to true here to allow immediate typing
     // Only show loading indicator in the messages area
     
-    // Don't add duplicate image message - it was already added when image was uploaded
-    // Just add the analyzing indicator
-    
-    // Add a message indicating analysis is starting with special flag
-    const analyzingMessage: Message = {
-      id: `analyzing-${Date.now()}`,
-      role: 'assistant',
-      content: language === 'es' 
-        ? '🔍 Analizando tu imagen...'
-        : '🔍 Analyzing your image...',
-      timestamp: new Date(),
-      isAnalyzing: true // Special flag for analyzing state
-    };
-    
-    setMessages(prev => [...prev, analyzingMessage]);
+    // No mostrar mensaje de "analizando" - proceso silencioso
+    const analyzingMessage = { id: `analyzing-${Date.now()}` };
     
     try {
       // Prepare the message asking for image analysis
@@ -396,8 +381,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       
-      // Remove the "analyzing" message and create the real response
-      setMessages(prev => prev.filter(msg => msg.id !== analyzingMessage.id));
+      // No need to remove analyzing message since we didn't add it
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
