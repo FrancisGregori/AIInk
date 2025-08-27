@@ -977,6 +977,7 @@ function DesignEditor() {
                   onImageGenerated={(imageUrl, prompt, permanentUrl) => {
                     // Cuando InkVision genera una imagen, crear un job para mostrar el cuadro
                     const tempJobId = `job-${Date.now()}`;
+                    const now = new Date();
                     const tempJob: StencilJob = {
                       id: tempJobId,
                       status: 'completed' as const,
@@ -984,10 +985,10 @@ function DesignEditor() {
                       processedImageUrl: permanentUrl || imageUrl, // Usar URL permanente si está disponible
                       style: prompt,
                       errorMessage: null,
-                      startedAt: new Date(),
-                      completedAt: new Date(),
+                      startedAt: now,
+                      completedAt: now,
                       userId: 'temp-user',
-                      createdAt: new Date(),
+                      createdAt: now,
                       comfyDeployRunId: null,
                       processingOptions: {}
                     };
@@ -995,13 +996,20 @@ function DesignEditor() {
                     
                     // Guardar el trabajo en localStorage con metadata completa
                     console.log('Trabajo completed guardado en localStorage:', tempJobId);
+                    console.log('URL permanente:', permanentUrl);
+                    console.log('URL a guardar:', permanentUrl || imageUrl);
+                    
                     try {
                       const stored = localStorage.getItem('tattoo-stencil-jobs');
                       let jobs = stored ? JSON.parse(stored) : [];
                       
                       // Agregar el trabajo completado al historial con tipo 'design'
+                      // Convertir las fechas a strings para evitar problemas de serialización
                       jobs.push({
                         ...tempJob,
+                        startedAt: now.toISOString(),
+                        completedAt: now.toISOString(),
+                        createdAt: now.toISOString(),
                         type: 'design' // Importante para el filtrado
                       });
                       
@@ -1011,6 +1019,7 @@ function DesignEditor() {
                       }
                       
                       localStorage.setItem('tattoo-stencil-jobs', JSON.stringify(jobs));
+                      console.log('Trabajo guardado exitosamente en localStorage');
                     } catch (error) {
                       console.error('Error guardando trabajo en localStorage:', error);
                     }
@@ -1212,68 +1221,106 @@ function DesignEditor() {
                       ? 'grid-cols-2 lg:grid-cols-2' 
                       : 'grid-cols-1 lg:grid-cols-1'
                   }`}>
-                    {projects.slice(0, 8).map((project) => (
-                    <Dialog key={project.id}>
-                      <DialogTrigger asChild>
-                        <div className="relative group cursor-pointer">
-                          <AuthenticatedImage
-                            src={project.imageUrl || ""}
-                            alt={project.name}
-                            className="w-full aspect-[3/4] rounded-lg object-cover transition-opacity"
-                          />
-                        </div>
-                      </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] p-4">
-                          <div className="space-y-4">
-                            <div className="relative">
+                    {/* Combinar trabajos locales de Gemini con proyectos del backend */}
+                    {(() => {
+                      // Obtener trabajos locales completados del localStorage
+                      const stored = localStorage.getItem('tattoo-stencil-jobs');
+                      let localJobs: any[] = [];
+                      if (stored) {
+                        try {
+                          const allJobs = JSON.parse(stored);
+                          // Filtrar solo trabajos de design completados
+                          localJobs = allJobs.filter((job: any) => 
+                            job.type === 'design' && 
+                            job.status === 'completed' && 
+                            job.processedImageUrl
+                          );
+                        } catch (e) {
+                          console.error('Error parsing local jobs:', e);
+                        }
+                      }
+                      
+                      // Combinar trabajos locales con proyectos del backend
+                      const combinedItems = [
+                        ...localJobs.map((job: any) => ({
+                          id: job.id,
+                          imageUrl: job.processedImageUrl,
+                          name: job.style || 'Gemini Design',
+                          isLocal: true
+                        })),
+                        ...projects.map((project) => ({
+                          id: project.id,
+                          imageUrl: project.imageUrl,
+                          name: project.name,
+                          isLocal: false
+                        }))
+                      ].slice(0, 8);
+                      
+                      return combinedItems.map((item) => (
+                        <Dialog key={item.id}>
+                          <DialogTrigger asChild>
+                            <div className="relative group cursor-pointer">
                               <AuthenticatedImage
-                                src={project.imageUrl || ""}
-                                alt={`${project.name} full size`}
-                                className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+                                src={item.imageUrl || ""}
+                                alt={item.name}
+                                className="w-full aspect-[3/4] rounded-lg object-cover transition-opacity"
                               />
                             </div>
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium">{project.name}</p>
-                              <p className="text-xs text-zinc-400">{new Date(project.createdAt || "").toLocaleDateString()}</p>
-                              <div className="flex gap-2 pt-2">
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  className="flex-1"
-                                  onClick={() => handleUseAsReference(project.imageUrl || "")}
-                                  data-testid={`button-use-as-reference-history-${project.id}`}
-                                >
-                                  <Edit className="h-4 w-4 mr-1" />
-                                  {language === 'es' ? 'Editar' : 'Edit'}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="flex-1"
-                                  onClick={() => downloadImage(project.imageUrl || "", `design-${project.id}.png`)}
-                                  data-testid={`button-download-history-${project.id}`}
-                                >
-                                  <Download className="h-4 w-4 mr-1" />
-                                  {language === 'es' ? 'Descargar' : 'Download'}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => {
-                                    if (confirm(language === 'es' ? '¿Estás seguro de que quieres eliminar esta imagen?' : 'Are you sure you want to delete this image?')) {
-                                      deleteProjectMutation.mutate(project.id);
-                                    }
-                                  }}
-                                  data-testid={`button-delete-history-${project.id}`}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  {language === 'es' ? 'Eliminar' : 'Delete'}
-                                </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl max-h-[90vh] p-4">
+                            <div className="space-y-4">
+                              <div className="relative">
+                                <AuthenticatedImage
+                                  src={item.imageUrl || ""}
+                                  alt={`${item.name} full size`}
+                                  className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium">{item.name}</p>
+                                <p className="text-xs text-zinc-400">{item.isLocal ? 'Gemini Design' : new Date().toLocaleDateString()}</p>
+                                <div className="flex gap-2 pt-2">
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="flex-1"
+                                    onClick={() => handleUseAsReference(item.imageUrl || "")}
+                                    data-testid={`button-use-as-reference-history-${item.id}`}
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    {language === 'es' ? 'Editar' : 'Edit'}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() => downloadImage(item.imageUrl || "", `design-${item.id}.png`)}
+                                    data-testid={`button-download-history-${item.id}`}
+                                  >
+                                    <Download className="h-4 w-4 mr-1" />
+                                    {language === 'es' ? 'Descargar' : 'Download'}
+                                  </Button>
+                                  {!item.isLocal && (
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => {
+                                        if (confirm(language === 'es' ? '¿Estás seguro de que quieres eliminar esta imagen?' : 'Are you sure you want to delete this image?')) {
+                                          deleteProjectMutation.mutate(item.id);
+                                        }
+                                      }}
+                                      data-testid={`button-delete-history-${item.id}`}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1" />
+                                      {language === 'es' ? 'Eliminar' : 'Delete'}
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    ))}
+                          </DialogContent>
+                        </Dialog>
+                      ));
+                    })()}
                   </div>
                   
                   {/* Load More Button - show when there are more than 8 projects */}
