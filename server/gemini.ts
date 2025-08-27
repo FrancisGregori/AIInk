@@ -397,11 +397,6 @@ Responde de forma profesional y clara.`
     const response = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
       contents: chatMessages,
-      generationConfig: {
-        maxOutputTokens: 150,  // Respuestas cortas y concisas
-        temperature: 0.8,
-        topP: 0.8,
-      },
     });
 
     return response.text || "Error generating response";
@@ -459,32 +454,10 @@ export async function editImageWithGemini(
   try {
     console.log('Edit image request:', { promptLength: prompt.length, hasImage: !!imageBase64 });
     
-    const genAI = new GenAI(process.env.GEMINI_API_KEY!);
-    
-    // Usar gemini-2.5-flash para generar/editar imágenes
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",  // Este modelo puede generar imágenes
-      generationConfig: {
-        maxOutputTokens: 8192,  // Más tokens para generar contenido de imágenes
-        temperature: 1.0,
-        topP: 0.95,
-      },
-    });
+    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
     // Crear el prompt para editar la imagen  
-    const editPrompt = `You are an advanced image generation and editing AI assistant.
-    
-    User request: ${prompt}
-    
-    If the user wants to edit the provided image:
-    - Analyze the image carefully
-    - Apply the requested modifications
-    - Generate the edited version
-    
-    If the user wants to generate a new image:
-    - Create a new image based on the description
-    
-    Focus on accuracy and quality. Generate the result as requested.`;
+    const editPrompt = `${prompt}`;  // El modelo entiende directamente las instrucciones del usuario
 
     const contents = [
       { text: editPrompt }
@@ -500,8 +473,11 @@ export async function editImageWithGemini(
       } as any);
     }
 
-    const response = await model.generateContent(contents);
-    const result = response.response.text();
+    const response = await genAI.models.generateContent({
+      model: "gemini-2.5-flash-image-preview",  // Nuevo modelo de Google que puede generar y editar imágenes
+      contents,
+    });
+    const result = response.text || '';
     
     console.log('Edit image response received, length:', result.length);
     
