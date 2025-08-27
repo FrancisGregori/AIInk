@@ -763,15 +763,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Deducir créditos solo si fue exitoso
       await storage.deductCredits(userId, EDIT_COST);
       
-      // Si hay una imagen generada, guardarla permanentemente
-      let finalImageUrl = result.editedImage;
-      let thumbnailUrl = null;
-      
+      // Si hay una imagen generada, guardarla permanentemente en galería
+      // pero mantener el base64 para el chat
       if (result.editedImage && result.editedImage.startsWith('data:')) {
         try {
           console.log('=== GUARDANDO IMAGEN GEMINI EN GALERÍA ===');
           
-          // Subir imagen a Object Storage
+          // Subir imagen a Object Storage para la galería
           const objectStorage = new ObjectStorageService();
           const uploadResult = await objectStorage.uploadImageFromBase64(
             result.editedImage,
@@ -779,16 +777,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId
           );
           
-          finalImageUrl = uploadResult.imageUrl;
-          thumbnailUrl = uploadResult.thumbnailUrl;
+          console.log('Imagen subida a Object Storage:', uploadResult.imageUrl);
           
-          console.log('Imagen subida a Object Storage:', finalImageUrl);
-          
-          // Guardar en galería
+          // Guardar en galería con las URLs permanentes
           const galleryItem = await storage.addToGallery({
             userId,
-            imageUrl: finalImageUrl,
-            thumbnailUrl: thumbnailUrl,
+            imageUrl: uploadResult.imageUrl,
+            thumbnailUrl: uploadResult.thumbnailUrl,
             type: 'design',
             title: `Gemini Edit: ${prompt.slice(0, 40)}`,
             description: prompt,
@@ -808,11 +803,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Retornar el resultado con la URL permanente
+      // Retornar el resultado con el base64 original para que se muestre en el chat
+      // La imagen ya está guardada en la galería con URL permanente
       res.json({
         ...result,
-        editedImage: finalImageUrl, // Usar URL permanente en lugar de base64
-        thumbnailUrl: thumbnailUrl,
+        editedImage: result.editedImage, // Mantener base64 para el chat
         creditsUsed: EDIT_COST,
         creditsRemaining: availableCredits - EDIT_COST
       });
