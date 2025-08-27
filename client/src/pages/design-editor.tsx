@@ -974,14 +974,14 @@ function DesignEditor() {
                     setAspectRatio("Match Input");
                     setMatchInput(true);
                   }}
-                  onImageGenerated={(imageUrl, prompt) => {
+                  onImageGenerated={(imageUrl, prompt, permanentUrl) => {
                     // Cuando InkVision genera una imagen, crear un job para mostrar el cuadro
                     const tempJobId = `job-${Date.now()}`;
                     const tempJob: StencilJob = {
                       id: tempJobId,
                       status: 'completed' as const,
                       originalImageUrl: referencePreview || '',
-                      processedImageUrl: imageUrl,
+                      processedImageUrl: permanentUrl || imageUrl, // Usar URL permanente si está disponible
                       style: prompt,
                       errorMessage: null,
                       startedAt: new Date(),

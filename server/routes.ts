@@ -764,7 +764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deductCredits(userId, EDIT_COST);
       
       // Si hay una imagen generada, guardarla permanentemente en galería
-      // pero mantener el base64 para el chat
+      let permanentImageUrl = '';
       if (result.editedImage && result.editedImage.startsWith('data:')) {
         try {
           console.log('=== GUARDANDO IMAGEN GEMINI EN GALERÍA ===');
@@ -778,6 +778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
           
           console.log('Imagen subida a Object Storage:', uploadResult.imageUrl);
+          permanentImageUrl = uploadResult.imageUrl; // Guardar la URL permanente
           
           // Guardar en galería con las URLs permanentes
           const galleryItem = await storage.addToGallery({
@@ -803,11 +804,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Retornar el resultado con el base64 original para que se muestre en el chat
-      // La imagen ya está guardada en la galería con URL permanente
+      // Retornar el resultado con ambas URLs: base64 para el chat y permanente para el historial
       res.json({
         ...result,
-        editedImage: result.editedImage, // Mantener base64 para el chat
+        editedImage: result.editedImage, // Base64 para el chat
+        permanentUrl: permanentImageUrl, // URL permanente para el historial
         creditsUsed: EDIT_COST,
         creditsRemaining: availableCredits - EDIT_COST
       });

@@ -23,7 +23,7 @@ interface ChatAssistantProps {
   language?: "es" | "en";
   embedded?: boolean;
   onImageUpload?: (imageUrl: string, file: File) => void;
-  onImageGenerated?: (imageUrl: string, prompt: string) => void;
+  onImageGenerated?: (imageUrl: string, prompt: string, permanentUrl?: string) => void;
   isAuthenticated?: boolean;
   onAuthRequired?: () => void;
   modelVariant?: string;
@@ -531,7 +531,8 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           if (result.editedImage) {
             setStoredImage(result.editedImage);
             if (onImageGenerated) {
-              onImageGenerated(result.editedImage, userMessage.content);
+              // Pasar también la URL permanente si está disponible
+              onImageGenerated(result.editedImage, userMessage.content, result.permanentUrl);
             }
             toast({
               title: language === 'es' ? "✨ Imagen editada" : "✨ Image edited",
