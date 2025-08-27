@@ -339,7 +339,7 @@ function DesignEditor() {
       }
       
       // También invalidar queries para actualizar el historial y créditos
-      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery", "design", 8] });
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     };
@@ -419,10 +419,13 @@ function DesignEditor() {
 
   const txt = t[language];
 
-  // Fetch user's projects (moved before useEffect to avoid initialization error)
-  const { data: projects = [] } = useQuery<FluxProject[]>({
-    queryKey: ["/api/flux/projects"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+  // Fetch ALL recent designs from gallery (both Gemini and FLUX) - persistent storage
+  const { data: galleryDesigns = [] } = useQuery({
+    queryKey: ["/api/gallery", "design", 8],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/gallery?type=design&limit=8');
+      return response.json();
+    },
     initialData: [],
     enabled: isAuthenticated, // evita petición antes de autenticarse
     staleTime: 0,              // permite refetch inmediato tras login
@@ -430,15 +433,15 @@ function DesignEditor() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery", "design", 8] });
     }
   }, [isAuthenticated, queryClient]);
 
-  // Verificar automáticamente cuando se actualiza la lista de proyectos
+  // Verificar automáticamente cuando se actualiza la lista de diseños
   useEffect(() => {
-    if (!currentJob || currentJob.status !== 'processing' || !projects.length) return;
+    if (!currentJob || currentJob.status !== 'processing' || !galleryDesigns.length) return;
 
-    const completedProject = projects.find((p: any) => p.id === currentJob.id);
+    const completedProject = galleryDesigns.find((p: any) => p.id === currentJob.id);
     if (completedProject && completedProject.imageUrl && !completedProject.imageUrl.includes('placeholder')) {
       console.log('Design job completed, updating state');
       setIsGenerating(false);
@@ -458,7 +461,7 @@ function DesignEditor() {
         description: "Tu imagen ha sido generada exitosamente",
       });
     }
-  }, [projects, currentJob, updateJob, toast]);
+  }, [galleryDesigns, currentJob, updateJob, toast]);
 
 
 
@@ -485,7 +488,7 @@ function DesignEditor() {
         startedAt: new Date().toISOString()
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery", "design", 8] });
       setIsGenerating(false);
     },
     onError: () => {
@@ -503,7 +506,7 @@ function DesignEditor() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/flux/projects'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery", "design", 8] });
       toast({
         title: language === 'es' ? 'Imagen eliminada' : 'Image deleted',
         description: language === 'es' ? 'La imagen se ha eliminado correctamente' : 'The image has been deleted successfully',
@@ -692,8 +695,8 @@ function DesignEditor() {
         style: modelVariant,
       });
       
-      // Invalidate projects query to refresh history
-      queryClient.invalidateQueries({ queryKey: ["/api/flux/projects"] });
+      // Invalidate gallery query to refresh history
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery", "design", 8] });
       queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
       queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
@@ -1290,10 +1293,10 @@ function DesignEditor() {
                           name: job.style || 'Gemini Design',
                           isLocal: true
                         })),
-                        ...projects.map((project) => ({
-                          id: project.id,
-                          imageUrl: project.imageUrl,
-                          name: project.name,
+                        ...galleryDesigns.map((design: any) => ({
+                          id: design.id,
+                          imageUrl: design.imageUrl,
+                          name: design.title || design.style || 'Diseño',
                           isLocal: false
                         }))
                       ].slice(0, 8);
@@ -1367,18 +1370,18 @@ function DesignEditor() {
                     })()}
                   </div>
                   
-                  {/* Load More Button - show when there are more than 8 projects */}
-                  {projects.length > 8 && (
+                  {/* Load More Button - show when there are more than 8 designs */}
+                  {galleryDesigns.length >= 8 && (
                     <div className="flex justify-center">
                       <Button
                         variant="outline"
                         onClick={() => {
-                          // Navigate to main gallery to see all projects
+                          // Navigate to main gallery to see all designs
                           window.location.href = '/gallery';
                         }}
                         className="text-sm"
                       >
-                        Ver todos ({projects.length} diseños)
+                        Ver todos los diseños
                       </Button>
                     </div>
                   )}
