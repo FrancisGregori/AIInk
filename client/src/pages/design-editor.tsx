@@ -992,6 +992,28 @@ function DesignEditor() {
                       processingOptions: {}
                     };
                     setCurrentJob(tempJob);
+                    
+                    // Guardar el trabajo en localStorage con metadata completa
+                    console.log('Trabajo completed guardado en localStorage:', tempJobId);
+                    try {
+                      const stored = localStorage.getItem('tattoo-stencil-jobs');
+                      let jobs = stored ? JSON.parse(stored) : [];
+                      
+                      // Agregar el trabajo completado al historial con tipo 'design'
+                      jobs.push({
+                        ...tempJob,
+                        type: 'design' // Importante para el filtrado
+                      });
+                      
+                      // Limitar a 20 trabajos más recientes
+                      if (jobs.length > 20) {
+                        jobs = jobs.slice(-20);
+                      }
+                      
+                      localStorage.setItem('tattoo-stencil-jobs', JSON.stringify(jobs));
+                    } catch (error) {
+                      console.error('Error guardando trabajo en localStorage:', error);
+                    }
                   }}
                 />
               </CardContent>
