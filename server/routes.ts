@@ -763,9 +763,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Deducir créditos solo si fue exitoso
       await storage.deductCredits(userId, EDIT_COST);
       
-      // Retornar el resultado
+      // Si hay una imagen generada, guardarla permanentemente
+      let finalImageUrl = result.editedImage;
+      let thumbnailUrl = null;
+      
+      if (result.editedImage && result.editedImage.startsWith('data:')) {
+        try {
+          console.log('=== GUARDANDO IMAGEN GEMINI EN GALERÍA ===');
+          
+          // Subir imagen a Object Storage
+          const objectStorage = new ObjectStorageService();
+          const uploadResult = await objectStorage.uploadImageFromBase64(
+            result.editedImage,
+            'designs',
+            userId
+          );
+          
+          finalImageUrl = uploadResult.imageUrl;
+          thumbnailUrl = uploadResult.thumbnailUrl;
+          
+          console.log('Imagen subida a Object Storage:', finalImageUrl);
+          
+          // Guardar en galería
+          const galleryItem = await storage.addToGallery({
+            userId,
+            imageUrl: finalImageUrl,
+            thumbnailUrl: thumbnailUrl,
+            type: 'design',
+            title: `Gemini Edit: ${prompt.slice(0, 40)}`,
+            description: prompt,
+            prompt: prompt,
+            metadata: {
+              model: 'gemini-2.0-flash-exp',
+              editType: 'image_edit',
+              originalImage: imageBase64 ? 'provided' : 'none'
+            }
+          });
+          
+          console.log('Imagen guardada en galería:', galleryItem.id);
+          
+        } catch (saveError) {
+          console.error('Error guardando imagen en galería:', saveError);
+          // Continuar aunque falle el guardado, ya que la imagen fue generada
+        }
+      }
+      
+      // Retornar el resultado con la URL permanente
       res.json({
         ...result,
+        editedImage: finalImageUrl, // Usar URL permanente en lugar de base64
+        thumbnailUrl: thumbnailUrl,
         creditsUsed: EDIT_COST,
         creditsRemaining: availableCredits - EDIT_COST
       });
