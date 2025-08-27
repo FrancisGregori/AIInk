@@ -1,0 +1,108 @@
+🧠 Instrucciones del Sistema para Chat
+const systemPrompt = "Eres un asistente útil y conciso. Responde de manera breve y directa, máximo 2-3 oraciones. Si necesitas dar una explicación detallada, ofrece resumir los puntos principales.";
+// Configuración del chat
+config: {
+  systemInstruction: systemPrompt,
+  maxOutputTokens: 150,  // Máximo 150 tokens (aprox 120 palabras)
+}
+🔄 Flujo Completo del Chat
+1. Mensaje Normal (Solo Texto)
+// Usuario escribe mensaje → Se envía al backend
+await chatMutation.mutateAsync({
+  messages: [{ role: "user", content: "Hola, ¿cómo estás?" }]
+});
+// Backend procesa con Gemini
+const response = await ai.models.generateContent({
+  model: "gemini-2.5-flash",
+  contents: text,
+});
+// Respuesta se agrega al chat
+setMessages(prev => [...prev, {
+  role: "assistant", 
+  content: data.text,
+  timestamp: new Date()
+}]);
+2. Edición de Imagen (Imagen + Texto)
+// Usuario sube imagen + escribe instrucción
+if (uploadedImage && message) {
+  await imageMutation.mutateAsync({
+    prompt: "Cambia el fondo a azul",         // La instrucción
+    imageBase64: uploadedImage.base64,        // Imagen en base64
+    mimeType: "image/jpeg"                    // Tipo de archivo
+  });
+}
+🎨 Proceso de Generación de Imagen
+Backend recibe la petición:
+
+// Construye el contenido para Gemini
+contents = [
+  {
+    inlineData: {
+      data: imageBase64,      // La imagen original
+      mimeType: mimeType,     // "image/jpeg", "image/png", etc.
+    },
+  },
+  prompt,                   // "Cambia el fondo a azul"
+];
+// Envía a Gemini 2.5 Flash Image Preview
+const response = await ai.models.generateContent({
+  model: "gemini-2.5-flash-image-preview",
+  contents: contents,
+});
+Gemini procesa y devuelve:
+
+// Extrae la imagen editada de la respuesta
+for (const part of content.parts) {
+  if (part.inlineData && part.inlineData.data) {
+    return {
+      mimeType: "image/png",               // Siempre PNG
+      dataBase64: part.inlineData.data     // Imagen editada en base64
+    };
+  }
+}
+🔄 Magia de la Edición Continua
+Cuando llega la imagen editada:
+
+onSuccess: async (data) => {
+  // 1. Muestra la imagen editada en el chat
+  setMessages(prev => [...prev, {
+    content: "He editado tu imagen. Puedes seguir editándola:",
+    editedImage: {
+      dataBase64: data.dataBase64,
+      mimeType: data.mimeType
+    }
+  }]);
+  // 2. CLAVE: Convierte la imagen editada en la nueva imagen cargada
+  const editedFile = await base64ToFile(data.dataBase64, "edited-image.png");
+  const editedPreview = URL.createObjectURL(editedFile);
+  
+  setUploadedImage({
+    file: editedFile,
+    preview: editedPreview,
+    base64: data.dataBase64     // ¡Esta es ahora la imagen base!
+  });
+}
+🎯 Decisión de Comportamiento
+const handleSendMessage = async () => {
+  if (uploadedImage && message) {
+    // 🎨 HAY IMAGEN: Edita la imagen con el texto
+    await imageMutation.mutateAsync({...});
+  } else if (message) {
+    // 💬 SOLO TEXTO: Chat normal
+    await chatMutation.mutateAsync({...});
+  }
+};
+📊 Estados Visuales
+Miniatura en la barra de input:
+
+{uploadedImage ? (
+  <img 
+    src={uploadedImage.preview}           // URL local de la imagen
+    className="w-12 h-12 rounded-lg"      // 48x48px, bordes redondeados
+  />
+) : (
+  <Button>                               // Botón de subir si no hay imagen
+    <svg>📎</svg>
+  </Button>
+)}
+Resultado: Cada vez que editas una imagen, esa imagen editada se convierte automáticamente en la nueva imagen base para la siguiente edición. ¡Es como tener Photoshop pero conversacional! 🎨✨
