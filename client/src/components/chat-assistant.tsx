@@ -529,7 +529,11 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           
           // Si se generó una nueva imagen, actualizarla como la imagen actual
           if (result.editedImage) {
-            setStoredImage(result.editedImage);
+            // Usar URL permanente si está disponible, si no usar la imagen base64
+            const newImage = result.permanentUrl || result.editedImage;
+            setStoredImage(newImage);
+            console.log('Actualizando imagen de referencia (Edit-Image):', newImage.substring(0, 50));
+            
             if (onImageGenerated) {
               // Pasar también la URL permanente si está disponible
               onImageGenerated(result.editedImage, userMessage.content, result.permanentUrl);
@@ -727,9 +731,13 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         
         // Si se generó una nueva imagen, actualizarla
         if (result.editedImage) {
-          setStoredImage(result.editedImage);
+          // Usar URL permanente si está disponible, si no usar la imagen base64
+          const newImage = result.permanentUrl || result.editedImage;
+          setStoredImage(newImage);
+          console.log('Actualizando imagen de referencia (Gemini):', newImage.substring(0, 50));
+          
           if (onImageGenerated) {
-            onImageGenerated(result.editedImage, content);
+            onImageGenerated(result.editedImage, content, result.permanentUrl);
           }
           
           // Agregar mensaje mostrando la imagen generada
@@ -802,6 +810,10 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         const result = await response.json();
         
         if (result.success && result.imageUrl) {
+          // IMPORTANTE: Actualizar la imagen almacenada para la siguiente edición
+          setStoredImage(result.imageUrl);
+          console.log('Actualizando imagen de referencia (FLUX):', result.imageUrl.substring(0, 50));
+          
           // Success toast
           toast({
             title: language === 'es' ? "¡Imagen generada!" : "Image generated!",
