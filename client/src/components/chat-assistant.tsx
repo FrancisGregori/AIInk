@@ -476,62 +476,94 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       if (storedImage && inputMessage.trim() && modelVariant === 'gemini-preview') {
         console.log('Using Gemini Preview for image editing');
         
-        // Llamar al endpoint de edición de imágenes
-        const response = await fetch('/api/edit-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: userMessage.content,
-            imageBase64: storedImage,
-            mimeType: storedImage.startsWith('data:image/png') ? 'image/png' : 'image/jpeg'
-          })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          if (response.status === 402) {
-            throw new Error(error.error || 'No tienes créditos suficientes');
-          }
-          throw new Error('Failed to edit image');
-        }
-
-        const result = await response.json();
-        
-        // Create assistant message with the result
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: result.editedImage 
-            ? (language === 'es' ? '✨ Imagen editada con éxito' : '✨ Image edited successfully')
-            : result.result || (language === 'es' ? 'Procesando tu solicitud...' : 'Processing your request...'),
-          timestamp: new Date(),
-          image: result.editedImage // Si hay imagen editada, mostrarla
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        
-        // Si se generó una nueva imagen, actualizarla como la imagen actual
-        if (result.editedImage) {
-          setStoredImage(result.editedImage);
-          if (onImageGenerated) {
-            onImageGenerated(result.editedImage, userMessage.content);
-          }
-          toast({
-            title: language === 'es' ? "✨ Imagen editada" : "✨ Image edited",
-            description: language === 'es' 
-              ? "La imagen ha sido modificada exitosamente" 
-              : "The image has been successfully modified"
+        try {
+          // Llamar al endpoint de edición de imágenes
+          const response = await fetch('/api/edit-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: userMessage.content,
+              imageBase64: storedImage,
+              mimeType: storedImage.startsWith('data:image/png') ? 'image/png' : 'image/jpeg'
+            })
           });
-        }
-        
-        // Mostrar créditos restantes si están disponibles
-        if (result.creditsRemaining !== undefined) {
-          toast({
-            title: language === 'es' ? "Créditos" : "Credits",
-            description: language === 'es' 
-              ? `Te quedan ${result.creditsRemaining} créditos`
-              : `You have ${result.creditsRemaining} credits remaining`
-          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            if (response.status === 402) {
+              // Mensaje específico para créditos insuficientes
+              const errorMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: error.error || 'No tienes créditos suficientes',
+                timestamp: new Date()
+              };
+              setMessages(prev => [...prev, errorMessage]);
+              
+              toast({
+                title: language === 'es' ? "Sin créditos" : "No credits",
+                description: error.error || 'No tienes créditos suficientes',
+                variant: "destructive"
+              });
+              
+              setIsLoading(false);
+              return;
+            }
+            throw new Error('Failed to edit image');
+          }
+
+          const result = await response.json();
+          
+          // Create assistant message with the result
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: result.editedImage 
+              ? (language === 'es' ? '✨ Imagen editada con éxito' : '✨ Image edited successfully')
+              : result.result || (language === 'es' ? 'Procesando tu solicitud...' : 'Processing your request...'),
+            timestamp: new Date(),
+            image: result.editedImage // Si hay imagen editada, mostrarla
+          };
+          
+          setMessages(prev => [...prev, assistantMessage]);
+          
+          // Si se generó una nueva imagen, actualizarla como la imagen actual
+          if (result.editedImage) {
+            setStoredImage(result.editedImage);
+            if (onImageGenerated) {
+              onImageGenerated(result.editedImage, userMessage.content);
+            }
+            toast({
+              title: language === 'es' ? "✨ Imagen editada" : "✨ Image edited",
+              description: language === 'es' 
+                ? "La imagen ha sido modificada exitosamente" 
+                : "The image has been successfully modified"
+            });
+          }
+          
+          // Mostrar créditos restantes si están disponibles
+          if (result.creditsRemaining !== undefined) {
+            toast({
+              title: language === 'es' ? "Créditos" : "Credits",
+              description: language === 'es' 
+                ? `Te quedan ${result.creditsRemaining} créditos`
+                : `You have ${result.creditsRemaining} credits remaining`
+            });
+          }
+        } catch (geminiError: any) {
+          // Manejar errores específicos de Gemini
+          console.error('Error in Gemini edit:', geminiError);
+          
+          const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: geminiError.message || (language === 'es'
+              ? '❌ Error al editar la imagen.'
+              : '❌ Error editing image.'),
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, errorMessage]);
         }
         
         setIsLoading(false);
