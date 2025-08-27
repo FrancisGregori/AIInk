@@ -306,21 +306,17 @@ export async function getChatResponseGemini(
       console.log('Is description request:', isDescriptionRequest);
       console.log('Is initial analysis:', isInitialAnalysis);
       
-      // Si el usuario ya envió un prompt técnico, aplicarlo directamente
+      // Si el usuario ya envió un prompt técnico, solo responder normalmente
       if (isTechnicalPrompt) {
-        console.log('User provided technical prompt, applying directly');
-        // Si ya está en inglés con formato correcto, devolver tal cual
+        console.log('User message detected');
         chatMessages = [
           {
             role: "user",
             parts: [
               {
-                text: `The user provided this technical prompt: "${lastMessage}"
+                text: `El usuario dice: "${lastMessage}"
 
-If it's already in perfect English technical format, return it EXACTLY as is.
-If it's in another language or needs minor formatting, translate/adjust to English keeping the technical structure.
-
-OUTPUT ONLY THE TECHNICAL PROMPT (no explanations):`
+Responde de forma natural y conversacional.`
               },
               {
                 inlineData: {
@@ -351,15 +347,15 @@ OUTPUT ONLY THE TECHNICAL PROMPT (no explanations):`
           }
         ];
       } else {
-        // Cualquier solicitud de modificación - genera prompt técnico directo
+        // Cualquier solicitud - responder de forma natural
         chatMessages = [
           {
             role: "user",
             parts: [
               {
-                text: `Generate a technical edit prompt based on this request: ${lastMessage}
+                text: `El usuario dice: "${lastMessage}"
 
-Output only the technical prompt in English.`
+Responde de forma natural y conversacional.`
               },
               {
                 inlineData: {
