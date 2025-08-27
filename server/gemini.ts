@@ -21,9 +21,7 @@ const getGeminiKey = (): string => {
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export async function summarizeArticle(text: string): Promise<string> {
-    const prompt = `You are a helpful AI assistant for Darwin AI Tools, a platform that provides professional AI-powered design tools including Stencil Tool and Flux Kontext editor.
-
-Please respond to the following message in a helpful, professional manner. If the user is asking about design, creative work, or needs assistance with AI tools, provide relevant guidance and suggestions.
+    const prompt = `You are a helpful AI assistant.
 
 Message: ${text}`;
 
@@ -95,13 +93,7 @@ export async function analyzeImage(jpegImagePath: string): Promise<string> {
                     mimeType: "image/jpeg",
                 },
             },
-            `As an AI assistant for Darwin AI Tools, analyze this image in detail. 
-            Focus on design elements, composition, colors, and potential applications for:
-            1. Stencil creation (suitable for conversion to stencils)
-            2. Design inspiration for Flux Kontext projects
-            3. Overall artistic and technical qualities
-            
-            Provide practical suggestions for how this image could be used or improved with our AI tools.`,
+            `Analyze this image and describe what you see.`,
         ];
 
         const response = await ai.models.generateContent({
@@ -124,20 +116,8 @@ export async function analyzeImageForTattoo(imageBase64: string, language: "es" 
 }> {
     try {
         const systemPrompt = language === "es" 
-            ? `Eres InkVision, un asistente IA experto en diseño de tatuajes integrado en TattoostencilPro. 
-               Analiza la imagen para crear diseños de tatuajes profesionales. Identifica:
-               1. Elementos visuales principales que funcionarían en un tatuaje
-               2. Estilos de tatuaje recomendados (blackwork, realista, geométrico, tradicional, etc.)
-               3. Ubicaciones corporales ideales
-               4. Modificaciones sugeridas para optimizar como tatuaje
-               5. Técnicas de stencil apropiadas`
-            : `You are InkVision, an expert tattoo design AI assistant integrated in TattoostencilPro.
-               Analyze the image to create professional tattoo designs. Identify:
-               1. Main visual elements that would work in a tattoo
-               2. Recommended tattoo styles (blackwork, realistic, geometric, traditional, etc.)
-               3. Ideal body placements
-               4. Suggested modifications to optimize as tattoo
-               5. Appropriate stencil techniques`;
+            ? `Eres InkVision, un asistente IA. Analiza la imagen proporcionada.`
+            : `You are InkVision, an AI assistant. Analyze the provided image.`;
 
         const contents = [
             {
@@ -204,19 +184,11 @@ export async function inkVisionChat(
     suggestions: string[];
 }> {
     try {
-        const systemPrompt = `Eres InkVision, el asistente IA experto en edición de imágenes de TattoostencilPro.
+        const systemPrompt = `Eres InkVision, un asistente IA.
                
                IDIOMA: Detecta automáticamente el idioma del mensaje y responde en ese mismo idioma.
                
-               Tienes conocimiento profundo sobre:
-               - Modificación avanzada de imágenes para tatuajes: rotar rostros, cambiar pose, ajustar perspectiva/encuadre, iluminación y ángulo de cámara
-               - Edición de diseños del propio artista para generar variantes y mejorar el diseño rápidamente
-               - Estilos artísticos: especializado en surrealismo, compatible con todos (realismo, black & grey, tradicional, neo-tradicional, geométrico, etc.)
-               - Flux Kontext y Qwen-Image-Edit para edición avanzada
-               
-               Contexto actual: ${context}
-               
-               Responde de forma profesional, precisa y orientada a la edición para artistas del tatuaje.`;
+               Contexto actual: ${context}`;
 
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -284,20 +256,9 @@ Provide practical steps, color suggestions, composition ideas, and specific tech
 
 export async function generateFluxPrompt(userDescription: string): Promise<string> {
     try {
-        const promptGeneration = `You are an expert prompt engineer for AI image generation models like Flux Kontext.
+        const promptGeneration = `Generate an image prompt based on: ${userDescription}
 
-Convert this user description into a detailed, optimized prompt for generating high-quality designs:
-
-User description: ${userDescription}
-
-Create a comprehensive prompt that includes:
-- Style specifications
-- Color palette suggestions  
-- Composition details
-- Technical quality parameters
-- Artistic direction
-
-Respond with just the optimized prompt, no additional explanation.`;
+Respond with just the prompt, no explanation.`;
 
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -412,17 +373,7 @@ OUTPUT ONLY THE TECHNICAL PROMPT (no explanations):`
             role: "user",
             parts: [
               {
-                text: `NO describas la imagen. Ve directo a la pregunta.
-
-Detecta el idioma del último mensaje del usuario y responde en ese mismo idioma.
-
-Identifica el sujeto principal y pregunta según el tipo:
-- Si es rostro/cara → "¿Qué quieres cambiar del rostro?"
-- Si es perro/animal → "¿Qué quieres cambiar del [animal]: fondo, luz, pose o expresión?"
-- Si es personaje/persona → "¿Qué quieres cambiar del personaje: fondo, luz, pose, ángulo o expresión?"
-- Si es otro sujeto/escena → "¿Qué quieres cambiar: fondo, luz, pose/ángulo o color?"
-
-Sé directo y profesional. Sin emojis ni explicaciones largas. Una sola pregunta breve.`
+                text: `Analiza la imagen y pregunta qué modificación desea el usuario.`
               },
               {
                 inlineData: {
@@ -440,40 +391,9 @@ Sé directo y profesional. Sin emojis ni explicaciones largas. Una sola pregunta
             role: "user",
             parts: [
               {
-                text: `You are an AI that generates technical edit prompts optimized for Qwen-Image-Edit (and compatible with Flux Kontext Pro).
+                text: `Generate a technical edit prompt based on this request: ${lastMessage}
 
-CRITICAL RULES:
-- Output ONLY the technical prompt in English
-- One single sentence, imperative, direct and concise
-- Mandatory format: [action] [change][, context], maintaining [what stays the same]
-- Name the target (subject/object/surface) and location (on/in/at/in front of) when applicable
-- For text in images, use quotes and surface: Replace 'OLD' with 'NEW' on [surface], maintaining font style and layout
-- If crucial, add brief constraint: ... do not change [X]
-- Never give explanations or mention tools/tutorials
-
-KEY TEMPLATES:
-- Change the background to [scene], maintaining [subject/lighting]
-- Replace '[old]' with '[new]' on [surface], maintaining font style and layout
-- Add [object] [position/size] [context], maintaining [composition/lighting]
-- Remove [object] from [location], maintaining [surroundings/details]
-- Change the [object] color to [color], maintaining materials and reflections
-- Transform to [style], maintaining identity and composition
-- Turn the subject to [front/left/right/back] view, maintaining identity and outfit
-- Rotate the subject [angle]°, maintaining identity and proportions
-- Change lighting to [type], maintaining composition
-
-COMMON REQUESTS:
-- "de frente" / "vista frontal" → "Turn the subject to front view, maintaining identity and outfit"
-- "girar cabeza" → "Rotate the head [direction], maintaining body position"
-- "cambiar fondo" → "Change the background to [scene], maintaining subject and lighting"
-- "quitar fondo" → "Remove the background, maintaining subject"
-- "añadir [elemento]" → "Add [element] [position], maintaining composition"
-- "cambiar color" → "Change the [object] color to [color], maintaining materials"
-- "más luz" → "Change lighting to bright/dramatic, maintaining composition"
-
-USER REQUEST: ${lastMessage}
-
-OUTPUT ONLY THE TECHNICAL PROMPT:`
+Output only the technical prompt in English.`
               },
               {
                 inlineData: {
@@ -490,31 +410,11 @@ OUTPUT ONLY THE TECHNICAL PROMPT:`
       const systemMessage = {
         role: "user",
         parts: [{
-          text: `## ERES "InkVision" - ESPECIALISTA EN EDICIÓN DE IMÁGENES PARA TATUAJES
+          text: `Eres InkVision, un asistente IA.
 
-**PERSONALIDAD:**
-- Tatuador experto con 20 años de experiencia
-- Tono cercano, motivador y seguro
-- Le gusta enseñar y compartir conocimiento
-- Conversa con naturalidad
-- **IDIOMA:** Detecta automáticamente el idioma del último mensaje del usuario y responde en ese mismo idioma (español, inglés, o cualquier otro)
-- Explica técnicas, da consejos artísticos y resuelve dudas
+IDIOMA: Detecta automáticamente el idioma del último mensaje del usuario y responde en ese mismo idioma.
 
-**CONOCIMIENTO ESPECIALIZADO:**
-- Modificación avanzada de imágenes para tatuajes: rotar rostros, cambiar pose, ajustar perspectiva/encuadre, iluminación y ángulo de cámara
-- Edición de diseños del propio artista para generar variantes y mejorar el diseño rápidamente
-- Estilos artísticos: especializado en surrealismo, compatible con todos los estilos (realismo, black & grey, tradicional, neo-tradicional, geométrico, etc.)
-- Flux Kontext y Qwen-Image-Edit para edición avanzada
-
-**CHAT DE SOLO TEXTO:**
-- Mantén la voz experta y empática
-- Enfócate en edición de diseños y modificación de imágenes
-- Ayuda con dudas sobre el proceso creativo y técnicas de edición
-- Respuesta profesional, precisa y orientada a la edición
-
-**REGLAS DE ESTILO:** Directo, profesional, sin emojis, respuestas claras.
-
-Responde como InkVision naturalmente:`
+Responde de forma profesional y clara.`
         }]
       };
       
