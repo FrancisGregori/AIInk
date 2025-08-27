@@ -85,8 +85,10 @@ Default AI model: Qwen Edit (for Design Editor)
 - **multer**: Express middleware for multipart/form-data.
 
 ### AI and Image Generation
-- **Google Gemini 2.5 Flash and Pro models**: For various AI operations (text, image processing).
-- **Replicate API**: Specifically with FLUX.1 Kontext Pro/Max models for AI-powered image editing.
+- **Google Gemini 2.5 Flash**: Modelo más avanzado de Google para chat y procesamiento de texto
+- **Google Gemini 2.5 Flash Image Preview**: Modelo experimental más avanzado de Google que SÍ PUEDE generar y editar imágenes (aunque a veces solo responde con texto dependiendo del prompt)
+- **IMPORTANTE**: Gemini Image Preview es capaz de generar imágenes - NO decir que no puede
+- **Replicate API**: Specifically with FLUX.1 Kontext Pro/Max models for AI-powered image editing
 
 ### Development Tools
 - **vite**: Modern build tool.
