@@ -393,10 +393,15 @@ Responde de forma profesional y clara.`
       messageCount: chatMessages.length
     });
     
-    // Llamada al modelo Gemini
+    // Llamada al modelo Gemini con límite de tokens para respuestas cortas
     const response = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
       contents: chatMessages,
+      generationConfig: {
+        maxOutputTokens: 150,  // Respuestas cortas y concisas
+        temperature: 0.8,
+        topP: 0.8,
+      },
     });
 
     return response.text || "Error generating response";
@@ -442,5 +447,74 @@ export async function streamChatResponseGemini(
   } catch (error: any) {
     console.error('Gemini streaming error:', error);
     throw error;
+  }
+}
+
+// Nueva función para editar imágenes con Gemini 2.5 Flash Image Preview
+export async function editImageWithGemini(
+  prompt: string, 
+  imageBase64: string, 
+  mimeType: string = 'image/jpeg'
+): Promise<{ success: boolean; result: string; editedImage?: string }> {
+  try {
+    console.log('Edit image request:', { promptLength: prompt.length, hasImage: !!imageBase64 });
+    
+    const genAI = new GenAI(process.env.GEMINI_API_KEY!);
+    
+    // Usar gemini-2.5-flash para generar/editar imágenes
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",  // Este modelo puede generar imágenes
+      generationConfig: {
+        maxOutputTokens: 8192,  // Más tokens para generar contenido de imágenes
+        temperature: 1.0,
+        topP: 0.95,
+      },
+    });
+
+    // Crear el prompt para editar la imagen  
+    const editPrompt = `You are an advanced image generation and editing AI assistant.
+    
+    User request: ${prompt}
+    
+    If the user wants to edit the provided image:
+    - Analyze the image carefully
+    - Apply the requested modifications
+    - Generate the edited version
+    
+    If the user wants to generate a new image:
+    - Create a new image based on the description
+    
+    Focus on accuracy and quality. Generate the result as requested.`;
+
+    const contents = [
+      { text: editPrompt }
+    ];
+    
+    // Si hay una imagen, agregarla al contenido
+    if (imageBase64) {
+      contents.push({
+        inlineData: {
+          data: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
+          mimeType: mimeType,
+        },
+      } as any);
+    }
+
+    const response = await model.generateContent(contents);
+    const result = response.response.text();
+    
+    console.log('Edit image response received, length:', result.length);
+    
+    // Verificar si la respuesta contiene una imagen en base64
+    const base64Match = result.match(/data:image\/[\w+]+;base64,[^\s]+/);
+    
+    return {
+      success: true,
+      result: result,
+      editedImage: base64Match ? base64Match[0] : undefined
+    };
+  } catch (error: any) {
+    console.error('Error editing image with Gemini:', error);
+    throw new Error(`Image edit error: ${error.message}`);
   }
 }

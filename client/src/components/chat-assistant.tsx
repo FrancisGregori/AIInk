@@ -472,6 +472,73 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
     setIsLoading(true);
 
     try {
+      // Si hay una imagen cargada, usar el endpoint de edición de imágenes
+      if (storedImage && inputMessage.trim()) {
+        console.log('Image detected, using edit-image endpoint');
+        
+        // Llamar al endpoint de edición de imágenes
+        const response = await fetch('/api/edit-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: userMessage.content,
+            imageBase64: storedImage,
+            mimeType: storedImage.startsWith('data:image/png') ? 'image/png' : 'image/jpeg'
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          if (response.status === 402) {
+            throw new Error(error.error || 'No tienes créditos suficientes');
+          }
+          throw new Error('Failed to edit image');
+        }
+
+        const result = await response.json();
+        
+        // Create assistant message with the result
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: result.editedImage 
+            ? (language === 'es' ? '✨ Imagen editada con éxito' : '✨ Image edited successfully')
+            : result.result || (language === 'es' ? 'Procesando tu solicitud...' : 'Processing your request...'),
+          timestamp: new Date(),
+          image: result.editedImage // Si hay imagen editada, mostrarla
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // Si se generó una nueva imagen, actualizarla como la imagen actual
+        if (result.editedImage) {
+          setStoredImage(result.editedImage);
+          if (onImageGenerated) {
+            onImageGenerated(result.editedImage, userMessage.content);
+          }
+          toast({
+            title: language === 'es' ? "✨ Imagen editada" : "✨ Image edited",
+            description: language === 'es' 
+              ? "La imagen ha sido modificada exitosamente" 
+              : "The image has been successfully modified"
+          });
+        }
+        
+        // Mostrar créditos restantes si están disponibles
+        if (result.creditsRemaining !== undefined) {
+          toast({
+            title: language === 'es' ? "Créditos" : "Credits",
+            description: language === 'es' 
+              ? `Te quedan ${result.creditsRemaining} créditos`
+              : `You have ${result.creditsRemaining} credits remaining`
+          });
+        }
+        
+        setIsLoading(false);
+        return; // Salir aquí si se usó el endpoint de edición
+      }
+      
+      // Si no hay imagen, usar el chat normal
       // Prepare messages for API
       const apiMessages = messages.slice(1).map(msg => ({
         role: msg.role,

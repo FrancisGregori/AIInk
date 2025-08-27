@@ -730,6 +730,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint for editing images with Gemini
+  app.post("/api/edit-image", isAuthenticated, async (req: any, res) => {
+    try {
+      const { prompt, imageBase64, mimeType = 'image/jpeg' } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ error: "No prompt provided" });
+      }
+      
+      // Verificar que el usuario tenga créditos suficientes
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      const availableCredits = await storage.getUserCredits(userId);
+      const EDIT_COST = 2; // 2 créditos por edición
+      
+      if (availableCredits < EDIT_COST) {
+        return res.status(402).json({
+          error: "No tienes créditos suficientes",
+          required: EDIT_COST,
+          available: availableCredits
+        });
+      }
+      
+      // Llamar a la función de edición
+      const { editImageWithGemini } = await import('./gemini');
+      const result = await editImageWithGemini(prompt, imageBase64, mimeType);
+      
+      // Deducir créditos solo si fue exitoso
+      await storage.deductCredits(userId, EDIT_COST);
+      
+      // Retornar el resultado
+      res.json({
+        ...result,
+        creditsUsed: EDIT_COST,
+        creditsRemaining: availableCredits - EDIT_COST
+      });
+      
+    } catch (error: any) {
+      console.error("Error editing image:", error);
+      res.status(500).json({ 
+        error: "Error al editar la imagen",
+        message: error.message
+      });
+    }
+  });
+
   // Replicate FLUX Kontext endpoint - Exact implementation from your original
   app.post("/api/generate", isAuthenticated, async (req: any, res) => {
     let creditsDeducted = false;
