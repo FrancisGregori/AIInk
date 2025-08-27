@@ -515,6 +515,24 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
           const result = await response.json();
           
           // Create assistant message with the result
+          // Si se generó una nueva imagen, convertir a blob URL primero
+          let blobUrl: string | undefined;
+          if (result.editedImage) {
+            // Convertir base64 a blob URL
+            const base64Data = result.editedImage.split(',')[1];
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'image/png' });
+            blobUrl = URL.createObjectURL(blob);
+            
+            // Guardar la URL blob
+            setStoredImage(blobUrl);
+          }
+          
           const assistantMessage: Message = {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
@@ -522,17 +540,16 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
               ? (language === 'es' ? '✨ Imagen generada con éxito' : '✨ Image generated successfully')
               : result.result || (language === 'es' ? 'Procesando tu solicitud...' : 'Processing your request...'),
             timestamp: new Date(),
-            image: result.editedImage // Si hay imagen editada, mostrarla
+            image: blobUrl || undefined // Usar la URL blob si se generó
           };
           
           setMessages(prev => [...prev, assistantMessage]);
           
-          // Si se generó una nueva imagen, actualizarla como la imagen actual
+          if (blobUrl && onImageGenerated) {
+            onImageGenerated(blobUrl, userMessage.content);
+          }
+          
           if (result.editedImage) {
-            setStoredImage(result.editedImage);
-            if (onImageGenerated) {
-              onImageGenerated(result.editedImage, userMessage.content);
-            }
             toast({
               title: language === 'es' ? "✨ Imagen editada" : "✨ Image edited",
               description: language === 'es' 
