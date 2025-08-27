@@ -78,6 +78,7 @@ function DesignEditor() {
   const [currentJob, setCurrentJob] = useState<any>(null);
   const [recoveredImageUrl, setRecoveredImageUrl] = useState<string | null>(null);
   const [gridSize, setGridSize] = useState<'small' | 'large'>('small');
+  const [localStorageJobs, setLocalStorageJobs] = useState<any[]>([]);
   
   // Suggested edit prompts organized by category
   const editSuggestions = {
@@ -121,6 +122,41 @@ function DesignEditor() {
       { es: "Nivel del suelo", en: "Ground level" },
     ],
   };
+
+  // Cargar y escuchar cambios en localStorage para el historial
+  useEffect(() => {
+    const loadLocalJobs = () => {
+      const stored = localStorage.getItem('tattoo-stencil-jobs');
+      if (stored) {
+        try {
+          const allJobs = JSON.parse(stored);
+          const designJobs = allJobs.filter((job: any) => 
+            job.type === 'design' && 
+            job.status === 'completed' && 
+            job.processedImageUrl
+          );
+          setLocalStorageJobs(designJobs);
+        } catch (e) {
+          console.error('Error loading local jobs:', e);
+        }
+      }
+    };
+
+    // Cargar inicial
+    loadLocalJobs();
+
+    // Escuchar cambios en localStorage
+    const handleStorageChange = () => {
+      loadLocalJobs();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Limpiar listener
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   // Recuperar trabajo en progreso al cargar la página - CON LIMPIEZA Y AUTENTICACIÓN
   useEffect(() => {
@@ -1003,15 +1039,24 @@ function DesignEditor() {
                       const stored = localStorage.getItem('tattoo-stencil-jobs');
                       let jobs = stored ? JSON.parse(stored) : [];
                       
-                      // Agregar el trabajo completado al historial con tipo 'design'
-                      // Convertir las fechas a strings para evitar problemas de serialización
-                      jobs.push({
-                        ...tempJob,
+                      // Crear objeto serializable para localStorage
+                      const serializableJob = {
+                        id: tempJobId,
+                        status: 'completed',
+                        originalImageUrl: referencePreview || '',
+                        processedImageUrl: permanentUrl || imageUrl,
+                        style: prompt,
+                        errorMessage: null,
                         startedAt: now.toISOString(),
                         completedAt: now.toISOString(),
                         createdAt: now.toISOString(),
+                        userId: 'temp-user',
+                        comfyDeployRunId: null,
+                        processingOptions: {},
                         type: 'design' // Importante para el filtrado
-                      });
+                      };
+                      
+                      jobs.push(serializableJob);
                       
                       // Limitar a 20 trabajos más recientes
                       if (jobs.length > 20) {
@@ -1020,6 +1065,17 @@ function DesignEditor() {
                       
                       localStorage.setItem('tattoo-stencil-jobs', JSON.stringify(jobs));
                       console.log('Trabajo guardado exitosamente en localStorage');
+                      
+                      // Actualizar estado local inmediatamente
+                      const designJobs = jobs.filter((job: any) => 
+                        job.type === 'design' && 
+                        job.status === 'completed' && 
+                        job.processedImageUrl
+                      );
+                      setLocalStorageJobs(designJobs);
+                      
+                      // También disparar evento para otros listeners
+                      window.dispatchEvent(new Event('storage'));
                     } catch (error) {
                       console.error('Error guardando trabajo en localStorage:', error);
                     }
@@ -1223,26 +1279,12 @@ function DesignEditor() {
                   }`}>
                     {/* Combinar trabajos locales de Gemini con proyectos del backend */}
                     {(() => {
-                      // Obtener trabajos locales completados del localStorage
-                      const stored = localStorage.getItem('tattoo-stencil-jobs');
-                      let localJobs: any[] = [];
-                      if (stored) {
-                        try {
-                          const allJobs = JSON.parse(stored);
-                          // Filtrar solo trabajos de design completados
-                          localJobs = allJobs.filter((job: any) => 
-                            job.type === 'design' && 
-                            job.status === 'completed' && 
-                            job.processedImageUrl
-                          );
-                        } catch (e) {
-                          console.error('Error parsing local jobs:', e);
-                        }
-                      }
+                      // Usar el estado reactivo en lugar de leer directamente del localStorage
+                      console.log('LocalStorageJobs desde estado:', localStorageJobs);
                       
                       // Combinar trabajos locales con proyectos del backend
                       const combinedItems = [
-                        ...localJobs.map((job: any) => ({
+                        ...localStorageJobs.map((job: any) => ({
                           id: job.id,
                           imageUrl: job.processedImageUrl,
                           name: job.style || 'Gemini Design',
@@ -1255,6 +1297,8 @@ function DesignEditor() {
                           isLocal: false
                         }))
                       ].slice(0, 8);
+                      
+                      console.log('Items combinados para el historial:', combinedItems);
                       
                       return combinedItems.map((item) => (
                         <Dialog key={item.id}>
