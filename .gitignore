@@ -8,3 +8,5 @@ vite.config.ts.*
 .env
 .idea
 yarn.lock
+CLAUDE.md
+.claude
