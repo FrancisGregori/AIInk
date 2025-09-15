@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { apiFetch } from "@/lib/api";
 import { useJobs } from "@/contexts/JobContext";
 import { useJobRecovery } from "@/hooks/useJobRecovery";
 import { useAuth } from "@/hooks/useAuth";
@@ -131,7 +132,7 @@ function StencilTool() {
       }
       
       // Después actualizar desde servidor en segundo plano
-      fetch(`/api/stencil/jobs/${latestJob.id}`)
+      apiFetch(`/api/stencil/jobs/${latestJob.id}`)
         .then(res => res.json())
         .then(serverJob => {
           if (serverJob.status !== latestJob.status || serverJob.processedImageUrl !== latestJob.processedImageUrl) {
@@ -169,7 +170,7 @@ function StencilTool() {
   // Process image mutation
   const processImageMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await fetch("/api/stencil/process", {
+      const response = await apiFetch("/api/stencil/process", {
         method: "POST",
         body: formData,
       });
@@ -231,7 +232,7 @@ function StencilTool() {
     
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`/api/stencil/jobs/${currentJob.id}`);
+        const response = await apiFetch(`/api/stencil/jobs/${currentJob.id}`);
         if (response.ok) {
           const updatedJob = await response.json();
           setCurrentJob(updatedJob);

@@ -3,6 +3,8 @@ import { Link, useLocation } from "wouter";
 import { Bot, Menu, X, LogOut, User, CreditCard, Image, Home, Wand2, Sparkles, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +20,24 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
   const { user, isAuthenticated } = useAuth();
+  const { signOut } = useFirebaseAuth();
+  const { toast } = useToast();
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign out",
+        variant: "destructive",
+      });
+    }
+  };
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -159,8 +179,8 @@ export default function Navigation() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => window.location.href = '/api/logout'}
-                    className="text-red-600 dark:text-red-400"
+                    onClick={handleSignOut}
+                    className="text-red-600 dark:text-red-400 cursor-pointer"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>

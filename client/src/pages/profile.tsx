@@ -5,16 +5,36 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Navigation from "@/components/Navigation";
 import { Link } from "wouter";
-import { ArrowLeft, CreditCard, User, Mail, Calendar, Package } from "lucide-react";
+import { ArrowLeft, CreditCard, User, Mail, Calendar, Package, LogOut } from "lucide-react";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { signOut } = useFirebaseAuth();
+  const { toast } = useToast();
   
   // Fetch credits data
   const { data: credits } = useQuery({
     queryKey: ["/api/credits"],
     enabled: isAuthenticated,
   });
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign out",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (authLoading) {
     return (
@@ -164,7 +184,7 @@ export default function Profile() {
         </Card>
 
         {/* Subscription Card */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-zinc-900 border-zinc-800 mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
@@ -188,6 +208,18 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Sign Out Button */}
+        <div className="mt-8">
+          <Button 
+            onClick={handleSignOut}
+            variant="outline"
+            className="w-full border-red-900 text-red-500 hover:bg-red-900/20"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
       </main>
     </div>
   );

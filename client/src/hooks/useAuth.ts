@@ -1,21 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
-import { type User } from "@shared/schema";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 
+// This hook now wraps the Firebase auth context for backwards compatibility
+// All existing components using useAuth will continue to work
 export function useAuth() {
-  const { data: user, isLoading } = useQuery<User | null>({
-    queryKey: ["/api/auth/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: false,
-    staleTime: 60 * 1000, // 60 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
-  });
-
+  const { user, isLoading, isAuthenticated } = useFirebaseAuth();
+  
   return {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated,
   };
 }

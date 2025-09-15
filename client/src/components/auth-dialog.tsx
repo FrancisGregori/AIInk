@@ -7,8 +7,11 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail } from "lucide-react";
+import { Mail, Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
+import { useState } from "react";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthDialogProps {
   open: boolean;
@@ -46,17 +49,89 @@ const translations = {
 
 export function AuthDialog({ open, onOpenChange, language = "en", toolType }: AuthDialogProps) {
   const t = translations[language];
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signInWithGoogle, signInWithApple, signInWithEmail, signUpWithEmail } = useFirebaseAuth();
+  const { toast } = useToast();
 
-  const handleGoogleLogin = () => {
-    window.location.href = "/api/login";
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await signInWithGoogle();
+      onOpenChange(false);
+      toast({
+        title: language === "es" ? "¡Bienvenido!" : "Welcome!",
+        description: language === "es" ? "Has iniciado sesión correctamente" : "You have successfully signed in",
+      });
+    } catch (error: any) {
+      toast({
+        title: language === "es" ? "Error" : "Error",
+        description: error.message || "Failed to sign in with Google",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleAppleLogin = () => {
-    window.location.href = "/api/login";
+  const handleAppleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await signInWithApple();
+      onOpenChange(false);
+      toast({
+        title: language === "es" ? "¡Bienvenido!" : "Welcome!",
+        description: language === "es" ? "Has iniciado sesión correctamente" : "You have successfully signed in",
+      });
+    } catch (error: any) {
+      toast({
+        title: language === "es" ? "Error" : "Error",
+        description: error.message || "Failed to sign in with Apple",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEmailLogin = () => {
-    window.location.href = "/api/login";
+  const handleEmailLogin = async () => {
+    if (!email || !password) {
+      toast({
+        title: language === "es" ? "Error" : "Error",
+        description: language === "es" ? "Por favor ingresa email y contraseña" : "Please enter email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (isSignUp) {
+        await signUpWithEmail(email, password);
+        toast({
+          title: language === "es" ? "¡Cuenta creada!" : "Account created!",
+          description: language === "es" ? "Tu cuenta ha sido creada exitosamente" : "Your account has been created successfully",
+        });
+      } else {
+        await signInWithEmail(email, password);
+        toast({
+          title: language === "es" ? "¡Bienvenido!" : "Welcome!",
+          description: language === "es" ? "Has iniciado sesión correctamente" : "You have successfully signed in",
+        });
+      }
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({
+        title: language === "es" ? "Error" : "Error",
+        description: error.message || "Authentication failed",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -82,6 +157,7 @@ export function AuthDialog({ open, onOpenChange, language = "en", toolType }: Au
           {/* Google Button */}
           <button
             onClick={handleGoogleLogin}
+            disabled={isLoading}
             className="w-full text-white font-normal py-3 px-4 text-base flex items-center justify-center gap-3 rounded-md hover:opacity-90 transition-opacity"
             style={{ 
               backgroundColor: '#3a3a3a',
@@ -101,6 +177,7 @@ export function AuthDialog({ open, onOpenChange, language = "en", toolType }: Au
           {/* Apple Button */}
           <button
             onClick={handleAppleLogin}
+            disabled={isLoading}
             className="w-full text-white font-normal py-3 px-4 text-base flex items-center justify-center gap-3 rounded-md hover:opacity-90 transition-opacity"
             style={{ 
               backgroundColor: '#000000',
@@ -125,6 +202,8 @@ export function AuthDialog({ open, onOpenChange, language = "en", toolType }: Au
             <input
               type="email"
               placeholder={t.emailPlaceholder}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full text-white pl-10 py-3 px-4 text-base rounded-md auth-email-input"
               style={{ 
                 backgroundColor: '#3a3a3a',
@@ -134,21 +213,72 @@ export function AuthDialog({ open, onOpenChange, language = "en", toolType }: Au
               }}
               onFocus={(e) => e.target.style.borderColor = '#5a5a5a'}
               onBlur={(e) => e.target.style.borderColor = '#4a4a4a'}
+              disabled={isLoading}
             />
           </div>
+          
+          {/* Password Input (shown after email is entered) */}
+          {email && (
+            <div className="w-full relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder={language === "es" ? "Contraseña" : "Password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full text-white pl-4 pr-10 py-3 px-4 text-base rounded-md auth-password-input"
+                style={{ 
+                  backgroundColor: '#3a3a3a',
+                  border: '1px solid #4a4a4a',
+                  outline: 'none',
+                  color: '#ffffff'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#5a5a5a'}
+                onBlur={(e) => e.target.style.borderColor = '#4a4a4a'}
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                style={{ color: '#808080' }}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          )}
           
           {/* Continue with email button */}
           <button
             onClick={handleEmailLogin}
-            className="w-full text-black font-normal py-3 px-4 text-base rounded-md hover:opacity-90 transition-opacity"
+            disabled={isLoading}
+            className="w-full text-black font-normal py-3 px-4 text-base rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
             style={{ 
               backgroundColor: '#ffffff',
               border: 'none',
               outline: 'none'
             }}
           >
-            {t.continueWithEmail} →
+            {isLoading ? (language === "es" ? "Cargando..." : "Loading...") : 
+             email && password ? 
+               (isSignUp ? 
+                 (language === "es" ? "Crear cuenta" : "Create account") : 
+                 (language === "es" ? "Iniciar sesión" : "Sign in")) : 
+               t.continueWithEmail} →
           </button>
+          
+          {/* Toggle between sign in and sign up */}
+          {email && (
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-gray-400 hover:text-gray-300 transition-colors"
+              disabled={isLoading}
+            >
+              {isSignUp ? 
+                (language === "es" ? "¿Ya tienes cuenta? Inicia sesión" : "Already have an account? Sign in") :
+                (language === "es" ? "¿No tienes cuenta? Regístrate" : "Don't have an account? Sign up")}
+            </button>
+          )}
           
           {/* Terms */}
           <p className="text-xs text-gray-500 text-center">

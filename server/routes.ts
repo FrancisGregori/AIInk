@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+// import { setupAuth, isAuthenticated } from "./replitAuth"; // Old Replit auth
+import { isAuthenticated, checkFirebaseConfig } from "./firebaseAuth"; // New Firebase auth
 import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
@@ -52,7 +53,6 @@ try {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2023-10-16", // Using stable API version (latest stable without codename)
     });
-    console.log("✅ Stripe initialized successfully");
   } else {
     console.warn("⚠️  STRIPE_SECRET_KEY not found - Stripe functionality disabled");
   }
@@ -79,16 +79,21 @@ const generateImageSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Auth middleware - Firebase auth is now configured
+  // await setupAuth(app); // Old Replit auth - removed
+  
+  // Check if Firebase is configured
+  if (!checkFirebaseConfig()) {
+    console.warn('⚠️ Firebase not configured - running in development mode');
+  }
   
   // Initialize services
   const comfyDeploy = new ComfyDeployService();
   
-  // Auth routes
+  // Auth routes - Updated for Firebase
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -100,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user credits
   app.get('/api/credits', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       const user = await storage.getUser(userId);
       const credits = await storage.getUserCredits(userId);
       
@@ -133,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/stencil/jobs", isAuthenticated, upload.single('image'), async (req: any, res) => {
     try {
       // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -170,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/stencil/jobs/:id", isAuthenticated, async (req: any, res) => {
     try {
       // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -194,17 +199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId,
             job.style
           );
-          
-          console.log("Polling result for job", job.id, "ComfyDeploy run:", job.comfyDeployRunId);
-          console.log("Status from ComfyDeploy:", {
-            status: status.status,
-            outputUrl: status.outputUrl,
-            error: status.error
-          });
-          
           // Update job based on ComfyDeploy status
           if (status.status === "completed" && status.outputUrl) {
-            console.log("Job completed! Updating with URL:", status.outputUrl);
             await storage.updateStencilJob(job.id, {
               status: "completed",
               processedImageUrl: status.outputUrl,
@@ -225,24 +221,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   processingOptions: job.processingOptions
                 }
               });
-              console.log("Stencil saved to gallery");
             } catch (galleryError) {
               console.error("Error saving to gallery:", galleryError);
               // Don't fail the request if gallery save fails
             }
           } else if (status.status === "failed") {
-            console.log("Job failed:", status.error);
             await storage.updateStencilJob(job.id, {
               status: "failed",
               errorMessage: status.error || "Processing failed",
             });
           } else {
-            console.log("Job still processing, status:", status.status);
           }
           
           // Return the updated job
           const updatedJob = await storage.getStencilJob(req.params.id);
-          console.log("Returning updated job:", updatedJob);
           return res.json(updatedJob);
         } catch (error) {
           console.error("Error checking ComfyDeploy status:", error);
@@ -260,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's stencil jobs
   app.get("/api/stencil/jobs", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user?.claims?.sub;
+      const userId = req.userId || (req as any).user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -275,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get gallery stencils
   app.get("/api/stencil/gallery", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user?.claims?.sub;
+      const userId = req.userId || (req as any).user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -301,7 +293,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Remove images older than 30 minutes
         if (now - data.timestamp > 30 * 60 * 1000) {
           tempImages.delete(id);
-          console.log(`Cleaned up expired temp image: ${id}`);
         }
       }
     }, 5 * 60 * 1000); // Run every 5 minutes
@@ -339,7 +330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get authenticated user ID
-      const authenticatedUserId = (req as any).user?.claims?.sub;
+      const authenticatedUserId = req.userId || (req as any).user?.claims?.sub; // Support both Firebase and legacy
       if (!authenticatedUserId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -376,7 +367,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const base64 = fileBuffer.toString('base64');
         const mimeType = req.file.mimetype || 'image/png';
         publicImageUrl = `data:${mimeType};base64,${base64}`;
-        console.log("Image prepared for processing");
       } catch (uploadError) {
         console.error("Error preparing image:", uploadError);
         return res.status(500).json({ error: "Failed to prepare image" });
@@ -435,7 +425,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 processingOptions: options
               }
             });
-            console.log("Stencil saved to gallery immediately");
           } catch (galleryError) {
             console.error("Error saving to gallery:", galleryError);
           }
@@ -471,17 +460,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/flux/projects", isAuthenticated, async (req: any, res) => {
     try {
       // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
 
       // Solo devolver proyectos del usuario autenticado
-      console.log(`[DB] Fetching flux projects for user ${userId}`);
       const startTime = Date.now();
       const projects = await storage.getFluxProjects(userId);
       const endTime = Date.now();
-      console.log(`Flux projects query took ${endTime - startTime}ms for ${projects.length} items`);
       
       if (endTime - startTime > 5000) {
         console.warn(`🐌 SLOW QUERY DETECTED: flux projects took ${endTime - startTime}ms - investigating...`);
@@ -497,7 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/flux/create", isAuthenticated, async (req: any, res) => {
     try {
       // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -520,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/flux/projects/:id", isAuthenticated, async (req: any, res) => {
     try {
       // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -544,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/flux/projects/:id/regenerate", isAuthenticated, async (req: any, res) => {
     try {
       // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -569,7 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/flux/projects/:id", isAuthenticated, async (req: any, res) => {
     try {
       // SEGURIDAD: Obtener userId del usuario autenticado
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -603,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await summarizeArticle(message + (context ? `\n\nContext: ${context}` : ''));
       
       // Get authenticated user ID
-      const userId = req.user?.claims?.sub || "anonymous";
+      const userId = req.userId || req.user?.claims?.sub || "anonymous"; // Support both Firebase and legacy
       
       // Save chat message
       await storage.saveGeminiChat({
@@ -699,9 +686,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { messages, image } = req.body;
       
-      console.log('Chat stream request received');
-      console.log('Messages count:', messages?.length || 0);
-      console.log('Has image:', !!image);
       
       // Set headers for SSE
       res.setHeader('Content-Type', 'text/event-stream');
@@ -740,7 +724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verificar que el usuario tenga créditos suficientes
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -767,7 +751,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let permanentImageUrl = '';
       if (result.editedImage && result.editedImage.startsWith('data:')) {
         try {
-          console.log('=== GUARDANDO IMAGEN GEMINI EN GALERÍA ===');
           
           // Subir imagen a Object Storage para la galería
           const objectStorage = new ObjectStorageService();
@@ -777,7 +760,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId
           );
           
-          console.log('Imagen subida a Object Storage:', uploadResult.imageUrl);
           permanentImageUrl = uploadResult.imageUrl; // Guardar la URL permanente
           
           // Guardar en galería con las URLs permanentes
@@ -796,7 +778,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
           
-          console.log('Imagen guardada en galería:', galleryItem.id);
           
         } catch (saveError) {
           console.error('Error guardando imagen en galería:', saveError);
@@ -828,12 +809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const DESIGN_COST = 3;
     let userId = "";
     try {
-      console.log("========= /api/generate CALLED =========");
-      console.log("Raw request body:", JSON.stringify(req.body, null, 2));
-      console.log("Model from body BEFORE parsing:", req.body.model);
       const { prompt, inputImageUrl, width, height, aspectRatio, model } = generateImageSchema.parse(req.body);
-      console.log("Model AFTER parsing:", model);
-      console.log("========================================");
       
       // Get authenticated user ID
       userId = req.user?.claims?.sub;
@@ -890,9 +866,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Si hay imagen de entrada, la incluimos
       if (inputImageUrl) {
-        console.log("Input image URL received:", inputImageUrl);
-        console.log("URL type:", typeof inputImageUrl);
-        console.log("URL length:", inputImageUrl.length);
         
         // Para Qwen, el campo se llama "image", para Kontext es "input_image"
         const imageField = model === "qwen" ? "image" : "input_image";
@@ -900,14 +873,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (inputImageUrl.startsWith('data:')) {
           // Es una imagen base64, usarla directamente
           input[imageField] = inputImageUrl;
-          console.log("Using base64 image data directly");
         } else {
           // Verificar si es una URL válida antes de enviar a Replicate
           try {
             new URL(inputImageUrl);
             // Es una URL válida, usarla directamente
             input[imageField] = inputImageUrl;
-            console.log("Using external URL:", inputImageUrl);
           } catch {
             // No es una URL válida, reportar error
             console.error("Invalid image URL format that doesn't match any known pattern:", inputImageUrl);
@@ -932,10 +903,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Seleccionar el modelo basado en el parámetro
-      console.log("Model parameter received:", model);
-      console.log("Model type:", typeof model);
-      console.log("Model === 'qwen':", model === "qwen");
-      console.log("Model === 'pro':", model === "pro");
       
       let modelName: string;
       if (model === "qwen") {
@@ -944,8 +911,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         modelName = "black-forest-labs/flux-kontext-pro";
       }
       
-      console.log(`Using model: ${modelName}`);
-      console.log("Final input object for Replicate:", JSON.stringify(input, null, 2));
       
       // Validación final: asegurar que la imagen es válida si existe
       const imageField = model === "qwen" ? "image" : "input_image";
@@ -969,11 +934,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-          console.log(`Generating image (attempt ${attempt}/${retries}) with ${modelName}...`);
           output = await replicate.run(modelName as any, { input });
           break; // Éxito, salir del bucle
         } catch (error: any) {
-          console.log(`Attempt ${attempt} failed:`, error.message);
           
           // Si es error de contenido sensible, no reintentar
           if (error.message?.includes("flagged as sensitive")) {
@@ -989,7 +952,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log("Replicate output received:", output);
       
       // Manejar diferentes formatos de output según el modelo
       let imageUrl: string;
@@ -1004,12 +966,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const urlObject = file.url();
           // Convert URL object to string
           imageUrl = urlObject.href || urlObject.toString();
-          console.log("Qwen output URL object:", urlObject);
-          console.log("Qwen final URL string:", imageUrl);
         } else if (typeof file === 'string') {
           // Fallback si ya es string
           imageUrl = file;
-          console.log("Qwen output URL (direct string):", imageUrl);
         } else {
           console.error("Unexpected Qwen output format:", file);
           throw new Error("Unexpected Qwen output format");
@@ -1020,7 +979,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl = output[0];
       } else if (output && typeof (output as any)[Symbol.asyncIterator] === 'function') {
         // Es un stream iterable - Exacto como en tu repositorio
-        console.log("Processing async iterable stream from Replicate...");
         
         const chunks: Buffer[] = [];
         try {
@@ -1029,14 +987,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           const imageBuffer = Buffer.concat(chunks);
-          console.log("Original image buffer size:", imageBuffer.length);
           
           // Guardar imagen exactamente como la genera Replicate - SIN COMPRESIÓN
           optimizedImageBase64 = imageBuffer.toString('base64');
           thumbnailBase64 = optimizedImageBase64;
           imageUrl = `data:image/png;base64,${optimizedImageBase64}`;
           
-          console.log("Image saved without any compression or processing");
           
         } catch (streamError) {
           console.error("Error reading async stream:", streamError);
@@ -1044,7 +1000,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else if (output && 'getReader' in output) {
         // Es un ReadableStream estándar - Exacto de tu repositorio
-        console.log("Processing ReadableStream from Replicate...");
         
         const chunks: Buffer[] = [];
         const reader = (output as any).getReader();
@@ -1057,12 +1012,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           const imageBuffer = Buffer.concat(chunks);
-          console.log("Image buffer size:", imageBuffer.length);
           
           // Convertir a base64 data URL
           const base64 = imageBuffer.toString('base64');
           imageUrl = `data:image/png;base64,${base64}`;
-          console.log("Created data URL, length:", imageUrl.length);
         } catch (streamError) {
           console.error("Error reading stream:", streamError);
           throw new Error("Failed to read image stream");
@@ -1098,8 +1051,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let thumbnailUrl = null;
       
       try {
-        console.log('=== PROCESANDO IMAGEN PARA OBJECT STORAGE ===');
-        console.log('Tipo de imagen:', imageUrl.startsWith('data:') ? 'Base64' : 'URL externa');
         
         // Subir la imagen a Object Storage
         if (imageUrl.startsWith('data:')) {
@@ -1122,9 +1073,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           thumbnailUrl = uploadResult.thumbnailUrl;
         }
         
-        console.log('=== IMAGEN OPTIMIZADA ===');
-        console.log('URL final:', finalImageUrl);
-        console.log('URL miniatura:', thumbnailUrl);
       } catch (uploadError) {
         console.error('Error subiendo a Object Storage, usando URL original:', uploadError);
         // Si falla, mantener la URL original
@@ -1145,9 +1093,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      console.log('=== IMAGEN GUARDADA EN GALERÍA ===');
-      console.log('ID:', savedItem.id);
-      console.log('Título:', savedItem.title);
       
       res.json({
         imageUrl: finalImageUrl, // Devolver URL optimizada en lugar de base64
@@ -1177,7 +1122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user gallery
   app.get("/api/gallery", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -1202,7 +1147,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalItems = await storage.getGalleryItemCount(userId, type as string | undefined);
       
       const queryTime = Date.now() - startTime;
-      console.log(`Gallery query took ${queryTime}ms for ${galleryItems.length} items`);
       
       // Cache y metadata de paginación
       const totalCount = totalItems || 0;
@@ -1225,7 +1169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add item to gallery (this will be called automatically when generating)
   app.post("/api/gallery", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -1257,7 +1201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update gallery item
   app.patch("/api/gallery/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -1281,7 +1225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete gallery item
   app.delete("/api/gallery/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -1303,7 +1247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Toggle favorite
   app.post("/api/gallery/:id/favorite", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -1329,10 +1273,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
     try {
       const filename = decodeURIComponent(req.params.filename);
-      console.log('Sirviendo imagen privada:', filename);
       
       // SEGURIDAD: Verificar que el usuario está autenticado
-      const userId = req.user?.claims?.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       if (!userId) {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
@@ -1407,7 +1350,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('⚠️ STRIPE_WEBHOOK_SECRET not configured');
       // In development, process the webhook without signature verification
       if (process.env.NODE_ENV === 'development') {
-        console.log('Processing webhook in development mode (no signature verification)');
         try {
           const event = JSON.parse(req.body.toString());
           await handleStripeWebhook(event);
@@ -1435,16 +1377,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function to handle different webhook events
   async function handleStripeWebhook(event: any) {
-    console.log(`Processing webhook event: ${event.type}`);
 
     switch (event.type) {
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object;
-        console.log('💰 Payment succeeded:', {
-          id: paymentIntent.id,
-          amount: paymentIntent.amount / 100,
-          metadata: paymentIntent.metadata
-        });
 
         // Update user credits if this is a credit pack purchase
         if (paymentIntent.metadata?.type === 'credit_pack' && paymentIntent.metadata?.credits) {
@@ -1459,7 +1395,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ...user,
                 credits: newCredits
               });
-              console.log(`✅ Added ${credits} credits to user ${userId}. New balance: ${newCredits}`);
             }
           } catch (error) {
             console.error('Error updating user credits:', error);
@@ -1470,12 +1405,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
         const subscription = event.data.object;
-        console.log('📅 Subscription event:', {
-          type: event.type,
-          id: subscription.id,
-          status: subscription.status,
-          customer: subscription.customer
-        });
 
         // Update user subscription status
         try {
@@ -1486,11 +1415,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const priceId = subscription.items?.data?.[0]?.price?.id;
             const tier = priceId ? (PRICE_ID_TO_TIER[priceId] ?? 'basic') : 'basic';
             
-            console.log('✅ Mapped price ID to tier:', {
-              priceId,
-              tier,
-              found: priceId ? PRICE_ID_TO_TIER[priceId] !== undefined : false
-            });
 
             await storage.upsertUser({
               ...user,
@@ -1498,7 +1422,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               subscriptionTier: tier,
               subscriptionStatus: subscription.status
             });
-            console.log(`✅ Updated subscription for user ${user.id}: ${tier} (${subscription.status})`);
           }
         } catch (error) {
           console.error('Error updating subscription:', error);
@@ -1507,7 +1430,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       case 'customer.subscription.deleted':
         const deletedSub = event.data.object;
-        console.log('❌ Subscription cancelled:', deletedSub.id);
 
         // Remove subscription from user
         try {
@@ -1520,7 +1442,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               subscriptionTier: 'free',
               subscriptionStatus: null
             });
-            console.log(`✅ Removed subscription for user ${user.id}`);
           }
         } catch (error) {
           console.error('Error removing subscription:', error);
@@ -1529,25 +1450,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       case 'invoice.payment_succeeded':
         const invoice = event.data.object;
-        console.log('📧 Invoice paid:', {
-          id: invoice.id,
-          subscription: invoice.subscription,
-          amount: invoice.amount_paid / 100
-        });
         // Could send receipt email here
         break;
 
       case 'invoice.payment_failed':
         const failedInvoice = event.data.object;
-        console.log('⚠️ Invoice payment failed:', {
-          id: failedInvoice.id,
-          subscription: failedInvoice.subscription
-        });
         // Could send payment failure notification here
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
     }
   }
 
@@ -1573,12 +1484,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // SECURITY: Always use server-side validated price (already in cents)
       const amount = pack.price;
       
-      console.log('Creating payment intent:', {
-        credits: pack.credits,
-        amount: amount,
-        amountInDollars: amount / 100,
-        userId: req.user.claims.sub
-      });
 
       const paymentIntent = await stripe!.paymentIntents.create({
         amount: amount, // Already in cents, no conversion needed
@@ -1604,7 +1509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!checkStripe(res)) return;
 
-      const userId = req.user.claims.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       let user = await storage.getUser(userId);
 
       if (!user) {
@@ -1720,13 +1625,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Log for debugging
-      console.log('Subscription created:', {
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        hasClientSecret: !!clientSecret,
-        plan: plan,
-        billingPeriod: billingPeriod
-      });
       
       if (!clientSecret) {
         console.error('WARNING: No clientSecret obtained for subscription');
@@ -1750,7 +1648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!checkStripe(res)) return;
 
-      const userId = req.user.claims.sub;
+      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
       const user = await storage.getUser(userId);
 
       if (!user?.stripeSubscriptionId) {

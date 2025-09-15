@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
 import { MessageCircle, X, Send, Copy, Image, Sparkles, Download, Edit, Upload, Paperclip, Loader2, ImageIcon, Bot, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -365,7 +366,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       console.log('Image preview for analysis:', storedImage ? storedImage.substring(0, 50) : 'none');
       
       // Send request for image analysis
-      const response = await fetch('/api/chat/stream', {
+      const response = await apiFetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -478,7 +479,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         
         try {
           // Llamar al endpoint de edición de imágenes
-          const response = await fetch('/api/edit-image', {
+          const response = await apiFetch('/api/edit-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -586,7 +587,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
       console.log('Image data preview:', storedImage ? storedImage.substring(0, 50) : 'none');
       
       // Send request with streaming
-      const response = await fetch('/api/chat/stream', {
+      const response = await apiFetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -708,7 +709,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         setIsGeneratingImage(true);
         
         // Usar el endpoint de edición de imágenes con Gemini
-        const response = await fetch('/api/edit-image', {
+        const response = await apiFetch('/api/edit-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -788,7 +789,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
         setIsGeneratingImage(true);
         
         // Call Replicate API with the current image and prompt  
-        const response = await fetch('/api/generate', {
+        const response = await apiFetch('/api/generate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -847,7 +848,7 @@ const ChatAssistant = forwardRef<ChatAssistantRef, ChatAssistantProps>(({ curren
                             modelVariant === 'gemini-preview' ? 'G' :
                             modelVariant.charAt(0).toUpperCase();
             
-            const projectResponse = await fetch('/api/flux/create', {
+            const projectResponse = await apiFetch('/api/flux/create', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

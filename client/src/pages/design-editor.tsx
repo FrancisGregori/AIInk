@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth-dialog";
@@ -623,7 +624,7 @@ function DesignEditor() {
         model: modelVariant
       });
       
-      const response = await fetch('/api/generate', {
+      const response = await apiFetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
