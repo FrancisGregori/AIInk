@@ -1,4 +1,4 @@
-import { Storage } from "@google-cloud/storage";
+import { Storage, File } from "@google-cloud/storage";
 import { Response } from "express";
 import { randomUUID } from "crypto";
 import sharp from "sharp";
@@ -6,25 +6,28 @@ import sharp from "sharp";
 const REPLIT_SIDECAR_ENDPOINT =
   process.env.REPLIT_SIDECAR_ENDPOINT || "http://127.0.0.1:1106";
 
-// Bucket name configuration
+// Nombre del bucket de object storage. Se puede configurar vía variable de entorno
+// para mantenerlo consistente en toda la aplicación.
 export const OBJECT_STORAGE_BUCKET =
   process.env.OBJECT_STORAGE_BUCKET ||
   "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b";
 
-// Detect environment
+// Detectar si estamos en desarrollo
 const isDevelopment = process.env.NODE_ENV === "development";
+// Detectar si estamos en Replit (tienen un sidecar especial)
 const isReplitEnvironment = !!process.env.REPLIT_DEPLOYMENT;
 
 console.log('=== OBJECT STORAGE CONFIG ===');
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Is Development:', isDevelopment);
 console.log('Replit Deployment:', process.env.REPLIT_DEPLOYMENT || 'not set');
+console.log('Is Replit Environment:', isReplitEnvironment);
 
-// Initialize storage client
+// Object storage client para interactuar con el servicio
 let objectStorageClient: Storage;
 
 if (isReplitEnvironment && isDevelopment) {
-  // Replit development with sidecar
+  // Configuración para DESARROLLO en REPLIT (usando sidecar)
   objectStorageClient = new Storage({
     credentials: {
       audience: "replit",
@@ -43,7 +46,7 @@ if (isReplitEnvironment && isDevelopment) {
     projectId: "",
   });
 } else if (process.env.GOOGLE_CLOUD_CREDENTIALS) {
-  // Local development with credentials
+  // Configuración para desarrollo LOCAL con credenciales explícitas
   try {
     const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS);
     objectStorageClient = new Storage({
@@ -53,12 +56,13 @@ if (isReplitEnvironment && isDevelopment) {
     console.log('Using explicit Google Cloud credentials from environment');
   } catch (error) {
     console.error('Failed to parse GOOGLE_CLOUD_CREDENTIALS:', error);
+    // Fallback to default
     objectStorageClient = new Storage({
       projectId: process.env.GOOGLE_CLOUD_PROJECT || "",
     });
   }
 } else {
-  // Production or development without credentials
+  // Configuración para DEPLOYMENT (credenciales automáticas) o desarrollo sin credenciales
   objectStorageClient = new Storage({
     projectId: process.env.GOOGLE_CLOUD_PROJECT || "",
   });
@@ -68,12 +72,21 @@ export { objectStorageClient };
 
 console.log('Object Storage Client initialized');
 
-// Object storage service for handling images
+export class ObjectNotFoundError extends Error {
+  constructor() {
+    super("Object not found");
+    this.name = "ObjectNotFoundError";
+    Object.setPrototypeOf(this, ObjectNotFoundError.prototype);
+  }
+}
+
+// Servicio de object storage para manejar imágenes
 export class ObjectStorageService {
   private bucketName: string;
   private storageAvailable: boolean = true;
 
   constructor() {
+    // Usar el bucket configurado
     this.bucketName = OBJECT_STORAGE_BUCKET;
 
     // Check if storage is available
@@ -83,73 +96,69 @@ export class ObjectStorageService {
     }
   }
 
-  // Upload image from base64 with new folder structure
+  // Obtener directorio privado
+  getPrivateObjectDir(): string {
+    return process.env.PRIVATE_OBJECT_DIR || `/${this.bucketName}/.private`;
+  }
+
+  // Subir imagen desde base64 a Object Storage
   async uploadImageFromBase64(
     base64Data: string,
-    type: 'designs' | 'stencils',
-    userId?: string, // Keep for compatibility but not used
-    storageFolder?: string // UUID folder for storage
-  ): Promise<{ imageUrl: string; thumbnailUrl: string; storageFolder: string }> {
-    // If storage is not available, return base64 as-is
+    folder: 'designs' | 'stencils' | 'thumbnails',
+    userId: string,
+    storagePath?: string // Use storagePath instead of userId for storage organization
+  ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+    // If storage is not available in development, return the base64 as-is
     if (!this.storageAvailable) {
       console.log('Storage not available - returning base64 URL as-is');
       return {
         imageUrl: base64Data,
-        thumbnailUrl: base64Data,
-        storageFolder: ''
+        thumbnailUrl: base64Data
       };
     }
 
     try {
-      console.log(`=== UPLOADING IMAGE TO STORAGE ===`);
-      console.log(`Type: ${type}`);
+      console.log(`=== SUBIENDO IMAGEN A OBJECT STORAGE (PRIVADO) ===`);
+      console.log(`Carpeta: ${folder}, Usuario: ${userId}`);
 
-      // Clean base64 prefix if exists
+      // Limpiar el prefijo de base64 si existe
       const base64Clean = base64Data.replace(/^data:image\/\w+;base64,/, '');
       const imageBuffer = Buffer.from(base64Clean, 'base64');
-
-      // Generate unique file name
+      
+      // Generar ID único para el archivo
       const fileId = randomUUID();
       const timestamp = Date.now();
-      const imageName = `${timestamp}_${fileId}.png`;
-      const thumbName = `${timestamp}_${fileId}_thumb.png`;
-
-      // If no storageFolder provided, generate one
-      if (!storageFolder) {
-        storageFolder = randomUUID();
-      }
-
-      // New structure: /{uuid}/images/image-name.png
-      //                /{uuid}/thumbnails/image-name_thumb.png
-      const fileName = `${storageFolder}/images/${imageName}`;
-      const thumbnailName = `${storageFolder}/thumbnails/${thumbName}`;
-
-      // Upload original image
+      // IMPORTANTE: Usar directorio PRIVADO para proteger imágenes de usuarios
+      const fileName = `.private/${folder}/${userId}/${timestamp}_${fileId}.png`;
+      const thumbnailName = `.private/thumbnails/${userId}/${timestamp}_${fileId}_thumb.png`;
+      
+      // Subir imagen original
       const bucket = objectStorageClient.bucket(this.bucketName);
       const file = bucket.file(fileName);
-
+      
       await file.save(imageBuffer, {
         metadata: {
           contentType: 'image/png',
-          cacheControl: 'public, max-age=31536000', // Cache for 1 year
+          cacheControl: 'public, max-age=31536000', // Cache por 1 año
         },
       });
-
-      // Generate optimized thumbnail (400x400) with transparency
-      const isStencil = type === 'stencils';
+      
+      // Generar thumbnail optimizado (400x400 para todos os tamanhos de grid)
+      // Usar PNG para preservar transparência
+      const isStencil = folder === 'stencils';
       const thumbnailBuffer = await sharp(imageBuffer)
         .resize(400, 400, {
           fit: isStencil ? 'inside' : 'cover',
           position: 'center',
           withoutEnlargement: true,
-          background: { r: 0, g: 0, b: 0, alpha: 0 } // Transparent background
+          background: { r: 0, g: 0, b: 0, alpha: 0 } // Fundo transparente
         })
         .png({
-          compressionLevel: 9, // Maximum PNG compression
+          compressionLevel: 9, // Máxima compressão PNG
           quality: 95
         })
         .toBuffer();
-
+      
       const thumbnailFile = bucket.file(thumbnailName);
       await thumbnailFile.save(thumbnailBuffer, {
         metadata: {
@@ -157,97 +166,86 @@ export class ObjectStorageService {
           cacheControl: 'public, max-age=31536000',
         },
       });
-
-      // Generate clean URLs without exposing user info
-      const imageUrl = `/api/images/${storageFolder}/${imageName}`;
-      const thumbnailUrl = `/api/images/${storageFolder}/${thumbName}`;
-
-      console.log(`=== IMAGE UPLOADED SUCCESSFULLY ===`);
-      console.log(`Storage Folder: ${storageFolder}`);
-      console.log(`Image URL: ${imageUrl}`);
-      console.log(`Thumbnail URL: ${thumbnailUrl}`);
-      console.log(`Original size: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB`);
-      console.log(`Thumbnail size: ${(thumbnailBuffer.length / 1024).toFixed(2)} KB`);
-
-      return { imageUrl, thumbnailUrl, storageFolder };
+      
+      // Generar URLs internas que requieren autenticación
+      // Estas URLs solo funcionarán con el usuario autenticado
+      const imageUrl = `/api/images/${encodeURIComponent(fileName)}`;
+      const thumbnailUrl = `/api/images/${encodeURIComponent(thumbnailName)}`;
+      
+      console.log(`=== IMAGEN SUBIDA EXITOSAMENTE (PRIVADA) ===`);
+      console.log(`URL Original: ${imageUrl}`);
+      console.log(`URL Miniatura: ${thumbnailUrl}`);
+      console.log(`Tamaño original: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+      console.log(`Tamaño miniatura: ${(thumbnailBuffer.length / 1024).toFixed(2)} KB`);
+      
+      return { imageUrl, thumbnailUrl };
     } catch (error) {
-      console.error('Error uploading image to Object Storage:', error);
+      console.error('Error subiendo imagen a Object Storage:', error);
       throw new Error('Failed to upload image to Object Storage');
     }
   }
 
-  // Upload image from external URL with new folder structure
+  // Subir imagen desde URL externa
   async uploadImageFromUrl(
     sourceUrl: string,
-    type: 'designs' | 'stencils',
-    userId?: string, // Keep for compatibility but not used
-    storageFolder?: string // UUID folder for storage
-  ): Promise<{ imageUrl: string; thumbnailUrl: string; storageFolder: string }> {
-    // If storage is not available, return URL as-is
+    folder: 'designs' | 'stencils' | 'thumbnails',
+    userId: string
+  ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
+    // If storage is not available in development, return the URL as-is
     if (!this.storageAvailable) {
       console.log('Storage not available - returning URL as-is');
       return {
         imageUrl: sourceUrl,
-        thumbnailUrl: sourceUrl,
-        storageFolder: ''
+        thumbnailUrl: sourceUrl
       };
     }
 
     try {
-      console.log(`=== DOWNLOADING AND UPLOADING IMAGE ===`);
-      console.log(`Source URL: ${sourceUrl}`);
-
-      // Download the image
+      console.log(`=== DESCARGANDO Y SUBIENDO IMAGEN (PRIVADO) ===`);
+      console.log(`URL origen: ${sourceUrl}`);
+      
+      // Descargar la imagen
       const response = await fetch(sourceUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.statusText}`);
       }
-
+      
       const arrayBuffer = await response.arrayBuffer();
       const imageBuffer = Buffer.from(arrayBuffer);
-
-      // Generate unique file name
+      
+      // Generar ID único para el archivo
       const fileId = randomUUID();
       const timestamp = Date.now();
-      const imageName = `${timestamp}_${fileId}.png`;
-      const thumbName = `${timestamp}_${fileId}_thumb.png`;
-
-      // If no storageFolder provided, generate one
-      if (!storageFolder) {
-        storageFolder = randomUUID();
-      }
-
-      // New structure: /{uuid}/images/image-name.png
-      //                /{uuid}/thumbnails/image-name_thumb.png
-      const fileName = `${storageFolder}/images/${imageName}`;
-      const thumbnailName = `${storageFolder}/thumbnails/${thumbName}`;
-
-      // Upload original image
+      // IMPORTANTE: Usar directorio PRIVADO para proteger imágenes de usuarios
+      const fileName = `.private/${folder}/${userId}/${timestamp}_${fileId}.png`;
+      const thumbnailName = `.private/thumbnails/${userId}/${timestamp}_${fileId}_thumb.png`;
+      
+      // Subir imagen original
       const bucket = objectStorageClient.bucket(this.bucketName);
       const file = bucket.file(fileName);
-
+      
       await file.save(imageBuffer, {
         metadata: {
           contentType: 'image/png',
           cacheControl: 'public, max-age=31536000',
         },
       });
-
-      // Generate optimized thumbnail (400x400) with transparency
-      const isStencil = type === 'stencils';
+      
+      // Generar thumbnail optimizado (400x400)
+      const isStencil = folder === 'stencils';
       const thumbnailBuffer = await sharp(imageBuffer)
         .resize(400, 400, {
           fit: isStencil ? 'inside' : 'cover',
           position: 'center',
           withoutEnlargement: true,
-          background: { r: 0, g: 0, b: 0, alpha: 0 } // Transparent background
+          background: { r: 0, g: 0, b: 0, alpha: 0 } // Fundo transparente
         })
         .png({
-          compressionLevel: 9, // Maximum PNG compression
+          compressionLevel: 9, // Máxima compressão PNG
           quality: 95
         })
         .toBuffer();
-
+      
       const thumbnailFile = bucket.file(thumbnailName);
       await thumbnailFile.save(thumbnailBuffer, {
         metadata: {
@@ -255,48 +253,38 @@ export class ObjectStorageService {
           cacheControl: 'public, max-age=31536000',
         },
       });
-
-      // Generate clean URLs without exposing user info
-      const imageUrl = `/api/images/${storageFolder}/${imageName}`;
-      const thumbnailUrl = `/api/images/${storageFolder}/${thumbName}`;
-
-      console.log(`=== IMAGE PROCESSED AND UPLOADED ===`);
-      console.log(`Storage Folder: ${storageFolder}`);
-      console.log(`Image URL: ${imageUrl}`);
-      console.log(`Thumbnail URL: ${thumbnailUrl}`);
-      console.log(`Thumbnail size: ${(thumbnailBuffer.length / 1024).toFixed(2)} KB`);
-
-      return { imageUrl, thumbnailUrl, storageFolder };
+      
+      // Generar URLs internas que requieren autenticación
+      // Estas URLs solo funcionarán con el usuario autenticado
+      const imageUrl = `/api/images/${encodeURIComponent(fileName)}`;
+      const thumbnailUrl = `/api/images/${encodeURIComponent(thumbnailName)}`;
+      
+      console.log(`=== IMAGEN PROCESADA Y SUBIDA (PRIVADA) ===`);
+      console.log(`URL Original: ${imageUrl}`);
+      console.log(`URL Miniatura: ${thumbnailUrl}`);
+      console.log(`Tamaño miniatura: ${(thumbnailBuffer.length / 1024).toFixed(2)} KB`);
+      
+      return { imageUrl, thumbnailUrl };
     } catch (error) {
-      console.error('Error processing image from URL:', error);
+      console.error('Error procesando imagen desde URL:', error);
       throw new Error('Failed to process image from URL');
     }
   }
 
-  // Download file from Object Storage (for serving images)
-  async downloadObject(fileName: string, res: Response, cacheTtlSec: number = 31536000) {
+  // Descargar archivo desde Object Storage
+  async downloadObject(file: File, res: Response, cacheTtlSec: number = 31536000) {
     try {
-      const bucket = objectStorageClient.bucket(this.bucketName);
-      const file = bucket.file(fileName);
-
-      // Check if file exists
-      const [exists] = await file.exists();
-      if (!exists) {
-        res.status(404).json({ error: "File not found" });
-        return;
-      }
-
-      // Get file metadata
+      // Obtener metadata del archivo
       const [metadata] = await file.getMetadata();
-
-      // Set appropriate headers
+      
+      // Configurar headers apropiados
       res.set({
         "Content-Type": metadata.contentType || "image/png",
         "Content-Length": metadata.size,
         "Cache-Control": `public, max-age=${cacheTtlSec}`,
       });
 
-      // Stream file to response
+      // Stream del archivo a la respuesta
       const stream = file.createReadStream();
 
       stream.on("error", (err) => {

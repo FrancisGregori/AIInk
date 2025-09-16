@@ -35,9 +35,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { AuthenticatedImage } from '@/components/AuthenticatedImage';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { apiRequest } from '@/lib/queryClient';
 import { apiFetch } from '@/lib/api';
+import { normalizeImageUrl, getThumbnailUrl } from '@/lib/imageUtils';
 import Navigation from '@/components/Navigation';
 
 export default function Gallery() {
@@ -67,6 +68,14 @@ export default function Gallery() {
   // Update items when data changes
   React.useEffect(() => {
     if (data && Array.isArray(data)) {
+      // Log para verificar se thumbnails estão presentes
+      console.log('Gallery items loaded:', data.map(item => ({
+        id: item.id,
+        hasThumbnail: !!item.thumbnailUrl,
+        thumbnailUrl: item.thumbnailUrl,
+        imageUrl: item.imageUrl
+      })));
+
       if (currentPage === 1) {
         setAllLoadedItems(data);
       } else {
@@ -310,10 +319,12 @@ export default function Gallery() {
                             ? 'aspect-[3/4]'
                             : 'aspect-[3/4]'
                         } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
-                          <AuthenticatedImage
-                            src={item.thumbnailUrl || item.imageUrl}
+                          <OptimizedImage
+                            src={normalizeImageUrl(item.thumbnailUrl || item.imageUrl)}
+                            thumbnailSrc={null}
                             alt={item.title || 'Diseño'}
-                            className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
+                            objectFit={item.type === 'stencil' ? 'contain' : 'cover'}
+                            className="w-full h-full transition-transform group-hover:scale-105"
                           />
                           {/* Privacy indicator */}
                           <div className="absolute top-2 right-2 z-10">
@@ -336,7 +347,7 @@ export default function Gallery() {
                         <div className="flex flex-col">
                           <div className={`relative ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'} flex items-center justify-center p-3`}>
                             <img
-                              src={item.imageUrl}
+                              src={normalizeImageUrl(item.imageUrl)}
                               alt={item.title || 'Diseño'}
                               className="max-w-[400px] max-h-[55vh] w-auto h-auto object-contain"
                             />

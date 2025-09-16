@@ -34,7 +34,10 @@ export const users = pgTable("users", {
   // Settings
   autoTopUpEnabled: boolean("auto_top_up_enabled").default(false),
   preferredModel: varchar("preferred_model"),
-  
+
+  // Storage
+  storageFolder: varchar("storage_folder").unique().default(sql`gen_random_uuid()`), // UUID folder for user's files
+
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { useJobs } from "@/contexts/JobContext";
 import { useJobRecovery } from "@/hooks/useJobRecovery";
 import { useAuth } from "@/hooks/useAuth";
+import { normalizeImageUrl } from "@/lib/imageUtils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth-dialog";
@@ -348,7 +349,7 @@ function StencilTool() {
     if (!currentJob?.processedImageUrl) return;
     
     const link = document.createElement("a");
-    link.href = currentJob.processedImageUrl;
+    link.href = normalizeImageUrl(currentJob.processedImageUrl);
     link.download = `stencil-${currentJob.style}-${Date.now()}.png`;
     link.click();
   };
@@ -371,7 +372,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
     if (!job?.processedImageUrl) return;
     
     const link = document.createElement("a");
-    link.href = job.processedImageUrl;
+    link.href = normalizeImageUrl(job.processedImageUrl);
     link.download = `stencil-${job.style}-${Date.now()}.png`;
     link.click();
   };
@@ -607,7 +608,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
                             onClick={() => openGalleryModal(job)}
                           >
                             <img
-                              src={job.processedImageUrl || job.originalImageUrl}
+                              src={normalizeImageUrl(job.processedImageUrl || job.originalImageUrl)}
                               alt={`Stencil ${job.style}`}
                               className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                             />
@@ -664,7 +665,7 @@ Press and hold the stencil image above and select "Copy", then paste it directly
               {/* Imagen principal - tamaño compacto */}
               <div className="relative bg-[#f5f5f5] flex items-center justify-center p-3">
                 <img
-                  src={galleryModal.job.processedImageUrl || galleryModal.job.originalImageUrl}
+                  src={normalizeImageUrl(galleryModal.job.processedImageUrl || galleryModal.job.originalImageUrl)}
                   alt={`Stencil ${galleryModal.job.style}`}
                   className="max-w-[400px] max-h-[55vh] w-auto h-auto object-contain"
                 />

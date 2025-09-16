@@ -22,38 +22,43 @@ export class ComfyDeployService {
     }
   }
 
-  // Save processed stencil to protected Object Storage
+  // Save processed stencil to Object Storage
   async saveStencilToStorage(
     outputUrl: string,
     userId: string,
-    style: string
-  ): Promise<string> {
+    style: string,
+    storageFolder?: string
+  ): Promise<{ imageUrl: string; thumbnailUrl: string }> {
     try {
       const objectStorage = new ObjectStorageService();
-      
+
       if (outputUrl.startsWith('data:')) {
         // It's already base64, save directly
-        const { imageUrl } = await objectStorage.uploadImageFromBase64(
+        const result = await objectStorage.uploadImageFromBase64(
           outputUrl,
           'stencils',
-          userId
+          userId,
+          storageFolder
         );
-        console.log('Stencil saved to protected storage:', imageUrl);
-        return imageUrl;
+        console.log('Stencil saved to storage:', result.imageUrl);
+        console.log('Thumbnail generated:', result.thumbnailUrl);
+        return result;
       } else {
         // It's an external URL, download and save
-        const { imageUrl } = await objectStorage.uploadImageFromUrl(
+        const result = await objectStorage.uploadImageFromUrl(
           outputUrl,
           'stencils',
-          userId
+          userId,
+          storageFolder
         );
-        console.log('Stencil downloaded and saved to protected storage:', imageUrl);
-        return imageUrl;
+        console.log('Stencil downloaded and saved to storage:', result.imageUrl);
+        console.log('Thumbnail generated:', result.thumbnailUrl);
+        return result;
       }
     } catch (error) {
       console.error('Error saving stencil to storage:', error);
       // Return original URL as fallback
-      return outputUrl;
+      return { imageUrl: outputUrl, thumbnailUrl: outputUrl };
     }
   }
 
@@ -61,7 +66,8 @@ export class ComfyDeployService {
     imageUrl: string,
     style: string,
     processingOptions?: any,
-    userId?: string
+    userId?: string,
+    storageFolder?: string
   ): Promise<{ runId: string; status: string; outputUrl?: string }> {
     if (!this.apiKey) {
       // Mock processing for development - return immediately
@@ -70,14 +76,15 @@ export class ComfyDeployService {
       // In mock mode, save the original image as a "processed" stencil
       let mockOutputUrl = imageUrl;
       
-      // If userId provided, save to protected storage
+      // If userId provided, save to storage
       if (userId) {
         try {
-          mockOutputUrl = await this.saveStencilToStorage(imageUrl, userId, style);
+          const result = await this.saveStencilToStorage(imageUrl, userId, style, storageFolder);
+          mockOutputUrl = result.imageUrl;
         } catch (error) {
           console.error('Failed to save mock stencil to storage:', error);
           // Fallback to original behavior
-          mockOutputUrl = imageUrl.includes('?') 
+          mockOutputUrl = imageUrl.includes('?')
             ? `${imageUrl}&stencil=${style}&t=${Date.now()}`
             : `${imageUrl}?stencil=${style}&t=${Date.now()}`;
         }
@@ -145,8 +152,9 @@ export class ComfyDeployService {
   async checkRunStatus(
     runId: string,
     userId?: string,
-    style?: string
-  ): Promise<{ status: string; outputUrl?: string; error?: string }> {
+    style?: string,
+    storageFolder?: string
+  ): Promise<{ status: string; outputUrl?: string; thumbnailUrl?: string; error?: string }> {
     if (!this.apiKey || runId.startsWith("mock-")) {
       return {
         status: "completed",
@@ -224,19 +232,23 @@ export class ComfyDeployService {
       // Final fallback
       outputUrl = outputUrl || data.output_url;
       
-      // If we have an outputUrl and userId, save to protected storage
+      // If we have an outputUrl and userId, save to storage
+      let thumbnailUrl;
       if (outputUrl && userId && style) {
         try {
-          outputUrl = await this.saveStencilToStorage(outputUrl, userId, style);
+          const result = await this.saveStencilToStorage(outputUrl, userId, style, storageFolder);
+          outputUrl = result.imageUrl;
+          thumbnailUrl = result.thumbnailUrl;
         } catch (error) {
           console.error('Failed to save real stencil to storage:', error);
           // Continue with original URL as fallback
         }
       }
-      
+
       return {
         status,
         outputUrl,
+        thumbnailUrl,
         error: data.error,
       };
     } catch (error) {

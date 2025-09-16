@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
 
 interface AuthenticatedImageProps {
   src: string;
@@ -12,24 +13,43 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError }: Aut
   const [imageSrc, setImageSrc] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const { firebaseUser, isLoading: authLoading } = useFirebaseAuth();
 
   useEffect(() => {
     let mounted = true;
 
     const loadImage = async () => {
+      // Wait for auth to load before fetching protected images
+      if (authLoading) {
+        console.log('Waiting for auth to load...');
+        return;
+      }
+
       try {
         setIsLoading(true);
         setHasError(false);
-        
+
         // Check if this is an internal API route that requires authentication
         const isInternalAPI = src.startsWith('/api/images/');
-        
+
         if (isInternalAPI) {
+          // Get the Firebase ID token if user is authenticated
+          const headers: HeadersInit = {};
+
+          if (firebaseUser) {
+            const idToken = await firebaseUser.getIdToken();
+            headers['Authorization'] = `Bearer ${idToken}`;
+            console.log('Fetching image with auth token:', src);
+          } else {
+            console.log('Fetching image without auth (no user):', src);
+          }
+
           // Fetch the image with credentials for internal API routes
           const response = await fetch(src, {
             credentials: 'include',
             mode: 'cors',
-            cache: 'default'
+            cache: 'default',
+            headers: firebaseUser ? headers : undefined
           });
           
           if (!response.ok) {
@@ -72,7 +92,7 @@ export function AuthenticatedImage({ src, alt, className, onLoad, onError }: Aut
         URL.revokeObjectURL(imageSrc);
       }
     };
-  }, [src, onLoad, onError]);
+  }, [src, onLoad, onError, firebaseUser, authLoading]);
 
   // Cleanup blob URL when component unmounts
   useEffect(() => {

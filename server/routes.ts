@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Old Replit auth
-import { isAuthenticated, checkFirebaseConfig } from "./firebaseAuth"; // New Firebase auth
+import { isAuthenticated, checkFirebaseConfig, optionalAuth } from "./firebaseAuth"; // New Firebase auth
 import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
 import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
@@ -194,10 +194,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If job has a ComfyDeploy run ID and is still processing, check status
       if (job.comfyDeployRunId && job.status === "processing") {
         try {
+          // Get user to access storageFolder
+          const user = await storage.getUser(userId);
           const status = await comfyDeploy.checkRunStatus(
             job.comfyDeployRunId,
             userId,
-            job.style
+            job.style,
+            user?.storageFolder
           );
           // Update job based on ComfyDeploy status
           if (status.status === "completed" && status.outputUrl) {
@@ -209,10 +212,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Save to gallery when completed
             try {
+              // Use the thumbnailUrl from ComfyDeploy status (already generated)
+              const thumbnailUrl = status.thumbnailUrl || status.outputUrl;
+
               await storage.addToGallery({
                 userId: job.userId,
                 imageUrl: status.outputUrl,
-                thumbnailUrl: null, // No guardar imagen original
+                thumbnailUrl: thumbnailUrl,
                 type: 'stencil',
                 title: `Stencil - ${job.style}`,
                 style: job.style,
@@ -221,6 +227,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   processingOptions: job.processingOptions
                 }
               });
+
+              console.log('Stencil saved to gallery with thumbnail:', thumbnailUrl);
             } catch (galleryError) {
               console.error("Error saving to gallery:", galleryError);
               // Don't fail the request if gallery save fails
@@ -396,11 +404,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Start processing with ComfyDeploy
       try {
+        // Get user to access storageFolder
+        const user = await storage.getUser(userId);
         const result = await comfyDeploy.processImage(
           publicImageUrl,
           style as any,
           options,
-          userId
+          userId,
+          user?.storageFolder
         );
         
         // Update job with ComfyDeploy run ID
@@ -413,10 +424,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Save to gallery
         if (result.outputUrl) {
           try {
+            // For immediate processing, we need to generate thumbnails
+            // since processImage only returns the initial job, not the completed result
+            let thumbnailUrl = result.outputUrl; // Default to full image
+
+            // Check if the outputUrl is already from our storage (has /api/images/ prefix)
+            // If it is, the thumbnail should also exist
+            if (result.outputUrl.startsWith('/api/images/')) {
+              // Extract the path and convert to thumbnail path
+              const imagePath = decodeURIComponent(result.outputUrl.replace('/api/images/', ''));
+              // Replace the folder path to get thumbnail
+              const thumbnailPath = imagePath.replace(/\/(designs|stencils)\//, '/thumbnails/').replace('.png', '_thumb.jpg');
+              thumbnailUrl = `/api/images/${encodeURIComponent(thumbnailPath)}`;
+              console.log("Using existing thumbnail from storage:", thumbnailUrl);
+            } else if (result.outputUrl.startsWith('data:') || result.outputUrl.startsWith('http')) {
+              // This shouldn't happen after our fixes, but keep as fallback
+              try {
+                const objectStorage = new ObjectStorageService();
+                const user = await storage.getUser(userId);
+                const uploadResult = result.outputUrl.startsWith('data:')
+                  ? await objectStorage.uploadImageFromBase64(result.outputUrl, 'stencils', userId, user?.storageFolder)
+                  : await objectStorage.uploadImageFromUrl(result.outputUrl, 'stencils', userId, user?.storageFolder);
+
+                // Update both URLs to use the storage versions
+                result.outputUrl = uploadResult.imageUrl;
+                thumbnailUrl = uploadResult.thumbnailUrl;
+                console.log("Generated new thumbnail for stencil:", thumbnailUrl);
+
+                // Also update the job with the new URLs
+                await storage.updateStencilJob(job.id, {
+                  processedImageUrl: uploadResult.imageUrl,
+                });
+              } catch (uploadError) {
+                console.error("Error generating thumbnail:", uploadError);
+              }
+            }
+
             await storage.addToGallery({
               userId,
               imageUrl: result.outputUrl,
-              thumbnailUrl: publicImageUrl,
+              thumbnailUrl: thumbnailUrl,
               type: 'stencil',
               title: `Stencil - ${style}`,
               style: style,
@@ -425,6 +472,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 processingOptions: options
               }
             });
+
+            console.log('Immediate stencil saved to gallery with thumbnail:', thumbnailUrl);
           } catch (galleryError) {
             console.error("Error saving to gallery:", galleryError);
           }
@@ -754,10 +803,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Subir imagen a Object Storage para la galería
           const objectStorage = new ObjectStorageService();
+          const user = await storage.getUser(userId);
           const uploadResult = await objectStorage.uploadImageFromBase64(
             result.editedImage,
             'designs',
-            userId
+            userId,
+            user?.storageFolder
           );
           
           permanentImageUrl = uploadResult.imageUrl; // Guardar la URL permanente
@@ -1052,13 +1103,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         
+        // Get user for storageFolder
+        const user = await storage.getUser(userId);
+
         // Subir la imagen a Object Storage
         if (imageUrl.startsWith('data:')) {
           // Si es base64, subir directamente
           const uploadResult = await objectStorage.uploadImageFromBase64(
             imageUrl,
             'designs',
-            userId
+            userId,
+            user?.storageFolder
           );
           finalImageUrl = uploadResult.imageUrl;
           thumbnailUrl = uploadResult.thumbnailUrl;
@@ -1067,7 +1122,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const uploadResult = await objectStorage.uploadImageFromUrl(
             imageUrl,
             'designs',
-            userId
+            userId,
+            user?.storageFolder
           );
           finalImageUrl = uploadResult.imageUrl;
           thumbnailUrl = uploadResult.thumbnailUrl;
@@ -1269,55 +1325,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ADMIN ROUTES COMPLETELY REMOVED FOR SECURITY
   // Any admin functionality requires proper role-based access control implementation
 
-  // Endpoint seguro para servir imágenes privadas con autenticación
-  app.get('/api/images/:filename(*)', isAuthenticated, async (req: any, res) => {
+  // ===============================
+  // IMAGE SERVING ENDPOINTS
+  // ===============================
+
+  // New unified endpoint structure: /api/images/{storageFolder}/{imageName}
+  app.get('/api/images/:storageFolder/:imageName', optionalAuth, async (req: any, res) => {
     try {
-      const filename = decodeURIComponent(req.params.filename);
-      
-      // SEGURIDAD: Verificar que el usuario está autenticado
-      const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy
-      if (!userId) {
-        return res.status(401).json({ message: "Usuario no autenticado" });
+      const { storageFolder, imageName } = req.params;
+      const isAuthenticated = req.userId || req.user?.claims?.sub;
+
+      console.log('Image request:', {
+        storageFolder,
+        imageName,
+        isAuthenticated: !!isAuthenticated,
+        userId: req.userId || req.user?.claims?.sub,
+        cookies: req.headers.cookie
+      });
+
+      // Determine if it's a thumbnail based on the image name
+      const isThumb = imageName.includes('_thumb');
+      const folder = isThumb ? 'thumbnails' : 'images';
+
+      // Construct the full path in storage
+      const filePath = `${storageFolder}/${folder}/${imageName}`;
+
+      // Check if image is public by querying gallery
+      const galleryItem = await storage.getGalleryItemByUrl(`/api/images/${storageFolder}/${imageName}`);
+
+      console.log('Gallery item lookup:', {
+        searchUrl: `/api/images/${storageFolder}/${imageName}`,
+        found: !!galleryItem,
+        isPublic: galleryItem?.isPublic,
+        galleryUserId: galleryItem?.userId,
+        requestUserId: req.userId || req.user?.claims?.sub
+      });
+
+      // If we can't find the gallery item, we need to check if user has access
+      // For now, if no gallery item is found, allow access if authenticated
+      if (!galleryItem) {
+        // If no gallery record exists, require authentication as a safety measure
+        if (!isAuthenticated) {
+          console.log(`Image not found in gallery and user not authenticated: ${storageFolder}/${imageName}`);
+          return res.status(401).json({ message: "Authentication required" });
+        }
+        // If authenticated but no gallery record, allow access (might be old data)
+        console.log(`Warning: Image accessed without gallery record: ${storageFolder}/${imageName}`);
+      } else if (!galleryItem.isPublic) {
+        // Image exists and is private, require authentication
+        if (!isAuthenticated) {
+          console.log('Private image requested without authentication');
+          return res.status(401).json({ message: "Authentication required for private images" });
+        }
+
+        // Verify ownership
+        const userId = req.userId || req.user?.claims?.sub;
+        if (galleryItem.userId !== userId) {
+          console.log('User does not own this image:', { galleryUserId: galleryItem.userId, requestUserId: userId });
+          return res.status(403).json({ message: "Not authorized to access this image" });
+        }
       }
-      
-      // SEGURIDAD: Solo servir imágenes del directorio privado
-      if (!filename.startsWith('.private/')) {
-        return res.status(404).json({ message: "Imagen no encontrada" });
-      }
-      
-      // SEGURIDAD: Verificar que la imagen pertenece al usuario autenticado
-      // Las rutas son: .private/designs/{userId}/... o .private/uploads/{userId}/... o .private/thumbnails/{userId}/... o .private/stencils/{userId}/...
-      const userPattern = new RegExp(`\\.private/(designs|uploads|thumbnails|stencils)/${userId}/`);
-      if (!userPattern.test(filename)) {
-        console.warn(`Usuario ${userId} intentó acceder a imagen no autorizada: ${filename}`);
-        return res.status(403).json({ message: "No autorizado para ver esta imagen" });
-      }
-      
-      const objectStorage = new ObjectStorageService();
+
+      // Serve the image from storage
       const bucket = objectStorageClient.bucket(OBJECT_STORAGE_BUCKET);
-      const file = bucket.file(filename);
-      
-      // Verificar que el archivo existe
+      const file = bucket.file(filePath);
+
+      console.log('Attempting to serve file:', {
+        filePath,
+        bucket: OBJECT_STORAGE_BUCKET,
+        isThumb,
+        folder
+      });
+
       const [exists] = await file.exists();
       if (!exists) {
-        return res.status(404).json({ message: "Imagen no encontrada" });
+        console.log('File not found in storage:', filePath);
+        return res.status(404).json({ message: "Image not found", path: filePath });
       }
-      
-      // Obtener el archivo y enviarlo
+
       const [buffer] = await file.download();
-      
-      // Headers correctos para mostrar imágenes con credenciales
+
+      // Set cache headers based on privacy
+      const cacheControl = galleryItem && !galleryItem.isPublic
+        ? 'private, max-age=3600' // 1 hour for private
+        : 'public, max-age=31536000'; // 1 year for public
+
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Content-Length', buffer.length.toString());
-      res.setHeader('Cache-Control', 'private, max-age=3600'); // Cache privado por autenticación
-      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
-      
+      res.setHeader('Cache-Control', cacheControl);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
       res.end(buffer);
     } catch (error) {
-      console.error('Error sirviendo imagen privada:', error);
-      res.status(404).json({ message: "Imagen no encontrada" });
+      console.error('Error serving image:', error);
+      res.status(500).json({ message: "Error serving image" });
     }
   });
 

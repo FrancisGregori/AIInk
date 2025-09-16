@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { normalizeImageUrl, getThumbnailUrl } from "@/lib/imageUtils";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth-dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -1126,7 +1127,7 @@ function DesignEditor() {
                           <DialogTrigger asChild>
                             <div className="relative cursor-pointer group">
                               <AuthenticatedImage
-                                src={currentJob.processedImageUrl}
+                                src={normalizeImageUrl(currentJob.processedImageUrl)}
                                 alt="Processed design"
                                 className="w-full rounded-lg transition-all group-hover:opacity-90"
                               />
@@ -1135,7 +1136,7 @@ function DesignEditor() {
                           <DialogContent className="max-w-4xl max-h-[90vh] p-2">
                             <div className="relative">
                               <AuthenticatedImage
-                                src={currentJob.processedImageUrl}
+                                src={normalizeImageUrl(currentJob.processedImageUrl)}
                                 alt="Full size design"
                                 className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
                               />
@@ -1154,7 +1155,7 @@ function DesignEditor() {
                       ) : recoveredImageUrl ? (
                         <div className="relative">
                           <AuthenticatedImage
-                            src={recoveredImageUrl}
+                            src={normalizeImageUrl(recoveredImageUrl)}
                             alt="Processing..."
                             className="w-full rounded-lg opacity-75"
                           />
@@ -1313,7 +1314,7 @@ function DesignEditor() {
                           <DialogTrigger asChild>
                             <div className="relative group cursor-pointer">
                               <AuthenticatedImage
-                                src={item.imageUrl || ""}
+                                src={normalizeImageUrl(item.imageUrl)}
                                 alt={item.name}
                                 className="w-full aspect-[3/4] rounded-lg object-cover transition-opacity"
                               />
@@ -1323,7 +1324,7 @@ function DesignEditor() {
                             <div className="space-y-4">
                               <div className="relative">
                                 <AuthenticatedImage
-                                  src={item.imageUrl || ""}
+                                  src={normalizeImageUrl(item.imageUrl)}
                                   alt={`${item.name} full size`}
                                   className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
                                 />

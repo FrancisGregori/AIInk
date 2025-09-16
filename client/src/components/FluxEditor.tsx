@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Save, RefreshCw, Layers, Palette, Settings } from "lucide-react";
+import { normalizeImageUrl } from "@/lib/imageUtils";
 
 interface FluxProject {
   id: string;
@@ -240,7 +241,7 @@ export default function FluxEditor({ project }: FluxEditorProps) {
               <div className="aspect-square bg-black rounded-lg border border-medium-gray overflow-hidden relative">
                 {project.imageUrl ? (
                   <img
-                    src={project.imageUrl}
+                    src={normalizeImageUrl(project.imageUrl)}
                     alt={project.name}
                     className="w-full h-full object-cover"
                     data-testid="img-design-canvas"
