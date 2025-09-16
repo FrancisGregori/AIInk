@@ -389,12 +389,12 @@ export class DatabaseStorage implements IStorage {
         eq(userGallery.id, id),
         eq(userGallery.userId, userId)
       ));
-    
+
     if (!existing) {
       console.warn(`[SECURITY] User ${userId} attempted to update gallery item ${id} they don't own`);
       return undefined;
     }
-    
+
     const [updated] = await db.update(userGallery)
       .set({ ...updates, updatedAt: new Date() })
       .where(and(
@@ -402,6 +402,7 @@ export class DatabaseStorage implements IStorage {
         eq(userGallery.userId, userId)
       ))
       .returning();
+
     return updated;
   }
 

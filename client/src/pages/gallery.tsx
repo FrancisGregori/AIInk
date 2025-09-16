@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { 
-  Grid, 
-  List, 
-  Search, 
-  Download, 
-  Heart, 
-  Trash2, 
+import {
+  Grid,
+  List,
+  Search,
+  Download,
+  Heart,
+  Trash2,
   RefreshCw,
   Clock,
   Filter,
@@ -17,7 +17,9 @@ import {
   Loader2,
   Grid3x3,
   Grid2x2,
-  LayoutGrid
+  LayoutGrid,
+  Globe,
+  Lock
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,9 +27,17 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 import { apiRequest } from '@/lib/queryClient';
+import { apiFetch } from '@/lib/api';
 import Navigation from '@/components/Navigation';
 
 export default function Gallery() {
@@ -112,6 +122,36 @@ export default function Gallery() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+    }
+  });
+
+  const togglePrivacyMutation = useMutation({
+    mutationFn: async ({ id, isPublic }: { id: string; isPublic: boolean }) => {
+      const response = await apiFetch(`/api/gallery/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isPublic }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update privacy');
+      }
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      toast({
+        title: variables.isPublic ? "Imagen pública" : "Imagen privada",
+        description: variables.isPublic
+          ? "La imagen ahora es visible públicamente"
+          : "La imagen ahora es privada"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la privacidad",
+        variant: "destructive"
+      });
     }
   });
 
@@ -264,17 +304,27 @@ export default function Gallery() {
                     <Dialog>
                       <DialogTrigger asChild>
                         <div className={`relative cursor-pointer ${
-                          imageSize === 'small' 
-                            ? 'aspect-square' 
+                          imageSize === 'small'
+                            ? 'aspect-square'
                             : imageSize === 'medium'
                             ? 'aspect-[3/4]'
                             : 'aspect-[3/4]'
                         } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
                           <AuthenticatedImage
-                            src={item.thumbnailUrl || item.imageUrl} 
+                            src={item.thumbnailUrl || item.imageUrl}
                             alt={item.title || 'Diseño'}
                             className={`w-full h-full ${item.type === 'stencil' ? 'object-contain' : 'object-cover'} transition-transform group-hover:scale-105`}
                           />
+                          {/* Privacy indicator */}
+                          <div className="absolute top-2 right-2 z-10">
+                            <div className="bg-black/60 backdrop-blur-sm rounded-full p-1.5">
+                              {item.isPublic ? (
+                                <Globe className="h-3 w-3 text-white" />
+                              ) : (
+                                <Lock className="h-3 w-3 text-white" />
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-fit p-0 bg-zinc-900 border-zinc-800 overflow-hidden">
@@ -293,31 +343,82 @@ export default function Gallery() {
                           </div>
                           
                           <div className="bg-zinc-900 p-3 border-t border-zinc-800">
-                            <div className="flex items-center justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                {item.type !== 'stencil' && (
-                                  <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
-                                )}
-                                {item.style && item.type !== 'stencil' && (
-                                  <p className="text-xs text-zinc-400">Estilo: {item.style}</p>
-                                )}
+                            <div className="flex flex-col gap-3">
+                              {/* Privacy Toggle */}
+                              <div className="flex items-center justify-between p-3 bg-zinc-800 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-zinc-700 rounded-lg">
+                                    {item.isPublic ? (
+                                      <Globe className="h-5 w-5 text-green-400" />
+                                    ) : (
+                                      <Lock className="h-5 w-5 text-amber-400" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-white">
+                                      {item.isPublic ? 'Imagen Pública' : 'Imagen Privada'}
+                                    </p>
+                                    <p className="text-xs text-zinc-400">
+                                      {item.isPublic
+                                        ? 'Visible para todos'
+                                        : 'Solo visible para ti'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Switch
+                                    checked={item.isPublic || false}
+                                    onCheckedChange={(checked) =>
+                                      togglePrivacyMutation.mutate({
+                                        id: item.id,
+                                        isPublic: checked
+                                      })
+                                    }
+                                    disabled={togglePrivacyMutation.isPending}
+                                    className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-zinc-600"
+                                  />
+                                </div>
                               </div>
-                              <div className="flex gap-1">
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  className="h-8 w-8"
-                                  onClick={() => favoriteMutation.mutate(item.id)}
-                                >
-                                  <Heart className={`w-3 h-3 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
-                                </Button>
-                                <Button
-                                  onClick={() => handleDownload(item.imageUrl, item.title)}
-                                  className="bg-white text-black hover:bg-zinc-200 h-8 px-3 text-sm"
-                                >
-                                  <Download className="mr-1 h-3 w-3" />
-                                  Descargar
-                                </Button>
+
+                              {/* Actions */}
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                  {item.type !== 'stencil' && (
+                                    <h3 className="text-sm font-semibold truncate">{item.title || 'Sin título'}</h3>
+                                  )}
+                                  {item.style && item.type !== 'stencil' && (
+                                    <p className="text-xs text-zinc-400">Estilo: {item.style}</p>
+                                  )}
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-8 w-8"
+                                    onClick={() => favoriteMutation.mutate(item.id)}
+                                  >
+                                    <Heart className={`w-3 h-3 ${item.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleDownload(item.imageUrl, item.title)}
+                                    className="bg-white text-black hover:bg-zinc-200 h-8 px-3 text-sm"
+                                  >
+                                    <Download className="mr-1 h-3 w-3" />
+                                    Descargar
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="h-8 w-8"
+                                    onClick={() => {
+                                      if (confirm('¿Estás seguro de que quieres eliminar esta imagen?')) {
+                                        deleteMutation.mutate(item.id);
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="w-3 h-3 text-red-500" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>

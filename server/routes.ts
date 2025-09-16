@@ -1205,16 +1205,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
-      
+
       const { id } = req.params;
       const updates = req.body;
-      
+
       // SEGURIDAD: Pasar userId para validar propiedad
       const updatedItem = await storage.updateGalleryItem(id, updates, userId);
       if (!updatedItem) {
         return res.status(404).json({ error: "Gallery item not found or not authorized" });
       }
-      
+
       res.json(updatedItem);
     } catch (error) {
       console.error("Error updating gallery item:", error);

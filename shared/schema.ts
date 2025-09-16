@@ -54,6 +54,7 @@ export const userGallery = pgTable("user_gallery", {
   prompt: text("prompt"),
   style: varchar("style"), // for stencils: steven, makishi, etc
   isFavorite: boolean("is_favorite").default(false),
+  isPublic: boolean("is_public").default(false), // controls if image is public or private
   metadata: jsonb("metadata"), // extra data like processing options
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
