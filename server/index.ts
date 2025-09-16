@@ -1,9 +1,27 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Configure CORS
+const corsOptions = {
+  origin: process.env.CLIENT_URL || [
+    'http://localhost:5173',
+    'http://localhost:5001',
+    'http://localhost:3000',
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+
+// Log CORS configuration
+console.log('CORS configured for:', process.env.CLIENT_URL || 'localhost development');
 
 // IMPORTANT: Stripe webhook must be registered BEFORE body parsers
 // to access raw body for signature verification
