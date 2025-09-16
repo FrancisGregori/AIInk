@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Bot, Menu, X, LogOut, User, CreditCard, Image, Home, Wand2, Sparkles, Images } from "lucide-react";
+import { Menu, X, LogOut, User, CreditCard, Image, Home,  Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
@@ -57,13 +57,13 @@ export default function Navigation() {
               <img 
                 src={logoPath} 
                 alt="TattooStencilPro" 
-                className="h-8 w-auto group-hover:scale-105 transition-transform"
+                className="h-auto w-40 lg:w-48 group-hover:scale-105 transition-transform"
               />
             </div>
           </Link>
           
           {/* Center Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden mx-auto md:flex items-center space-x-8">
             {location === "/" ? (
               <>
                 <button 
@@ -121,7 +121,7 @@ export default function Navigation() {
           </div>
           
           {/* Right Side Actions */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center justify-end space-x-4 w-40 lg:w-48">
             <Link href="/pricing">
               <Button
                 variant="ghost"

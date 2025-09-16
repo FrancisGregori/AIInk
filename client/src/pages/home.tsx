@@ -2,12 +2,10 @@ import { Link, useLocation } from "wouter";
 import { useState, useRef, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Palette, Sparkles, RotateCw, Wand2, ArrowRight, Pen, Edit3, Bot, PenTool } from "lucide-react";
+import { Palette, Sparkles, RotateCw, Wand2, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import logoPath from "@assets/1Asset 3zzz_1755637024508.png";
 import stencilExample1 from "@assets/hub_stencil1.png";
-import stencilExample2 from "@assets/hub_stencil2.png";
 import stencilExample3 from "@assets/hub_stencil3.png";
 import aiEditorImage from "@assets/hub_stencil2.png";
 
@@ -155,13 +153,13 @@ export default function Home() {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center px-4 py-20">
+      <section className="relative min-h-dvh flex items-center justify-center px-4 py-20">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/50 to-black pointer-events-none" />
         
         <div className="relative max-w-7xl mx-auto text-center space-y-8">
           {/* Main Title with fade-in animation */}
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight animate-fade-in">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl mt-12 font-bold tracking-tight animate-fade-in">
             <span className="block">Revolutionize your Tattoo</span>
             <span className="block">Designs</span>
           </h1>
@@ -326,13 +324,12 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-gray-900 py-12">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2">
-              <img src={logoPath} alt="Logo" className="h-8 w-8" />
-              <span className="text-xl font-bold">TattooStencilPro</span>
+              <img src={logoPath} className="h-auto w-48 flex-shrink-0" alt='TattooStencilPro logo' />
             </div>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm max-sm:text-center">
               © 2025 TattooStencilPro. All rights reserved.
             </p>
           </div>

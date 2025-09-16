@@ -1,10 +1,8 @@
 // Simplified gallery with horizontal layout for desktop
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import {
-  Grid,
-  List,
   Search,
   Download,
   Heart,
@@ -13,7 +11,6 @@ import {
   Clock,
   Filter,
   ChevronDown,
-  Info,
   Loader2,
   Grid3x3,
   Grid2x2,
@@ -28,12 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+
 import { useToast } from '@/hooks/use-toast';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { apiRequest } from '@/lib/queryClient';
@@ -43,9 +35,7 @@ import Navigation from '@/components/Navigation';
 
 export default function Gallery() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [imageSize, setImageSize] = useState<'small' | 'medium' | 'large'>('small');
   const [selectedType, setSelectedType] = useState<'all' | 'stencil' | 'design'>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,8 +50,7 @@ export default function Gallery() {
     queryFn: async () => {
       const typeParam = selectedType === 'all' ? '' : `&type=${selectedType}`;
       const response = await apiRequest('GET', `/api/gallery?limit=${itemsPerPage}&page=${currentPage}${typeParam}`);
-      const items = await response.json();
-      return items;
+      return await response.json();
     },
   });
 
@@ -210,7 +199,7 @@ export default function Gallery() {
           </div>
 
           {/* Controls */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col items-start sm:flex-row gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
