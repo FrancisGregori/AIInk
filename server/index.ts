@@ -16,9 +16,18 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
 };
 
 app.use(cors(corsOptions));
+
+// Add security headers for COOP/COEP
+app.use((req, res, next) => {
+  // Allow popup authentication to work properly
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+  next();
+});
 
 // Log CORS configuration
 console.log('CORS configured for:', process.env.CLIENT_URL || 'localhost development');
