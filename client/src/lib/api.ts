@@ -1,5 +1,8 @@
 import { auth } from '@/lib/firebaseConfig';
 
+// Use VITE_API_URL in production, empty string in development (same origin)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export interface CreditsData {
   available: number;
   monthlyAllowance: number;
@@ -27,8 +30,11 @@ export async function apiFetch(url: string, options: FetchOptions = {}) {
     }
   }
 
+  // Construct full URL with API base
+  const fullUrl = API_BASE_URL + url;
+
   // Make the request
-  return await fetch(url, {
+  return await fetch(fullUrl, {
     ...fetchOptions,
     headers,
     credentials: 'include',

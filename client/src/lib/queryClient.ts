@@ -1,6 +1,9 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { getIdToken } from "@/lib/firebaseConfig";
 
+// Use VITE_API_URL in production, empty string in development (same origin)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -12,11 +15,11 @@ async function throwIfResNotOk(res: Response) {
 async function getAuthHeaders(): Promise<HeadersInit> {
   const token = await getIdToken();
   const headers: HeadersInit = {};
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 }
 
@@ -31,7 +34,10 @@ export async function apiRequest(
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
 
-  const res = await fetch(url, {
+  // Construct full URL with API base
+  const fullUrl = API_BASE_URL + url;
+
+  const res = await fetch(fullUrl, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -50,7 +56,8 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const authHeaders = await getAuthHeaders();
-    const res = await fetch(queryKey.join("/") as string, {
+    const fullUrl = API_BASE_URL + queryKey.join("/");
+    const res = await fetch(fullUrl, {
       headers: authHeaders,
       credentials: "include",
       cache: "no-store",
