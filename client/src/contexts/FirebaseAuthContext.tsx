@@ -37,7 +37,14 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const fetchUserData = async (fbUser: FirebaseUser) => {
     try {
       const token = await fbUser.getIdToken();
-      const response = await fetch('/api/auth/user', {
+
+      // Use API URL from environment
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const fullUrl = `${apiUrl}/api/auth/user`;
+
+      console.log('Fetching user from:', fullUrl);
+
+      const response = await fetch(fullUrl, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

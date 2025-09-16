@@ -3,6 +3,12 @@ import { auth } from '@/lib/firebaseConfig';
 // Use VITE_API_URL in production, empty string in development (same origin)
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+// Debug log for API URL configuration
+if (import.meta.env.DEV) {
+  console.log('API Base URL:', API_BASE_URL || 'Using same origin');
+  console.log('Environment:', import.meta.env.MODE);
+}
+
 export interface CreditsData {
   available: number;
   monthlyAllowance: number;
