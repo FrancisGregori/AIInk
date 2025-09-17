@@ -1,7 +1,6 @@
 // Simplified gallery with horizontal layout for desktop
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
 import {
   Search,
   Download,
@@ -309,11 +308,13 @@ export default function Gallery() {
                             : 'aspect-[3/4]'
                         } ${item.type === 'stencil' ? 'bg-[#f5f5f5]' : 'bg-zinc-900'}`}>
                           <OptimizedImage
-                            src={normalizeImageUrl(item.thumbnailUrl || item.imageUrl)}
+                            src={getThumbnailUrl(item.imageUrl, item.thumbnailUrl)}
                             thumbnailSrc={null}
                             alt={item.title || 'Diseño'}
                             objectFit={item.type === 'stencil' ? 'contain' : 'cover'}
                             className="w-full h-full transition-transform group-hover:scale-105"
+                            loading="lazy"
+                            quality="low"
                           />
                           {/* Privacy indicator */}
                           <div className="absolute top-2 right-2 z-10">

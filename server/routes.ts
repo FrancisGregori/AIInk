@@ -4,14 +4,14 @@ import multer from "multer";
 import { storage } from "./storage";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Old Replit auth
 import { isAuthenticated, checkFirebaseConfig, optionalAuth } from "./firebaseAuth"; // New Firebase auth
-import { summarizeArticle, analyzeSentiment, analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
-import { insertStencilJobSchema, insertFluxProjectSchema, insertGeminiChatSchema } from "@shared/schema";
+import { summarizeArticle,  analyzeImage, analyzeImageForTattoo, inkVisionChat, streamChatResponseGemini } from "./gemini";
+import {  insertFluxProjectSchema } from "@shared/schema";
 import ComfyDeployService from "./comfydeploy";
 import Replicate from "replicate";
 import { z } from "zod";
 import { ObjectStorageService, objectStorageClient, OBJECT_STORAGE_BUCKET } from "./objectStorage";
 import Stripe from "stripe";
-import { CREDIT_PACKS, getCreditPackByCredits, getPriceId, PRICE_ID_TO_TIER } from "../shared/stripe-config";
+import {  getCreditPackByCredits, getPriceId, PRICE_ID_TO_TIER } from "../shared/stripe-config";
 
 // Configure multer for file uploads - SECURE DISK STORAGE
 import fs from 'fs';
@@ -91,6 +91,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const comfyDeploy = new ComfyDeployService();
   
   // Auth routes - Updated for Firebase
+  // Thumbnail proxy endpoint - uses wsrv.nl for image resizing
+  app.get("/api/thumbnail", async (req, res) => {
+    try {
+      const { url, w = 400, h = 400 } = req.query;
+
+      if (!url) {
+        return res.status(400).json({ error: "URL parameter is required" });
+      }
+
+      // Decode the URL
+      const imageUrl = decodeURIComponent(url as string);
+
+      // If it's a local API URL, convert to full URL
+      let fullUrl = imageUrl;
+      if (imageUrl.startsWith('/api/')) {
+        const protocol = req.protocol;
+        const host = req.get('host');
+        fullUrl = `${protocol}://${host}${imageUrl}`;
+      }
+
+      // Use wsrv.nl free image proxy service for resizing
+      const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=${w}&h=${h}&fit=cover&q=85`;
+
+      // Redirect to the proxy service
+      res.redirect(proxyUrl);
+    } catch (error) {
+      console.error("Error generating thumbnail:", error);
+      res.status(500).json({ error: "Failed to generate thumbnail" });
+    }
+  });
+
+  // Debug endpoint to check storage configuration
+  app.get("/api/debug/storage-config", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      // Check storage configuration
+      const hasGoogleCredentials = !!process.env.GOOGLE_CLOUD_CREDENTIALS;
+      const isReplitDeployment = !!process.env.REPLIT_DEPLOYMENT;
+      const bucketName = process.env.OBJECT_STORAGE_BUCKET || "replit-objstore-12f3cfa6-c32d-4020-8906-8c1a7e0f108b";
+
+      // Try to parse credentials if they exist
+      let credentialsValid = false;
+      let projectId = null;
+      if (hasGoogleCredentials) {
+        try {
+          const creds = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS);
+          credentialsValid = !!creds.type && !!creds.project_id;
+          projectId = creds.project_id;
+        } catch (e) {
+          credentialsValid = false;
+        }
+      }
+
+      res.json({
+        storageConfigured: hasGoogleCredentials || isReplitDeployment,
+        hasGoogleCredentials,
+        credentialsValid,
+        isReplitDeployment,
+        bucketName,
+        projectId,
+        environment: process.env.NODE_ENV,
+        message: !hasGoogleCredentials && !isReplitDeployment
+          ? "Storage not configured - images will be saved as base64"
+          : "Storage is configured"
+      });
+    } catch (error) {
+      console.error("Error checking storage config:", error);
+      res.status(500).json({ error: "Failed to check storage configuration" });
+    }
+  });
+
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId || req.user?.claims?.sub; // Support both Firebase and legacy

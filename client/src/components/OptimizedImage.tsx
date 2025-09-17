@@ -8,6 +8,8 @@ interface OptimizedImageProps {
   alt: string;
   className?: string;
   objectFit?: 'cover' | 'contain';
+  loading?: 'lazy' | 'eager';
+  quality?: 'low' | 'medium' | 'high';
 }
 
 export function OptimizedImage({
@@ -15,7 +17,9 @@ export function OptimizedImage({
   thumbnailSrc,
   alt,
   className,
-  objectFit = 'cover'
+  objectFit = 'cover',
+  loading = 'lazy',
+  quality = 'medium'
 }: OptimizedImageProps) {
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -71,15 +75,35 @@ export function OptimizedImage({
       }
     };
 
+    // If loading is eager, load immediately
+    if (loading === 'eager') {
+      if (thumbnailSrc) {
+        loadImage(thumbnailSrc).then(() => {
+          if (thumbnailSrc !== src && !isCancelled) {
+            loadImage(src);
+          }
+        });
+      } else {
+        loadImage(src);
+      }
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    // For lazy loading, use IntersectionObserver
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(async (entry) => {
           if (entry.isIntersecting) {
-            // Carregar thumbnail primeiro se disponível
-            if (thumbnailSrc) {
+            // For gallery view with low quality, just load the main image
+            if (quality === 'low') {
+              await loadImage(src);
+            } else if (thumbnailSrc) {
+              // Load thumbnail first if available
               await loadImage(thumbnailSrc);
-              // Depois carregar imagem completa em background
-              if (thumbnailSrc !== src) {
+              // Then load full image in background for high quality
+              if (thumbnailSrc !== src && quality === 'high') {
                 loadImage(src).then(() => {
                   if (!isCancelled) {
                     setCurrentSrc(src);
@@ -94,7 +118,7 @@ export function OptimizedImage({
         });
       },
       {
-        rootMargin: '100px',
+        rootMargin: quality === 'low' ? '50px' : '100px',
         threshold: 0.01
       }
     );
@@ -107,7 +131,7 @@ export function OptimizedImage({
       isCancelled = true;
       observer.disconnect();
     };
-  }, [src, thumbnailSrc]);
+  }, [src, thumbnailSrc, loading, quality]);
 
   return (
     <div ref={imgRef} className={cn('relative overflow-hidden', className)}>

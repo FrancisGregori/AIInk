@@ -1,4 +1,3 @@
-import { StencilJob } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
 
 // Map style names to LoRA model files
@@ -188,57 +187,91 @@ export class ComfyDeployService {
         status = "completed";
       }
       
-      // Get the output image URL from the response
+      // Get the output image URLs from the response
       let outputUrl;
-      
+      let thumbnailUrl;
+
       // Check if outputs is an array with results
       if (Array.isArray(data.outputs) && data.outputs.length > 0) {
         // Look for any output with images
+        const allImages = [];
+
         for (const output of data.outputs) {
           console.log('Checking output:', output);
-          
+
           // Check if this output has image data
           if (output.data && output.data.images && Array.isArray(output.data.images)) {
-            // Get the first image
-            const imageData = output.data.images[0];
-            console.log('Found image data:', JSON.stringify(imageData, null, 2));
-            
-            // The image data might be a URL string or an object with various properties
-            if (typeof imageData === 'string') {
-              outputUrl = imageData;
-            } else if (imageData && typeof imageData === 'object') {
-              // Try various common properties
-              outputUrl = imageData.url || imageData.image || imageData.path || imageData.filename;
-            }
-            
-            if (outputUrl) {
-              console.log('Found image URL:', outputUrl);
-              break;
+            // Collect all images
+            for (const imageData of output.data.images) {
+              console.log('Found image data:', JSON.stringify(imageData, null, 2));
+
+              let imageUrl;
+              // The image data might be a URL string or an object with various properties
+              if (typeof imageData === 'string') {
+                imageUrl = imageData;
+              } else if (imageData && typeof imageData === 'object') {
+                // Try various common properties
+                imageUrl = imageData.url || imageData.image || imageData.path || imageData.filename;
+              }
+
+              if (imageUrl) {
+                allImages.push(imageUrl);
+                console.log('Found image URL:', imageUrl);
+              }
             }
           }
-          
+
           // Also check direct url/image properties
-          if (!outputUrl && (output.url || output.image)) {
-            outputUrl = output.url || output.image;
+          if (output.url || output.image) {
+            allImages.push(output.url || output.image);
           }
+        }
+
+        // If we found multiple images, use the first as main and second as thumbnail
+        // Or use the last as thumbnail if it's smaller (ComfyUI sometimes outputs thumbnails last)
+        if (allImages.length > 1) {
+          outputUrl = allImages[0];
+          thumbnailUrl = allImages[allImages.length - 1]; // Use last image as thumbnail
+          console.log(`Found ${allImages.length} images, using first as main and last as thumbnail`);
+        } else if (allImages.length === 1) {
+          outputUrl = allImages[0];
+          console.log('Found only 1 image, will generate thumbnail later');
         }
       } else if (data.outputs && typeof data.outputs === 'object') {
         // Fallback for object format
-        outputUrl = data.outputs.output_image || 
-                   data.outputs.image || 
+        outputUrl = data.outputs.output_image ||
+                   data.outputs.image ||
                    data.outputs.image_url;
+
+        // Check if there's a separate thumbnail field
+        thumbnailUrl = data.outputs.thumbnail ||
+                      data.outputs.thumb ||
+                      data.outputs.thumbnail_url;
       }
-      
+
       // Final fallback
       outputUrl = outputUrl || data.output_url;
-      
+      thumbnailUrl = thumbnailUrl || data.thumbnail_url;
+
       // If we have an outputUrl and userId, save to storage
-      let thumbnailUrl;
       if (outputUrl && userId && style) {
         try {
-          const result = await this.saveStencilToStorage(outputUrl, userId, style, storageFolder);
-          outputUrl = result.imageUrl;
-          thumbnailUrl = result.thumbnailUrl;
+          // If we already have a separate thumbnail from ComfyDeploy, save both
+          if (thumbnailUrl && thumbnailUrl !== outputUrl) {
+            console.log('ComfyDeploy returned separate thumbnail, saving both images');
+            // Save main image
+            const mainResult = await this.saveStencilToStorage(outputUrl, userId, style, storageFolder);
+            // Save thumbnail
+            const thumbResult = await this.saveStencilToStorage(thumbnailUrl, userId, `${style}_thumb`, storageFolder);
+
+            outputUrl = mainResult.imageUrl;
+            thumbnailUrl = thumbResult.imageUrl; // Use the saved thumbnail URL directly
+          } else {
+            // No separate thumbnail, let storage service generate it
+            const result = await this.saveStencilToStorage(outputUrl, userId, style, storageFolder);
+            outputUrl = result.imageUrl;
+            thumbnailUrl = result.thumbnailUrl;
+          }
         } catch (error) {
           console.error('Failed to save real stencil to storage:', error);
           // Continue with original URL as fallback

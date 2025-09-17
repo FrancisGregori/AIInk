@@ -41,8 +41,8 @@ export function normalizeImageUrl(url: string | null | undefined): string {
  * Works with both old and new formats
  */
 export function getThumbnailUrl(imageUrl: string, thumbnailUrl?: string | null): string {
-  // If we have an explicit thumbnail URL, use it
-  if (thumbnailUrl) {
+  // If we have an explicit thumbnail URL that's different from the main image, use it
+  if (thumbnailUrl && thumbnailUrl !== imageUrl) {
     return normalizeImageUrl(thumbnailUrl);
   }
 
@@ -53,8 +53,20 @@ export function getThumbnailUrl(imageUrl: string, thumbnailUrl?: string | null):
     return `${newFormatMatch[1]}${newFormatMatch[2]}_thumb${newFormatMatch[3]}`;
   }
 
-  // For old format or external URLs, use the image as thumbnail
-  return normalizeImageUrl(imageUrl);
+  // For external URLs or when no thumbnail exists, use the thumbnail proxy service
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    const baseUrl = API_BASE_URL || '';
+    return `${baseUrl}/api/thumbnail?url=${encodeURIComponent(imageUrl)}&w=400&h=400`;
+  }
+
+  // For old format or other URLs, use the proxy service
+  const normalizedUrl = normalizeImageUrl(imageUrl);
+  if (normalizedUrl) {
+    const baseUrl = API_BASE_URL || '';
+    return `${baseUrl}/api/thumbnail?url=${encodeURIComponent(normalizedUrl)}&w=400&h=400`;
+  }
+
+  return normalizedUrl;
 }
 
 /**
