@@ -34,9 +34,14 @@ export const requireAuth: RequestHandler = async (req: Request, res: Response, n
     }
 
     try {
+      // Debug log for Railway
+      console.log('[Firebase Auth] Verifying token, length:', idToken.length);
+
       // Verify the token with Firebase Admin SDK
       const decodedToken = await adminAuth.verifyIdToken(idToken);
-      
+
+      console.log('[Firebase Auth] Token verified successfully for user:', decodedToken.uid);
+
       // Attach the decoded token to the request
       req.firebaseUser = decodedToken;
       req.userId = decodedToken.uid;
@@ -66,8 +71,22 @@ export const requireAuth: RequestHandler = async (req: Request, res: Response, n
       };
       
       next();
-    } catch (error) {
-      console.error('Token verification failed:', error);
+    } catch (error: any) {
+      console.error('[Firebase Auth] Token verification failed:', {
+        error: error.message,
+        code: error.code,
+        projectId: process.env.FIREBASE_PROJECT_ID,
+      });
+
+      // Provide more specific error messages
+      if (error.code === 'auth/argument-error') {
+        return res.status(401).json({ message: 'Invalid token format' });
+      } else if (error.code === 'auth/id-token-expired') {
+        return res.status(401).json({ message: 'Token has expired' });
+      } else if (!adminAuth) {
+        return res.status(503).json({ message: 'Authentication service not configured' });
+      }
+
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
   } catch (error) {

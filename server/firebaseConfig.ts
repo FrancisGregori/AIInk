@@ -1,25 +1,48 @@
 import { initializeApp, cert, type ServiceAccount } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
+// Check if Firebase Admin is properly configured
+const isFirebaseConfigured = !!(
+  process.env.FIREBASE_PROJECT_ID &&
+  process.env.FIREBASE_CLIENT_EMAIL &&
+  process.env.FIREBASE_PRIVATE_KEY
+);
+
+if (!isFirebaseConfigured) {
+  console.warn('[Firebase Admin] Missing configuration:', {
+    hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
+    hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+    hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+  });
+}
+
 // Firebase Admin SDK configuration
-// You'll need to set up environment variables for production
 const serviceAccount: ServiceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID || 'your-project-id',
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL || 'your-client-email',
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || 'your-private-key',
+  projectId: process.env.FIREBASE_PROJECT_ID || '',
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || '',
 };
 
 // Initialize Firebase Admin only once
 let adminApp: any;
-try {
-  adminApp = initializeApp({
-    credential: cert(serviceAccount),
-  });
-} catch (error) {
-  console.error('Firebase Admin initialization error:', error);
+let adminAuth: any;
+
+if (isFirebaseConfigured) {
+  try {
+    console.log('[Firebase Admin] Initializing with project:', serviceAccount.projectId);
+    adminApp = initializeApp({
+      credential: cert(serviceAccount),
+    });
+    adminAuth = getAuth(adminApp);
+    console.log('[Firebase Admin] Initialized successfully');
+  } catch (error) {
+    console.error('[Firebase Admin] Initialization failed:', error);
+  }
+} else {
+  console.warn('[Firebase Admin] Not initialized - missing configuration');
 }
 
-export const adminAuth = getAuth(adminApp);
+export { adminAuth };
 
 // Firebase client configuration (for frontend)
 export const firebaseClientConfig = {
