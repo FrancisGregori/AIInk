@@ -14,13 +14,14 @@ const isRailwayInternal = process.env.DATABASE_URL?.includes('railway.internal')
 
 if (isRailwayInternal) {
   console.log('[Database] Railway internal connection detected - disabling WebSocket');
-  // For Railway internal connections, disable WebSocket features
-  neonConfig.poolQueryViaFetch = false;
-  neonConfig.fetchConnectionCache = false;
-  // Don't set WebSocket constructor for Railway
+  // For Railway internal connections, force fetch and disable WebSocket completely
+  neonConfig.poolQueryViaFetch = true;  // Force fetch instead of WebSocket
+  neonConfig.fetchConnectionCache = true;  // Enable connection caching
+  neonConfig.webSocketConstructor = undefined; // Explicitly disable WebSocket
 } else {
   console.log('[Database] Standard connection - enabling WebSocket');
   neonConfig.webSocketConstructor = ws;
+  neonConfig.poolQueryViaFetch = false;
 }
 
 export const pool = new Pool({
