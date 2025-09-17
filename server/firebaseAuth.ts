@@ -46,18 +46,24 @@ export const requireAuth: RequestHandler = async (req: Request, res: Response, n
       req.firebaseUser = decodedToken;
       req.userId = decodedToken.uid;
       
-      // Ensure user exists in our database
-      let user = await storage.getUser(decodedToken.uid);
-      
-      if (!user) {
-        // Create user if doesn't exist
-        user = await storage.upsertUser({
-          id: decodedToken.uid,
-          email: decodedToken.email || '',
-          firstName: decodedToken.name?.split(' ')[0] || '',
-          lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
-          profileImageUrl: decodedToken.picture || null,
-        });
+      // Try to ensure user exists in our database
+      try {
+        let user = await storage.getUser(decodedToken.uid);
+
+        if (!user) {
+          // Create user if doesn't exist
+          user = await storage.upsertUser({
+            id: decodedToken.uid,
+            email: decodedToken.email || '',
+            firstName: decodedToken.name?.split(' ')[0] || '',
+            lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
+            profileImageUrl: decodedToken.picture || null,
+          });
+        }
+      } catch (dbError: any) {
+        console.error('[Firebase Auth] Database error:', dbError.message);
+        // Continue without database user - Firebase token is still valid
+        // This allows auth to work even if database is temporarily unavailable
       }
       
       // Attach user to request for backwards compatibility
