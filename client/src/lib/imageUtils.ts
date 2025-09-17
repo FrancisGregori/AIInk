@@ -2,24 +2,15 @@
  * Utility functions for handling image URLs
  */
 
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 /**
  * Normalize image URLs to work with the new storage structure
  * Handles both old and new URL formats
  */
 export function normalizeImageUrl(url: string | null | undefined): string {
   if (!url) return '';
-
-  // If it's already a new format URL, return as-is
-  if (url.match(/^\/api\/images\/[a-f0-9-]+\/\d+_[a-f0-9-]+(_thumb)?\.png$/)) {
-    return url;
-  }
-
-  // If it's an old format with encoded path
-  if (url.startsWith('/api/images/%2E')) {
-    // Old format: /api/images/%2Eprivate%2Fdesigns%2F{userId}%2F{filename}
-    // This should still work with the legacy endpoint
-    return url;
-  }
 
   // If it's a base64 image, return as-is
   if (url.startsWith('data:')) {
@@ -31,7 +22,17 @@ export function normalizeImageUrl(url: string | null | undefined): string {
     return url;
   }
 
-  // For any other format, return as-is and let the server handle it
+  // For API image URLs, prepend the backend URL if needed
+  if (url.startsWith('/api/images/')) {
+    // In production, prepend the backend URL
+    if (API_BASE_URL) {
+      return API_BASE_URL + url;
+    }
+    // In development, return as-is (same origin)
+    return url;
+  }
+
+  // For any other format, return as-is
   return url;
 }
 
